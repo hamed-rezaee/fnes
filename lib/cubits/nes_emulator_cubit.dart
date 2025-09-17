@@ -147,6 +147,7 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
   void pauseEmulation() {
     _isRunning = false;
     _frameStopwatch.stop();
+
     emit(const NESEmulatorPaused());
   }
 

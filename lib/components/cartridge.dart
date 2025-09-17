@@ -55,9 +55,8 @@ class Cartridge {
     }
 
     _mapperId = ((mapper2 >> 4) << 4) | (mapper1 >> 4);
-    _hwMirror = (mapper1 & 0x01) != 0
-        ? MapperMirror.vertical
-        : MapperMirror.horizontal;
+    _hwMirror =
+        (mapper1 & 0x01) != 0 ? MapperMirror.vertical : MapperMirror.horizontal;
 
     var fileType = 1;
     if ((mapper2 & 0x0C) == 0x08) fileType = 2;

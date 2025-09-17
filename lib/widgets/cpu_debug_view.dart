@@ -18,103 +18,103 @@ class CpuDebugView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        'Registers',
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(height: 8),
-      RichText(
-        text: TextSpan(
-          style: const TextStyle(
-            fontSize: 9,
-            color: Colors.black,
-            fontFamily: 'MonospaceFont',
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Registers',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
           ),
-          children: [
-            const TextSpan(
-              text: 'Flags\n\t',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 9,
+                color: Colors.black,
+                fontFamily: 'MonospaceFont',
+              ),
+              children: [
+                const TextSpan(
+                  text: 'Flags\n\t',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: flags),
+              ],
             ),
-            TextSpan(text: flags),
-          ],
-        ),
-      ),
-      const SizedBox(height: 4),
-      RichText(
-        text: TextSpan(
-          style: const TextStyle(
-            fontSize: 9,
-            color: Colors.black,
-            fontFamily: 'MonospaceFont',
           ),
-          children: [
-            const TextSpan(
-              text: 'PC ',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          const SizedBox(height: 4),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 9,
+                color: Colors.black,
+                fontFamily: 'MonospaceFont',
+              ),
+              children: [
+                const TextSpan(
+                  text: 'PC ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: pc),
+              ],
             ),
-            TextSpan(text: pc),
-          ],
-        ),
-      ),
-      const SizedBox(height: 4),
-      RichText(
-        text: TextSpan(
-          style: const TextStyle(
-            fontSize: 9,
-            color: Colors.black,
-            fontFamily: 'MonospaceFont',
           ),
-          children: [
-            const TextSpan(
-              text: 'SP ',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          const SizedBox(height: 4),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 9,
+                color: Colors.black,
+                fontFamily: 'MonospaceFont',
+              ),
+              children: [
+                const TextSpan(
+                  text: 'SP ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: stackPointer),
+              ],
             ),
-            TextSpan(text: stackPointer),
-          ],
-        ),
-      ),
-      const SizedBox(height: 4),
-      RichText(
-        text: TextSpan(
-          style: const TextStyle(
-            fontSize: 9,
-            color: Colors.black,
-            fontFamily: 'MonospaceFont',
           ),
-          children: [
-            const TextSpan(
-              text: 'AC ',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          const SizedBox(height: 4),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 9,
+                color: Colors.black,
+                fontFamily: 'MonospaceFont',
+              ),
+              children: [
+                const TextSpan(
+                  text: 'AC ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: acRegister),
+                const TextSpan(
+                  text: ' | X ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: xRegister),
+                const TextSpan(
+                  text: ' | Y ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: yRegister),
+              ],
             ),
-            TextSpan(text: acRegister),
-            const TextSpan(
-              text: ' | X ',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          if (disassembly.isNotEmpty) ...[
+            const Text(
+              'Disassembler',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
             ),
-            TextSpan(text: xRegister),
-            const TextSpan(
-              text: ' | Y ',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 8),
+            RichText(
+              text: _getDisassemblyRichText(),
             ),
-            TextSpan(text: yRegister),
           ],
-        ),
-      ),
-      const SizedBox(height: 8),
-      if (disassembly.isNotEmpty) ...[
-        const Text(
-          'Disassembler',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        RichText(
-          text: _getDisassemblyRichText(),
-        ),
-      ],
-    ],
-  );
+        ],
+      );
 
   TextSpan _getDisassemblyRichText() {
     final lines = disassembly.split('\n');
@@ -256,17 +256,15 @@ class CpuDebugView extends StatelessWidget {
     final calculatedEndAddress = (currentPC + 30) & 0xFFFF;
     final disassembledMap = cpu.disassemble(baseAddress, calculatedEndAddress);
 
-    disassembly = disassembledMap.entries
-        .map((entry) {
-          final instruction = entry.value;
+    disassembly = disassembledMap.entries.map((entry) {
+      final instruction = entry.value;
 
-          if (entry.key == currentPC) {
-            return '-> $instruction';
-          }
+      if (entry.key == currentPC) {
+        return '-> $instruction';
+      }
 
-          return '   $instruction';
-        })
-        .join('\n');
+      return '   $instruction';
+    }).join('\n');
   }
 
   String _formatFlags(String rawFlags) {

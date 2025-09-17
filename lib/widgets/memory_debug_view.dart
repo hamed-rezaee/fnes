@@ -11,56 +11,56 @@ class MemoryDebugView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) => MemoryDebugViewCubit(),
-    child: BlocBuilder<MemoryDebugViewCubit, MemoryDebugViewState>(
-      builder: (context, state) {
-        final cubit = context.read<MemoryDebugViewCubit>();
+        create: (_) => MemoryDebugViewCubit(),
+        child: BlocBuilder<MemoryDebugViewCubit, MemoryDebugViewState>(
+          builder: (context, state) {
+            final cubit = context.read<MemoryDebugViewCubit>();
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDropdown<MemoryRegion>(
-              context: context,
-              label: 'Region',
-              value: state.selectedRegion,
-              items: MemoryRegion.values
-                  .map(
-                    (region) => DropdownMenuItem(
-                      value: region,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          region.title,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: cubit.selectedRegion == region
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontFamily: 'MonospaceFont',
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDropdown<MemoryRegion>(
+                  context: context,
+                  label: 'Region',
+                  value: state.selectedRegion,
+                  items: MemoryRegion.values
+                      .map(
+                        (region) => DropdownMenuItem(
+                          value: region,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              region.title,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: cubit.selectedRegion == region
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                fontFamily: 'MonospaceFont',
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  cubit.selectRegion(value);
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: RichText(
-                text: _getMemoryWindowRichText(state.selectedRegion),
-              ),
-            ),
-          ],
-        );
-      },
-    ),
-  );
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      cubit.selectRegion(value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: RichText(
+                    text: _getMemoryWindowRichText(state.selectedRegion),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
 
   Widget _buildDropdown<T>({
     required BuildContext context,
@@ -68,37 +68,38 @@ class MemoryDebugView extends StatelessWidget {
     required T value,
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
-  }) => Row(
-    children: [
-      Text(
-        label,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(width: 8),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<T>(
-            value: value,
-            items: items,
-            onChanged: onChanged,
-            isDense: true,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.black,
-              fontFamily: 'MonospaceFont',
-            ),
-            dropdownColor: Colors.white,
-            focusColor: Colors.white,
+  }) =>
+      Row(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
           ),
-        ),
-      ),
-    ],
-  );
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<T>(
+                value: value,
+                items: items,
+                onChanged: onChanged,
+                isDense: true,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.black,
+                  fontFamily: 'MonospaceFont',
+                ),
+                dropdownColor: Colors.white,
+                focusColor: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      );
 
   TextSpan _getMemoryWindowRichText(MemoryRegion region) {
     final spans = <TextSpan>[];

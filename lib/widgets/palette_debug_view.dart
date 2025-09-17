@@ -120,127 +120,130 @@ class PaletteDebugView extends StatelessWidget {
   }
 
   Widget _buildPatternTable(Image? image) => RawImage(
-    image: image,
-    width: _imageSize.toDouble() * 2,
-    height: _imageSize.toDouble() * 2,
-    fit: BoxFit.contain,
-    filterQuality: FilterQuality.none,
-  );
+        image: image,
+        width: _imageSize.toDouble() * 2,
+        height: _imageSize.toDouble() * 2,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+      );
 
   Widget _buildDropdown<T>({
     required String label,
     required T value,
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
-  }) => Row(
-    children: [
-      Text(
-        label,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(width: 8),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<T>(
-            value: value,
-            items: items,
-            onChanged: onChanged,
-            isDense: true,
-            focusColor: Colors.white,
-            style: const TextStyle(fontSize: 11, color: Colors.black),
+  }) =>
+      Row(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
           ),
-        ),
-      ),
-    ],
-  );
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<T>(
+                value: value,
+                items: items,
+                onChanged: onChanged,
+                isDense: true,
+                focusColor: Colors.white,
+                style: const TextStyle(fontSize: 11, color: Colors.black),
+              ),
+            ),
+          ),
+        ],
+      );
 
   @override
   Widget build(
     BuildContext context,
-  ) => BlocBuilder<PaletteDebugViewCubit, PaletteDebugViewState>(
-    builder: (context, state) {
-      final cubit = context.read<PaletteDebugViewCubit>();
-      final selectedPalette = cubit.selectedPalette;
-      final selectedPatternTable = cubit.selectedPatternTable;
+  ) =>
+      BlocBuilder<PaletteDebugViewCubit, PaletteDebugViewState>(
+        builder: (context, state) {
+          final cubit = context.read<PaletteDebugViewCubit>();
+          final selectedPalette = cubit.selectedPalette;
+          final selectedPatternTable = cubit.selectedPatternTable;
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDropdown<int>(
-                label: 'Palette',
-                value: selectedPalette,
-                items: List.generate(
-                  8,
-                  (index) => DropdownMenuItem(
-                    value: index,
-                    child: Center(
-                      child: Text(
-                        '$index',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.black,
-                          fontWeight: cubit.selectedPalette == index
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontFamily: 'MonospaceFont',
+              Row(
+                children: [
+                  _buildDropdown<int>(
+                    label: 'Palette',
+                    value: selectedPalette,
+                    items: List.generate(
+                      8,
+                      (index) => DropdownMenuItem(
+                        value: index,
+                        child: Center(
+                          child: Text(
+                            '$index',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black,
+                              fontWeight: cubit.selectedPalette == index
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              fontFamily: 'MonospaceFont',
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                    onChanged: (value) {
+                      if (value != null) {
+                        cubit.changePalette(value);
+                      }
+                    },
                   ),
-                ),
-                onChanged: (value) {
-                  if (value != null) {
-                    cubit.changePalette(value);
-                  }
-                },
-              ),
-              const SizedBox(width: 16),
-              _buildDropdown<int>(
-                label: 'Pattern Table',
-                value: selectedPatternTable,
-                items: [
-                  for (var i = 0; i < PatternTable.values.length; i++)
-                    DropdownMenuItem(
-                      value: PatternTable.values[i].index,
-                      child: Text(
-                        PatternTable.values[i].title,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.black,
-                          fontWeight: cubit.selectedPatternTable == i
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontFamily: 'MonospaceFont',
+                  const SizedBox(width: 16),
+                  _buildDropdown<int>(
+                    label: 'Pattern Table',
+                    value: selectedPatternTable,
+                    items: [
+                      for (var i = 0; i < PatternTable.values.length; i++)
+                        DropdownMenuItem(
+                          value: PatternTable.values[i].index,
+                          child: Text(
+                            PatternTable.values[i].title,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black,
+                              fontWeight: cubit.selectedPatternTable == i
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              fontFamily: 'MonospaceFont',
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        cubit.changePatternTable(value);
+                      }
+                    },
+                  ),
                 ],
-                onChanged: (value) {
-                  if (value != null) {
-                    cubit.changePatternTable(value);
-                  }
+              ),
+              const SizedBox(height: 8),
+              FutureBuilder<Image>(
+                future:
+                    _createPatternImage(selectedPatternTable, selectedPalette),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const SizedBox.shrink();
+
+                  return _buildPatternTable(snapshot.data);
                 },
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          FutureBuilder<Image>(
-            future: _createPatternImage(selectedPatternTable, selectedPalette),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
-
-              return _buildPatternTable(snapshot.data);
-            },
-          ),
-        ],
+          );
+        },
       );
-    },
-  );
 }

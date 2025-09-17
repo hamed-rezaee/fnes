@@ -407,11 +407,9 @@ class PPU {
       backgroundShifterPatternHigh =
           (backgroundShifterPatternHigh & 0xFF00) | backgroundNextTileMsb;
 
-      backgroundShifterAttribLow =
-          (backgroundShifterAttribLow & 0xFF00) |
+      backgroundShifterAttribLow = (backgroundShifterAttribLow & 0xFF00) |
           ((backgroundNextTileAttrib & 0x01) != 0 ? 0xFF : 0x00);
-      backgroundShifterAttribHigh =
-          (backgroundShifterAttribHigh & 0xFF00) |
+      backgroundShifterAttribHigh = (backgroundShifterAttribHigh & 0xFF00) |
           ((backgroundNextTileAttrib & 0x02) != 0 ? 0xFF : 0x00);
     }
 
@@ -570,38 +568,32 @@ class PPU {
 
           if (!control.spriteSize) {
             if ((spriteScanline[i].attribute & 0x80) == 0) {
-              spritePatternAddrLow =
-                  (control.patternSprite << 12) |
+              spritePatternAddrLow = (control.patternSprite << 12) |
                   (spriteScanline[i].id << 4) |
                   (scanline - spriteScanline[i].y);
             } else {
-              spritePatternAddrLow =
-                  (control.patternSprite << 12) |
+              spritePatternAddrLow = (control.patternSprite << 12) |
                   (spriteScanline[i].id << 4) |
                   (7 - (scanline - spriteScanline[i].y));
             }
           } else {
             if ((spriteScanline[i].attribute & 0x80) == 0) {
               if (scanline - spriteScanline[i].y < 8) {
-                spritePatternAddrLow =
-                    ((spriteScanline[i].id & 0x01) << 12) |
+                spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
                     ((spriteScanline[i].id & 0xFE) << 4) |
                     ((scanline - spriteScanline[i].y) & 0x07);
               } else {
-                spritePatternAddrLow =
-                    ((spriteScanline[i].id & 0x01) << 12) |
+                spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
                     (((spriteScanline[i].id & 0xFE) + 1) << 4) |
                     ((scanline - spriteScanline[i].y) & 0x07);
               }
             } else {
               if (scanline - spriteScanline[i].y < 8) {
-                spritePatternAddrLow =
-                    ((spriteScanline[i].id & 0x01) << 12) |
+                spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
                     (((spriteScanline[i].id & 0xFE) + 1) << 4) |
                     ((7 - (scanline - spriteScanline[i].y)) & 0x07);
               } else {
-                spritePatternAddrLow =
-                    ((spriteScanline[i].id & 0x01) << 12) |
+                spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
                     ((spriteScanline[i].id & 0xFE) << 4) |
                     ((7 - (scanline - spriteScanline[i].y)) & 0x07);
               }
@@ -613,24 +605,18 @@ class PPU {
           spritePatternBitsHigh = ppuRead(spritePatternAddrHigh);
 
           if ((spriteScanline[i].attribute & 0x40) != 0) {
-            spritePatternBitsLow =
-                ((spritePatternBitsLow & 0xF0) >> 4) |
+            spritePatternBitsLow = ((spritePatternBitsLow & 0xF0) >> 4) |
                 ((spritePatternBitsLow & 0x0F) << 4);
-            spritePatternBitsLow =
-                ((spritePatternBitsLow & 0xCC) >> 2) |
+            spritePatternBitsLow = ((spritePatternBitsLow & 0xCC) >> 2) |
                 ((spritePatternBitsLow & 0x33) << 2);
-            spritePatternBitsLow =
-                ((spritePatternBitsLow & 0xAA) >> 1) |
+            spritePatternBitsLow = ((spritePatternBitsLow & 0xAA) >> 1) |
                 ((spritePatternBitsLow & 0x55) << 1);
 
-            spritePatternBitsHigh =
-                ((spritePatternBitsHigh & 0xF0) >> 4) |
+            spritePatternBitsHigh = ((spritePatternBitsHigh & 0xF0) >> 4) |
                 ((spritePatternBitsHigh & 0x0F) << 4);
-            spritePatternBitsHigh =
-                ((spritePatternBitsHigh & 0xCC) >> 2) |
+            spritePatternBitsHigh = ((spritePatternBitsHigh & 0xCC) >> 2) |
                 ((spritePatternBitsHigh & 0x33) << 2);
-            spritePatternBitsHigh =
-                ((spritePatternBitsHigh & 0xAA) >> 1) |
+            spritePatternBitsHigh = ((spritePatternBitsHigh & 0xAA) >> 1) |
                 ((spritePatternBitsHigh & 0x55) << 1);
           }
 
@@ -660,12 +646,10 @@ class PPU {
         final p1Pixel = (backgroundShifterPatternHigh & bitMux) > 0 ? 1 : 0;
         backgroundPixel = (p1Pixel << 1) | p0Pixel;
 
-        final backgroundPal0 = (backgroundShifterAttribLow & bitMux) > 0
-            ? 1
-            : 0;
-        final backgroundPal1 = (backgroundShifterAttribHigh & bitMux) > 0
-            ? 1
-            : 0;
+        final backgroundPal0 =
+            (backgroundShifterAttribLow & bitMux) > 0 ? 1 : 0;
+        final backgroundPal1 =
+            (backgroundShifterAttribHigh & bitMux) > 0 ? 1 : 0;
         backgroundPalette = (backgroundPal1 << 1) | backgroundPal0;
       }
     }
@@ -681,9 +665,8 @@ class PPU {
         for (var i = 0; i < spriteCount; i++) {
           if (spriteScanline[i].x == 0) {
             final fgPixelLow = (spriteShifterPatternLow[i] & 0x80) > 0 ? 1 : 0;
-            final fgPixelHigh = (spriteShifterPatternHigh[i] & 0x80) > 0
-                ? 1
-                : 0;
+            final fgPixelHigh =
+                (spriteShifterPatternHigh[i] & 0x80) > 0 ? 1 : 0;
             fgPixel = (fgPixelHigh << 1) | fgPixelLow;
 
             fgPalette = (spriteScanline[i].attribute & 0x03) + 0x04;

@@ -8,16 +8,16 @@ class PaletteDebugViewCubit extends Cubit<PaletteDebugViewState> {
   int get selectedPatternTable => state.selectedPatternTable;
 
   void changePalette(int palette) => emit(
-    CharacterTileViewerChanged(
-      selectedPalette: palette,
-      selectedPatternTable: selectedPatternTable,
-    ),
-  );
+        CharacterTileViewerChanged(
+          selectedPalette: palette,
+          selectedPatternTable: selectedPatternTable,
+        ),
+      );
 
   void changePatternTable(int patternTable) => emit(
-    CharacterTileViewerChanged(
-      selectedPalette: selectedPalette,
-      selectedPatternTable: patternTable,
-    ),
-  );
+        CharacterTileViewerChanged(
+          selectedPalette: selectedPalette,
+          selectedPatternTable: patternTable,
+        ),
+      );
 }

@@ -23,28 +23,28 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Flutter NES Emulator',
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      useMaterial3: false,
-      fontFamily: 'MonospaceFont',
-      primarySwatch: Colors.blueGrey,
-    ),
-    home: MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => NESEmulatorCubit(
-            bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU()),
+        title: 'Flutter NES Emulator',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: false,
+          fontFamily: 'MonospaceFont',
+          primarySwatch: Colors.blueGrey,
+        ),
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => NESEmulatorCubit(
+                bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU()),
+              ),
+            ),
+            BlocProvider(create: (context) => PaletteDebugViewCubit()),
+          ],
+          child: Focus(
+            onKeyEvent: (focus, onKey) => KeyEventResult.handled,
+            child: const NESEmulatorScreen(),
           ),
         ),
-        BlocProvider(create: (context) => PaletteDebugViewCubit()),
-      ],
-      child: Focus(
-        onKeyEvent: (focus, onKey) => KeyEventResult.handled,
-        child: const NESEmulatorScreen(),
-      ),
-    ),
-  );
+      );
 }
 
 class NESEmulatorScreen extends StatefulWidget {
@@ -80,246 +80,246 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
   @override
   Widget build(
     BuildContext context,
-  ) => BlocListener<NESEmulatorCubit, NESEmulatorState>(
-    listener: (context, state) {
-      if (state is NESEmulatorRunning) {
-        if (!_emulationTicker.isActive) {
-          _emulationTicker.start();
-        }
-        _focusNode.requestFocus();
-      } else if (state is NESEmulatorPaused) {
-        _emulationTicker.stop();
-      } else if (state is NESEmulatorROMLoaded) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('ROM loaded successfully: ${state.fileName}'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else if (state is NESEmulatorError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(state.message),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    },
-    child: BlocBuilder<NESEmulatorCubit, NESEmulatorState>(
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          title: Text(
-            'Flutter NES Emulator${_nesCubit.romName != null ? ' - ${_nesCubit.romName}' : ''}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          actions: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.folder_open),
-                  tooltip: 'Load ROM',
-                  onPressed: () => _nesEmulatorCubit.loadROMFile(),
-                ),
-                IconButton(
-                  icon: Icon(
-                    _nesEmulatorCubit.isRunning
-                        ? Icons.pause
-                        : Icons.play_arrow,
-                  ),
-                  tooltip: _nesEmulatorCubit.isRunning ? 'Pause' : 'Resume',
-                  onPressed: _nesEmulatorCubit.isROMLoaded
-                      ? () {
-                          if (_nesEmulatorCubit.isRunning) {
-                            _nesEmulatorCubit.pauseEmulation();
-                          } else {
-                            _nesEmulatorCubit.startEmulation();
-                          }
-                        }
-                      : null,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.skip_next),
-                  tooltip: 'Step',
-                  onPressed:
-                      _nesEmulatorCubit.isROMLoaded &&
-                          !_nesEmulatorCubit.isRunning
-                      ? _nesEmulatorCubit.stepEmulation
-                      : null,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Reset',
-                  onPressed: _nesEmulatorCubit.isROMLoaded
-                      ? _nesEmulatorCubit.resetEmulation
-                      : null,
-                ),
-                PopupMenuButton<FilterQuality>(
-                  icon: const Icon(Icons.tune),
-                  tooltip: 'Filter Quality',
-                  onSelected: _nesEmulatorCubit.changeFilterQuality,
-                  itemBuilder: (BuildContext context) => [
-                    PopupMenuItem<FilterQuality>(
-                      value: FilterQuality.none,
-                      child: Row(
-                        children: [
-                          Icon(
-                            _nesEmulatorCubit.filterQuality ==
-                                    FilterQuality.none
-                                ? Icons.check_box
-                                : Icons.check_box_outline_blank,
-                            size: 16,
-                            color: Colors.black,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Pixelated',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
+  ) =>
+      BlocListener<NESEmulatorCubit, NESEmulatorState>(
+        listener: (context, state) {
+          if (state is NESEmulatorRunning) {
+            if (!_emulationTicker.isActive) {
+              _emulationTicker.start();
+            }
+            _focusNode.requestFocus();
+          } else if (state is NESEmulatorPaused) {
+            _emulationTicker.stop();
+          } else if (state is NESEmulatorROMLoaded) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('ROM loaded successfully: ${state.fileName}'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else if (state is NESEmulatorError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<NESEmulatorCubit, NESEmulatorState>(
+          builder: (context, state) => Scaffold(
+            appBar: AppBar(
+              elevation: 0,
+              title: Text(
+                'Flutter NES Emulator${_nesCubit.romName != null ? ' - ${_nesCubit.romName}' : ''}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              actions: [
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.folder_open),
+                      tooltip: 'Load ROM',
+                      onPressed: () => _nesEmulatorCubit.loadROMFile(),
                     ),
-                    PopupMenuItem<FilterQuality>(
-                      value: FilterQuality.high,
-                      child: Row(
-                        children: [
-                          Icon(
-                            _nesEmulatorCubit.filterQuality ==
-                                    FilterQuality.high
-                                ? Icons.check_box
-                                : Icons.check_box_outline_blank,
-                            size: 16,
-                            color: Colors.black,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'High',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
+                    IconButton(
+                      icon: Icon(
+                        _nesEmulatorCubit.isRunning
+                            ? Icons.pause
+                            : Icons.play_arrow,
                       ),
+                      tooltip: _nesEmulatorCubit.isRunning ? 'Pause' : 'Resume',
+                      onPressed: _nesEmulatorCubit.isROMLoaded
+                          ? () {
+                              if (_nesEmulatorCubit.isRunning) {
+                                _nesEmulatorCubit.pauseEmulation();
+                              } else {
+                                _nesEmulatorCubit.startEmulation();
+                              }
+                            }
+                          : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.skip_next),
+                      tooltip: 'Step',
+                      onPressed: _nesEmulatorCubit.isROMLoaded &&
+                              !_nesEmulatorCubit.isRunning
+                          ? _nesEmulatorCubit.stepEmulation
+                          : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      tooltip: 'Reset',
+                      onPressed: _nesEmulatorCubit.isROMLoaded
+                          ? _nesEmulatorCubit.resetEmulation
+                          : null,
+                    ),
+                    PopupMenuButton<FilterQuality>(
+                      icon: const Icon(Icons.tune),
+                      tooltip: 'Filter Quality',
+                      onSelected: _nesEmulatorCubit.changeFilterQuality,
+                      itemBuilder: (BuildContext context) => [
+                        PopupMenuItem<FilterQuality>(
+                          value: FilterQuality.none,
+                          child: Row(
+                            children: [
+                              Icon(
+                                _nesEmulatorCubit.filterQuality ==
+                                        FilterQuality.none
+                                    ? Icons.check_box
+                                    : Icons.check_box_outline_blank,
+                                size: 16,
+                                color: Colors.black,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Pixelated',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem<FilterQuality>(
+                          value: FilterQuality.high,
+                          child: Row(
+                            children: [
+                              Icon(
+                                _nesEmulatorCubit.filterQuality ==
+                                        FilterQuality.high
+                                    ? Icons.check_box
+                                    : Icons.check_box_outline_blank,
+                                size: 16,
+                                color: Colors.black,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'High',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _nesEmulatorCubit.showDebugger
+                            ? Icons.bug_report
+                            : Icons.bug_report_outlined,
+                      ),
+                      tooltip: _nesEmulatorCubit.showDebugger
+                          ? 'Hide Debugger'
+                          : 'Show Debugger',
+                      onPressed: () => _nesEmulatorCubit.toggleDebugger(),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      tooltip: 'Cartridge Info',
+                      onPressed: _showROMInfoDialog,
                     ),
                   ],
                 ),
-                IconButton(
-                  icon: Icon(
-                    _nesEmulatorCubit.showDebugger
-                        ? Icons.bug_report
-                        : Icons.bug_report_outlined,
-                  ),
-                  tooltip: _nesEmulatorCubit.showDebugger
-                      ? 'Hide Debugger'
-                      : 'Show Debugger',
-                  onPressed: () => _nesEmulatorCubit.toggleDebugger(),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  tooltip: 'Cartridge Info',
-                  onPressed: _showROMInfoDialog,
-                ),
               ],
             ),
-          ],
-        ),
-        body: KeyboardListener(
-          focusNode: _focusNode,
-          autofocus: true,
-          onKeyEvent: (KeyEvent event) {
-            if (event is KeyDownEvent) {
-              _nesEmulatorCubit.handleKeyDown(event.logicalKey);
-            } else if (event is KeyUpEvent) {
-              _nesEmulatorCubit.handleKeyUp(event.logicalKey);
-            }
-          },
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
+            body: KeyboardListener(
+              focusNode: _focusNode,
+              autofocus: true,
+              onKeyEvent: (KeyEvent event) {
+                if (event is KeyDownEvent) {
+                  _nesEmulatorCubit.handleKeyDown(event.logicalKey);
+                } else if (event is KeyUpEvent) {
+                  _nesEmulatorCubit.handleKeyUp(event.logicalKey);
+                }
+              },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'FPS: ${_nesEmulatorCubit.currentFPS.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildRenderer(),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                      'Arrow Keys = D-pad, Z = A, X = B, Space = Start, Enter = Select',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-              if (_nesEmulatorCubit.showDebugger)
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Column(
                     children: [
-                      CpuDebugView(bus: _nesEmulatorCubit.bus),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          MemoryDebugView(cpu: _nesEmulatorCubit.bus.cpu),
-                          PaletteDebugView(bus: _nesEmulatorCubit.bus),
-                        ],
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'FPS: ${_nesEmulatorCubit.currentFPS.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _buildRenderer(),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'Arrow Keys = D-pad, Z = A, X = B, Space = Start, Enter = Select',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ],
                   ),
-                ),
-            ],
+                  if (_nesEmulatorCubit.showDebugger)
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CpuDebugView(bus: _nesEmulatorCubit.bus),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              MemoryDebugView(cpu: _nesEmulatorCubit.bus.cpu),
+                              PaletteDebugView(bus: _nesEmulatorCubit.bus),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
-    ),
-  );
+      );
 
   Widget _buildRenderer() => GestureDetector(
-    onTap: () => _focusNode.requestFocus(),
-    child: StreamBuilder<Image>(
-      stream: _nesEmulatorCubit.imageStream,
-      builder: (context, snapshot) => Container(
-        width: 512,
-        height: 480,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[600]!),
-        ),
-        child: (snapshot.hasData)
-            ? RawImage(
-                image: snapshot.data,
-                width: 512,
-                height: 480,
-                fit: BoxFit.fill,
-                filterQuality: _nesEmulatorCubit.filterQuality,
-              )
-            : const Center(
-                child: Text(
-                  'No ROM Loaded',
-                  style: TextStyle(
-                    fontSize: 32,
-                    color: Colors.grey,
-                    fontWeight: FontWeight.bold,
+        onTap: () => _focusNode.requestFocus(),
+        child: StreamBuilder<Image>(
+          stream: _nesEmulatorCubit.imageStream,
+          builder: (context, snapshot) => Container(
+            width: 512,
+            height: 480,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey[600]!),
+            ),
+            child: (snapshot.hasData)
+                ? RawImage(
+                    image: snapshot.data,
+                    width: 512,
+                    height: 480,
+                    fit: BoxFit.fill,
+                    filterQuality: _nesEmulatorCubit.filterQuality,
+                  )
+                : const Center(
+                    child: Text(
+                      'No ROM Loaded',
+                      style: TextStyle(
+                        fontSize: 32,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-      ),
-    ),
-  );
+          ),
+        ),
+      );
 
   Future<void> _showROMInfoDialog() async {
     final info = _nesEmulatorCubit.bus.cart?.getMapperInfoMap();
