@@ -164,7 +164,7 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
       bus.clock();
     } while (!bus.cpu.complete());
 
-    updatePixelBuffer();
+    unawaited(updatePixelBuffer());
 
     emit(NESEmulatorRunning(currentFPS: _currentFPS, frameCount: _frameCount));
     emit(const NESEmulatorStepped());
@@ -199,10 +199,10 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
         _skipFrames = _skipFrames.clamp(0, _maxFrameSkip);
 
         if (_frameCount % (_skipFrames + 1) == 0) {
-          updatePixelBuffer();
+          unawaited(updatePixelBuffer());
         }
       } else {
-        updatePixelBuffer();
+        unawaited(updatePixelBuffer());
       }
 
       _frameCount++;
@@ -286,7 +286,7 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
   @override
   Future<void> close() {
     _screenImage?.dispose();
-    _imageStreamController.close();
+    unawaited(_imageStreamController.close());
 
     return super.close();
   }

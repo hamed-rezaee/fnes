@@ -85,7 +85,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
         listener: (context, state) {
           if (state is NESEmulatorRunning) {
             if (!_emulationTicker.isActive) {
-              _emulationTicker.start();
+              unawaited(_emulationTicker.start());
             }
             _focusNode.requestFocus();
           } else if (state is NESEmulatorPaused) {
