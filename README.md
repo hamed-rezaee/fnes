@@ -46,7 +46,7 @@ The project is organized into the following directories:
   - `nes.dart`: The main `NES` class that orchestrates the entire emulator, managing the main loop and the interaction between components.
   - `cpu.dart`: An implementation of the MOS Technology 6502 processor. It fetches and executes instructions, manipulating data in memory and controlling the other components.
   - `ppu.dart`: The Picture Processing Unit, responsible for everything related to graphics. It renders the background and sprites, manages palettes, and generates the video output.
-  - `apu.dart`: The Audio Processing Unit, responsible for generating sound. (Note: This component is not yet implemented)
+  - `apu.dart`: The Audio Processing Unit, responsible for generating sound.
   - `cartridge.dart`: Handles loading and reading game ROMs (`.nes` files). It contains the game's code and graphics data.
 
 - **`lib/mappers/`**: NES cartridges often included Memory Management Controllers (Mappers) to expand memory. This directory contains implementations for various mappers used by different games.
