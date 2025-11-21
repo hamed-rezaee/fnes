@@ -203,6 +203,17 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     ),
                     IconButton(
                       icon: Icon(
+                        _nesEmulatorCubit.audioEnabled
+                            ? Icons.volume_up
+                            : Icons.volume_off,
+                      ),
+                      tooltip: _nesEmulatorCubit.audioEnabled
+                          ? 'Disable Audio'
+                          : 'Enable Audio',
+                      onPressed: () => _nesEmulatorCubit.toggleAudio(),
+                    ),
+                    IconButton(
+                      icon: Icon(
                         _nesEmulatorCubit.showDebugger
                             ? Icons.bug_report
                             : Icons.bug_report_outlined,

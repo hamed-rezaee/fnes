@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fnes/components/audio_manager.dart';
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cartridge.dart';
 import 'package:fnes/cubits/nes_emulator_state.dart';
@@ -12,6 +13,8 @@ import 'package:fnes/cubits/nes_emulator_state.dart';
 class NESEmulatorCubit extends Cubit<NESEmulatorState> {
   NESEmulatorCubit({required this.bus}) : super(const NESEmulatorInitial()) {
     bus.setSampleFrequency(44100);
+
+    unawaited(_initializeAudio());
   }
 
   final Bus bus;
@@ -35,6 +38,9 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
 
   final Stopwatch _frameStopwatch = Stopwatch();
 
+  final AudioManager _audioPlayer = AudioManager();
+  bool _audioEnabled = true;
+
   Stream<Image> get imageStream => _imageStreamController.stream;
 
   bool get isRunning => _isRunning;
@@ -52,6 +58,12 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
   FilterQuality get filterQuality => _filterQuality;
 
   bool get showDebugger => _isDebuggerVisible;
+
+  bool get audioEnabled => _audioEnabled;
+
+  Future<void> _initializeAudio() async {
+    await _audioPlayer.initialize();
+  }
 
   Future<Image> _createScreenImage(Uint8List pixelBuffer) async {
     final completer = Completer<Image>();
@@ -141,18 +153,24 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
     _lastFPSUpdate = DateTime.now();
     _frameStopwatch.start();
 
+    if (_audioEnabled) {
+      _audioPlayer.resume();
+    }
+
     emit(NESEmulatorRunning(currentFPS: _currentFPS, frameCount: _frameCount));
   }
 
   void pauseEmulation() {
     _isRunning = false;
     _frameStopwatch.stop();
+    _audioPlayer.pause();
 
     emit(const NESEmulatorPaused());
   }
 
   void resetEmulation() {
     bus.reset();
+    _audioPlayer.clear();
 
     startEmulation();
   }
@@ -200,6 +218,12 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
 
         if (_frameCount % (_skipFrames + 1) == 0) {
           unawaited(updatePixelBuffer());
+        }
+
+        if (_audioEnabled && bus.hasAudioData()) {
+          final audioBuffer = bus.getAudioBuffer();
+
+          _audioPlayer.addSamples(audioBuffer);
         }
       } else {
         unawaited(updatePixelBuffer());
@@ -283,10 +307,21 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
     emit(NESEmulatorDebuggerToggled(isDebuggerVisible: _isDebuggerVisible));
   }
 
+  void toggleAudio() {
+    _audioEnabled = !_audioEnabled;
+
+    if (_audioEnabled && _isRunning) {
+      _audioPlayer.resume();
+    } else {
+      _audioPlayer.pause();
+    }
+  }
+
   @override
   Future<void> close() {
     _screenImage?.dispose();
     unawaited(_imageStreamController.close());
+    unawaited(_audioPlayer.dispose());
 
     return super.close();
   }
