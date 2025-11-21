@@ -185,7 +185,7 @@ class APU {
     double tnd = 0;
     final tndSum = tri + noi + dmcOut;
     if (tndSum > 0) {
-      tnd = 159.79 / ((100.0 / tndSum) + 1.0);
+      tnd = 163.67 / ((24329.0 / tndSum) + 100.0);
     }
 
     var sample = pulseOut + tnd;
@@ -197,7 +197,7 @@ class APU {
     sample = _lowPassInput * sample + _lowPassFeedback * _lowPassPrev;
     _lowPassPrev = sample;
 
-    return (sample * 1.5).clamp(-1.0, 1.0);
+    return (sample * 100).clamp(-1.0, 1.0);
   }
 
   void reset() {
