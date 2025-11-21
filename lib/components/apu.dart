@@ -74,7 +74,7 @@ class APU {
         triangle.reload = (triangle.reload & 0x00FF) | ((data & 0x07) << 8);
         triangle.timer = triangle.reload;
         triangle.lengthCounter.load(data >> 3);
-        triangle.linearCounter.controlFlag = true;
+        triangle.linearCounter.setReloadFlag();
       case 0x400C:
         noise.envelope.loop = (data & 0x20) != 0;
         noise.envelope.disable = (data & 0x10) != 0;
@@ -83,22 +83,22 @@ class APU {
       case 0x400E:
         noise.mode = (data & 0x80) != 0;
         noise.reload = [
-          4,
-          8,
-          16,
-          32,
-          64,
-          96,
-          128,
-          160,
-          202,
-          254,
-          380,
-          508,
-          762,
-          1016,
-          2034,
-          4068,
+          0x004,
+          0x008,
+          0x010,
+          0x020,
+          0x040,
+          0x060,
+          0x080,
+          0x0A0,
+          0x0CA,
+          0x0FE,
+          0x17C,
+          0x1FC,
+          0x2FA,
+          0x3F8,
+          0x7F2,
+          0xFE4,
         ][(data & 0x0F)];
       case 0x400F:
         noise.lengthCounter.load(data >> 3);
@@ -107,29 +107,29 @@ class APU {
         dmc.irqEnabled = (data & 0x80) != 0;
         dmc.loop = (data & 0x40) != 0;
         dmc.timerLoad = [
-          428,
-          380,
-          340,
-          320,
-          286,
-          254,
-          226,
-          214,
-          190,
-          160,
-          142,
-          128,
-          106,
-          84,
-          72,
-          54,
+          0x1AC,
+          0x17C,
+          0x154,
+          0x140,
+          0x11E,
+          0x0FE,
+          0x0E2,
+          0x0D6,
+          0x0BE,
+          0x0A0,
+          0x08E,
+          0x080,
+          0x06A,
+          0x054,
+          0x048,
+          0x036,
         ][(data & 0x0F)];
       case 0x4011:
         dmc.dmcOutput = data & 0x7F;
       case 0x4012:
-        dmc.sampleAddress = 0xC000 + (data * 64);
+        dmc.sampleAddress = 0xC000 + (data * 0x40);
       case 0x4013:
-        dmc.bytesRemaining = (data * 16) + 1;
+        dmc.bytesRemaining = (data * 0x10) + 1;
       case 0x4015:
         pulse1.enable = (data & 0x01) != 0;
         pulse2.enable = (data & 0x02) != 0;
@@ -166,8 +166,17 @@ class APU {
 
   double _highPassPrev = 0;
   double _highPassOut = 0;
-
   double _lowPassPrev = 0;
+
+  static final List<double> _pulseLookup = List.generate(31, (i) {
+    if (i == 0) return 0.0;
+    return 95.52 / (8128.0 / i + 100.0);
+  });
+
+  static final List<double> _tndLookup = List.generate(203, (i) {
+    if (i == 0) return 0.0;
+    return 163.67 / (24329.0 / i + 100.0);
+  });
 
   double getOutputSample() {
     final p1 = pulse1.output();
@@ -176,17 +185,11 @@ class APU {
     final noi = noise.output();
     final dmcOut = dmc.output();
 
-    double pulseOut = 0;
-    final pulseSum = p1 + p2;
-    if (pulseSum > 0) {
-      pulseOut = 95.88 / ((8128.0 / pulseSum) + 100.0);
-    }
+    final pulseIndex = (p1 + p2).clamp(0, 30);
+    final pulseOut = _pulseLookup[pulseIndex];
 
-    double tnd = 0;
-    final tndSum = tri + noi + dmcOut;
-    if (tndSum > 0) {
-      tnd = 163.67 / ((24329.0 / tndSum) + 100.0);
-    }
+    final tndIndex = (tri * 3 + noi * 2 + dmcOut).clamp(0, 202);
+    final tnd = _tndLookup[tndIndex];
 
     var sample = pulseOut + tnd;
 
@@ -197,7 +200,7 @@ class APU {
     sample = _lowPassInput * sample + _lowPassFeedback * _lowPassPrev;
     _lowPassPrev = sample;
 
-    return (sample * 100).clamp(-1.0, 1.0);
+    return sample.clamp(-1.0, 1.0);
   }
 
   void reset() {
@@ -219,20 +222,20 @@ class APU {
     globalTime++;
 
     if (frameCounterMode) {
-      if (globalTime == 3729 ||
-          globalTime == 7457 ||
-          globalTime == 11185 ||
-          globalTime == 14913 ||
-          globalTime == 18641) {
-        globalTime = 0;
+      if (globalTime == 0x1D21 ||
+          globalTime == 0x3A41 ||
+          globalTime == 0x5763 ||
+          globalTime == 0x7485 ||
+          globalTime == 0x91A1) {
+        if (globalTime == 0x91A1) globalTime = 0;
         _clockFrameCounter();
       }
     } else {
-      if (globalTime == 3729 ||
-          globalTime == 7457 ||
-          globalTime == 11185 ||
-          globalTime == 14914) {
-        if (globalTime == 14914) globalTime = 0;
+      if (globalTime == 0x1D21 ||
+          globalTime == 0x3A41 ||
+          globalTime == 0x5763 ||
+          globalTime == 0x7485) {
+        if (globalTime == 0x7485) globalTime = 0;
         _clockFrameCounter();
       }
     }
@@ -338,14 +341,14 @@ class Envelope {
   void clock() {
     if (start) {
       start = false;
-      decayCount = 15;
+      decayCount = 0x0F;
       dividerCount = volume;
     } else {
       if (dividerCount == 0) {
         dividerCount = volume;
         if (decayCount == 0) {
           if (loop) {
-            decayCount = 15;
+            decayCount = 0x0F;
           }
         } else {
           decayCount--;
@@ -364,38 +367,38 @@ class LengthCounter {
   bool halt = false;
 
   static const List<int> lengthTable = [
-    10,
-    254,
-    20,
-    2,
-    40,
-    4,
-    80,
-    6,
-    160,
-    8,
-    60,
-    10,
-    14,
-    12,
-    26,
-    14,
-    12,
-    16,
-    24,
-    18,
-    48,
-    20,
-    96,
-    22,
-    192,
-    24,
-    72,
-    26,
-    16,
-    28,
-    32,
-    30,
+    0x0A,
+    0xFE,
+    0x14,
+    0x02,
+    0x28,
+    0x04,
+    0x50,
+    0x06,
+    0xA0,
+    0x08,
+    0x3C,
+    0x0A,
+    0x0E,
+    0x0C,
+    0x1A,
+    0x0E,
+    0x0C,
+    0x10,
+    0x18,
+    0x12,
+    0x30,
+    0x14,
+    0x60,
+    0x16,
+    0xC0,
+    0x18,
+    0x48,
+    0x1A,
+    0x10,
+    0x1C,
+    0x20,
+    0x1E,
   ];
 
   void load(int index) {
@@ -450,13 +453,17 @@ class PulseWave {
     sweeper.reload = false;
   }
 
-  double output() {
-    if (!enable || lengthCounter.counter == 0 || reload < 8 || sweeper.mute) {
+  int output() {
+    if (!enable ||
+        lengthCounter.counter == 0 ||
+        reload < 0x08 ||
+        sweeper.mute) {
       return 0;
     }
 
-    final duty = ((dutycycle * 8).toInt() - 1).clamp(0, 3);
-    return (APU._dutySequences[duty][phase] & envelope.output) / 16.0;
+    final duty = (dutycycle * 0x1F).clamp(0, 0x03).floor();
+
+    return APU._dutySequences[duty][phase] * envelope.output;
   }
 }
 
@@ -475,37 +482,35 @@ class Sweeper {
     void Function(int) setTarget, {
     required bool isPulse1,
   }) {
-    var targetValue = target;
+    if (timer == 0 && enabled) {
+      timer = period;
 
-    final changeAmount = targetValue >> shift;
-    mute = (targetValue < 8) || (targetValue > 0x7FF);
+      final changeAmount = target >> shift;
+      int newPeriod;
 
-    if (timer == 0 && reload) {
+      if (down) {
+        newPeriod = target - changeAmount - (isPulse1 ? 1 : 0);
+      } else {
+        newPeriod = target + changeAmount;
+      }
+
+      if (shift > 0 && newPeriod >= 0 && newPeriod <= 0x7FF) {
+        setTarget(newPeriod);
+      }
+    } else if (timer > 0) {
+      timer--;
+    }
+
+    if (reload) {
       timer = period;
       reload = false;
     }
 
-    if (timer == 0 && enabled && shift > 0 && !mute) {
-      if (down) {
-        targetValue -= changeAmount;
-        if (isPulse1) {
-          targetValue -= 1;
-        }
-      } else {
-        targetValue += changeAmount;
-      }
+    mute = (target < 8) || (target > 0x7FF);
 
-      if (targetValue >= 0 && targetValue <= 0x7FF) {
-        setTarget(targetValue);
-      } else {
-        mute = true;
-      }
-    }
-
-    if (timer == 0) {
-      timer = period;
-    } else {
-      timer--;
+    if (!down && shift > 0) {
+      final futureValue = target + (target >> shift);
+      if (futureValue > 0x7FF) mute = true;
     }
   }
 }
@@ -514,56 +519,57 @@ class LinearCounter {
   int counter = 0;
   int reload = 0;
   bool controlFlag = false;
+  bool reloadFlag = false;
 
-  void load(int value) {
-    reload = value;
-  }
+  void load(int value) => reload = value;
+
+  void setReloadFlag() => reloadFlag = true;
 
   void clock() {
-    if (controlFlag) {
+    if (reloadFlag) {
       counter = reload;
     } else if (counter > 0) {
       counter--;
     }
 
-    controlFlag = false;
+    if (!controlFlag) reloadFlag = false;
   }
 }
 
 class TriangleWave {
   static const List<int> _sequence = [
-    15,
-    14,
-    13,
-    12,
-    11,
-    10,
-    9,
-    8,
-    7,
-    6,
-    5,
-    4,
-    3,
-    2,
-    1,
-    0,
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
+    0x0F,
+    0x0E,
+    0x0D,
+    0x0C,
+    0x0B,
+    0x0A,
+    0x09,
+    0x08,
+    0x07,
+    0x06,
+    0x05,
+    0x04,
+    0x03,
+    0x02,
+    0x01,
+    0x00,
+    0x00,
+    0x01,
+    0x02,
+    0x03,
+    0x04,
+    0x05,
+    0x06,
+    0x07,
+    0x08,
+    0x09,
+    0x0A,
+    0x0B,
+    0x0C,
+    0x0D,
+    0x0E,
+    0x0F,
   ];
 
   int timer = 0;
@@ -597,12 +603,12 @@ class TriangleWave {
     linearCounter.controlFlag = false;
   }
 
-  double output() {
+  int output() {
     if (!enable || lengthCounter.counter == 0 || linearCounter.counter == 0) {
       return 0;
     }
 
-    return _sequence[phase] / 16.0;
+    return _sequence[phase];
   }
 }
 
@@ -643,11 +649,11 @@ class NoiseWave {
     lengthCounter.halt = false;
   }
 
-  double output() {
-    if (!enable || lengthCounter.counter == 0 || (shiftRegister & 1) == 1) {
-      return 0;
-    }
-    return envelope.output / 16.0;
+  int output() {
+    if (!enable || lengthCounter.counter == 0) return 0;
+    if ((shiftRegister & 1) == 0) return envelope.output;
+
+    return 0;
   }
 }
 
@@ -676,14 +682,14 @@ class DMC {
         bitsRemaining--;
         final bit = (sampleBuffer >> bitsRemaining) & 1;
         if (bit == 1) {
-          if (dmcOutput < 126) dmcOutput += 2;
+          if (dmcOutput < 0x7E) dmcOutput += 2;
         } else {
           if (dmcOutput > 1) dmcOutput -= 2;
         }
       } else if (!sampleBufferEmpty) {
         sampleBuffer = sampleBufferBits;
         sampleBufferEmpty = true;
-        bitsRemaining = 8;
+        bitsRemaining = 0x08;
       }
     } else {
       timerCounter--;
@@ -706,5 +712,5 @@ class DMC {
     sampleBufferEmpty = true;
   }
 
-  double output() => dmcOutput / 127.0;
+  int output() => dmcOutput;
 }

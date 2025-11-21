@@ -84,19 +84,20 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
     final pixelBuffer = Uint8List(256 * 240 * 4);
 
     for (var y = 0; y < 240; y++) {
+      final row = bus.ppu.screenPixels[y];
       for (var x = 0; x < 256; x++) {
         int colorIndex;
 
         if (_isROMLoaded && bus.cart != null) {
-          colorIndex = bus.ppu.screenPixels[y][x] % bus.ppu.palScreen.length;
+          colorIndex = row[x] % bus.ppu.palScreen.length;
         } else {
           colorIndex = 0;
         }
 
         final color = bus.ppu.palScreen[colorIndex];
-        pixelBuffer[bufferIndex++] = (color.r * 255).round() & 0xff;
-        pixelBuffer[bufferIndex++] = (color.g * 255).round() & 0xff;
-        pixelBuffer[bufferIndex++] = (color.b * 255).round() & 0xff;
+        pixelBuffer[bufferIndex++] = (color.r * 255).round();
+        pixelBuffer[bufferIndex++] = (color.g * 255).round();
+        pixelBuffer[bufferIndex++] = (color.b * 255).round();
         pixelBuffer[bufferIndex++] = 255;
       }
     }
@@ -191,7 +192,7 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
   void updateEmulation() {
     if (!_isRunning) return;
 
-    final elapsed = _frameStopwatch.elapsed.inMilliseconds;
+    final elapsed = _frameStopwatch.elapsedMicroseconds / 1000.0;
     if (elapsed < _targetFrameTime) {
       return;
     }
@@ -199,12 +200,9 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
 
     try {
       if (_isROMLoaded && bus.cart != null) {
-        var clocksToRun = 0;
-
         do {
           bus.clock();
-          clocksToRun++;
-        } while (!bus.ppu.frameComplete && clocksToRun < 89342);
+        } while (!bus.ppu.frameComplete);
 
         bus.ppu.frameComplete = false;
 
@@ -214,38 +212,36 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
           _skipFrames--;
         }
 
-        _skipFrames = _skipFrames.clamp(0, _maxFrameSkip);
-
-        if (_frameCount % (_skipFrames + 1) == 0) {
+        final shouldRender = _frameCount % (_skipFrames + 1) == 0;
+        if (shouldRender) {
           unawaited(updatePixelBuffer());
         }
 
         if (_audioEnabled && bus.hasAudioData()) {
           final audioBuffer = bus.getAudioBuffer();
-
           _audioPlayer.addSamples(audioBuffer);
+        }
+
+        _frameCount++;
+        final now = DateTime.now();
+
+        if (now.difference(_lastFPSUpdate).inMilliseconds >= 1000) {
+          _currentFPS = _frameCount /
+              (now.difference(_lastFPSUpdate).inMilliseconds / 1000.0);
+          _frameCount = 0;
+          _lastFPSUpdate = now;
+        }
+
+        if (shouldRender) {
+          emit(
+            NESEmulatorFrameUpdated(
+              currentFPS: _currentFPS,
+              frameCount: _frameCount,
+            ),
+          );
         }
       } else {
         unawaited(updatePixelBuffer());
-      }
-
-      _frameCount++;
-      final now = DateTime.now();
-
-      if (now.difference(_lastFPSUpdate).inMilliseconds >= 1000) {
-        _currentFPS = _frameCount /
-            (now.difference(_lastFPSUpdate).inMilliseconds / 1000.0);
-        _frameCount = 0;
-        _lastFPSUpdate = now;
-      }
-
-      if (_frameCount % (_skipFrames + 1) == 0) {
-        emit(
-          NESEmulatorFrameUpdated(
-            currentFPS: _currentFPS,
-            frameCount: _frameCount,
-          ),
-        );
       }
     } on Exception catch (e) {
       developer.log('$e');

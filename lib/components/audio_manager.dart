@@ -12,8 +12,8 @@ class AudioManager {
   bool _isPlaying = false;
 
   final List<double> _audioQueue = [];
-  final int _maxBufferSize = 16384;
-  final int _chunkSize = 4410;
+  final int _maxBufferSize = 0x2000;
+  final int _chunkSize = 0x0800;
 
   late final AudioStream _audioStream;
 
@@ -25,7 +25,7 @@ class AudioManager {
 
       _audioStream.init(
         sampleRate: sampleRate,
-        bufferMilliSec: 500,
+        bufferMilliSec: 0xC8,
       );
 
       _isInitialized = true;
@@ -36,18 +36,16 @@ class AudioManager {
 
   double _highPassPrev = 0;
   double _highPassOut = 0;
+  static const double _dcBlockerCoeff = 0.995;
 
   void addSamples(List<double> samples) {
     if (!_isInitialized || !_isPlaying) return;
 
     for (final sample in samples) {
-      var normalized = sample - 1.0;
+      _highPassOut = sample - _highPassPrev + _dcBlockerCoeff * _highPassOut;
+      _highPassPrev = sample;
 
-      _highPassOut = normalized - _highPassPrev + 0.996 * _highPassOut;
-      _highPassPrev = normalized;
-      normalized = _highPassOut;
-
-      final audioSample = (normalized * 0.5).clamp(-1.0, 1.0);
+      final audioSample = _highPassOut.clamp(-1.0, 1.0);
       _audioQueue.add(audioSample);
     }
 
@@ -63,7 +61,7 @@ class AudioManager {
     }
 
     while (_audioQueue.length > _maxBufferSize) {
-      _audioQueue.removeAt(0);
+      _audioQueue.removeRange(0, _audioQueue.length - _maxBufferSize);
     }
   }
 
