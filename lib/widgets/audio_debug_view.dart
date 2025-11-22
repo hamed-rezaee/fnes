@@ -16,15 +16,6 @@ class AudioDebugView extends StatelessWidget {
           builder: (context, state) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Audio',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontFamily: 'MonospaceFont',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
               Container(
                 width: 320,
                 height: 150,
@@ -59,32 +50,12 @@ class AudioDebugView extends StatelessWidget {
                     TextSpan(
                       text: _formatLevel(state.peakAmplitude),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 9,
-                    color: Colors.black,
-                    fontFamily: 'MonospaceFont',
-                  ),
-                  children: [
                     const TextSpan(
-                      text: 'RMS Level: ',
+                      text: ' | RMS Level: ',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
                       text: _formatLevel(state.rmsLevel),
-                    ),
-                    const TextSpan(
-                      text: ' | Buffer: ',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text:
-                          '${state.bufferSize}/${state.waveformSamples.length}',
                     ),
                   ],
                 ),

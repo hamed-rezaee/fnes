@@ -173,10 +173,11 @@ class PaletteDebugView extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Column(
+                spacing: 4,
                 children: [
                   _buildDropdown<int>(
-                    label: 'Palette',
+                    label: 'Palette      ',
                     value: selectedPalette,
                     items: List.generate(
                       8,

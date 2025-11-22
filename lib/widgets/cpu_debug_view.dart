@@ -20,11 +20,6 @@ class CpuDebugView extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Registers',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
           RichText(
             text: TextSpan(
               style: const TextStyle(
@@ -41,7 +36,7 @@ class CpuDebugView extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 16),
           RichText(
             text: TextSpan(
               style: const TextStyle(
@@ -274,7 +269,7 @@ class CpuDebugView extends StatelessWidget {
     for (var i = 0; i < flagLabels.length; i++) {
       final color = rawFlags[i] == '1' ? '🟩' : '🟥';
 
-      buffer.write('${flagLabels[i]} $color ');
+      buffer.write('$color${flagLabels[i]}  ');
     }
 
     return '$buffer'.trim();

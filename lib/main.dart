@@ -12,10 +12,7 @@ import 'package:fnes/components/ppu.dart';
 import 'package:fnes/cubits/nes_emulator_cubit.dart';
 import 'package:fnes/cubits/nes_emulator_state.dart';
 import 'package:fnes/cubits/palette_debug_view_cubit.dart';
-import 'package:fnes/widgets/audio_debug_view.dart';
-import 'package:fnes/widgets/cpu_debug_view.dart';
-import 'package:fnes/widgets/memory_debug_view.dart';
-import 'package:fnes/widgets/palette_debug_view.dart';
+import 'package:fnes/widgets/debug_panel.dart';
 
 void main() => runApp(const MainApp());
 
@@ -277,25 +274,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     ],
                   ),
                   if (_nesEmulatorCubit.showDebugger)
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 24,
-                        children: [
-                          CpuDebugView(bus: _nesEmulatorCubit.bus),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            spacing: 16,
-                            children: [
-                              MemoryDebugView(cpu: _nesEmulatorCubit.bus.cpu),
-                              PaletteDebugView(bus: _nesEmulatorCubit.bus),
-                              AudioDebugView(apu: _nesEmulatorCubit.bus.apu),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                    DebugPanel(bus: _nesEmulatorCubit.bus),
                 ],
               ),
             ),
