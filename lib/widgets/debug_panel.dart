@@ -38,6 +38,7 @@ class _DebugPanelState extends State<DebugPanel> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
+              spacing: 6,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildCollapsibleSection(
@@ -45,19 +46,16 @@ class _DebugPanelState extends State<DebugPanel> {
                   title: 'Registers',
                   child: CpuDebugView(bus: widget.bus),
                 ),
-                const SizedBox(height: 16),
                 _buildCollapsibleSection(
                   key: 'memory',
                   title: 'Memory',
                   child: MemoryDebugView(cpu: widget.bus.cpu),
                 ),
-                const SizedBox(height: 16),
                 _buildCollapsibleSection(
                   key: 'palette',
                   title: 'Graphics',
                   child: PaletteDebugView(bus: widget.bus),
                 ),
-                const SizedBox(height: 16),
                 _buildCollapsibleSection(
                   key: 'audio',
                   title: 'Audio',

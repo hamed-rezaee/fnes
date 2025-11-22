@@ -152,80 +152,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                           ? _nesEmulatorCubit.resetEmulation
                           : null,
                     ),
-                    PopupMenuButton<FilterQuality>(
-                      icon: const Icon(Icons.tune),
-                      tooltip: 'Filter Quality',
-                      onSelected: _nesEmulatorCubit.changeFilterQuality,
-                      itemBuilder: (BuildContext context) => [
-                        PopupMenuItem<FilterQuality>(
-                          value: FilterQuality.none,
-                          child: Row(
-                            children: [
-                              Icon(
-                                _nesEmulatorCubit.filterQuality ==
-                                        FilterQuality.none
-                                    ? Icons.check_box
-                                    : Icons.check_box_outline_blank,
-                                size: 16,
-                                color: Colors.black,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Pixelated',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem<FilterQuality>(
-                          value: FilterQuality.high,
-                          child: Row(
-                            children: [
-                              Icon(
-                                _nesEmulatorCubit.filterQuality ==
-                                        FilterQuality.high
-                                    ? Icons.check_box
-                                    : Icons.check_box_outline_blank,
-                                size: 16,
-                                color: Colors.black,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'High',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _nesEmulatorCubit.audioEnabled
-                            ? Icons.volume_up
-                            : Icons.volume_off,
-                      ),
-                      tooltip: _nesEmulatorCubit.audioEnabled
-                          ? 'Disable Audio'
-                          : 'Enable Audio',
-                      onPressed: () => _nesEmulatorCubit.toggleAudio(),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _nesEmulatorCubit.showDebugger
-                            ? Icons.bug_report
-                            : Icons.bug_report_outlined,
-                      ),
-                      tooltip: _nesEmulatorCubit.showDebugger
-                          ? 'Hide Debugger'
-                          : 'Show Debugger',
-                      onPressed: () => _nesEmulatorCubit.toggleDebugger(),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.info_outline),
-                      tooltip: 'Cartridge Info',
-                      onPressed: _showROMInfoDialog,
-                    ),
+                    _buildSettingsMenu(),
                   ],
                 ),
               ],
@@ -312,6 +239,86 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   ),
           ),
         ),
+      );
+
+  Widget _buildSettingsMenu() => PopupMenuButton<String>(
+        icon: const Icon(Icons.settings),
+        tooltip: 'Settings',
+        itemBuilder: (BuildContext context) => [
+          PopupMenuItem<String>(
+            value: 'toggle_debugger',
+            child: Row(
+              spacing: 16,
+              children: [
+                Icon(
+                  _nesEmulatorCubit.showDebugger
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 16,
+                  color: Colors.black,
+                ),
+                const Text(
+                  'Debugger Panels',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            onTap: () => _nesEmulatorCubit.toggleDebugger(),
+          ),
+          PopupMenuItem<String>(
+            value: 'toggle_filter',
+            child: Row(
+              spacing: 16,
+              children: [
+                Icon(
+                  _nesEmulatorCubit.filterQuality == FilterQuality.high
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 16,
+                  color: Colors.black,
+                ),
+                const Text('Video Filter', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+            onTap: () => _nesEmulatorCubit.changeFilterQuality(
+              _nesEmulatorCubit.filterQuality == FilterQuality.high
+                  ? FilterQuality.none
+                  : FilterQuality.high,
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'toggle_audio',
+            child: Row(
+              spacing: 16,
+              children: [
+                Icon(
+                  _nesEmulatorCubit.audioEnabled
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 16,
+                  color: Colors.black,
+                ),
+                const Text(
+                  'Audio',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            onTap: () => _nesEmulatorCubit.toggleAudio(),
+          ),
+          const PopupMenuDivider(),
+          PopupMenuItem<String>(
+            value: 'rom_info',
+            onTap: _showROMInfoDialog,
+            child: const Row(
+              spacing: 16,
+              children: [
+                Icon(Icons.info_outline, size: 16, color: Colors.black),
+                Text('Cartridge Information', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
       );
 
   Future<void> _showROMInfoDialog() async {

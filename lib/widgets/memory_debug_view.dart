@@ -49,7 +49,7 @@ class MemoryDebugView extends StatelessWidget {
                     }
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: RichText(

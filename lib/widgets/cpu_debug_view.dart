@@ -19,6 +19,7 @@ class CpuDebugView extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 2,
         children: [
           RichText(
             text: TextSpan(
@@ -29,7 +30,7 @@ class CpuDebugView extends StatelessWidget {
               ),
               children: [
                 const TextSpan(
-                  text: 'Flags\n\t',
+                  text: 'Flags\n\t\n\t',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 TextSpan(text: flags),
@@ -53,7 +54,6 @@ class CpuDebugView extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 4),
           RichText(
             text: TextSpan(
               style: const TextStyle(
@@ -70,7 +70,6 @@ class CpuDebugView extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 4),
           RichText(
             text: TextSpan(
               style: const TextStyle(
@@ -112,7 +111,15 @@ class CpuDebugView extends StatelessWidget {
       );
 
   TextSpan _getDisassemblyRichText() {
-    final lines = disassembly.split('\n');
+    var lines = disassembly.split('\n');
+    final pcIndex = lines.indexWhere((line) => line.startsWith('-> '));
+
+    if (pcIndex == -1) return const TextSpan();
+
+    final startIndex = (pcIndex - 10).clamp(0, lines.length);
+    final endIndex = (pcIndex + 11).clamp(0, lines.length);
+    lines = lines.sublist(startIndex, endIndex);
+
     final spans = <TextSpan>[];
 
     for (var i = 0; i < lines.length; i++) {
