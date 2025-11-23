@@ -85,3 +85,14 @@ class NESEmulatorDebuggerToggled extends NESEmulatorState {
   @override
   List<Object?> get props => [isDebuggerVisible];
 }
+
+class NESEmulatorOnScreenControllerToggled extends NESEmulatorState {
+  const NESEmulatorOnScreenControllerToggled({
+    required this.isOnScreenControllerVisible,
+  });
+
+  final bool isOnScreenControllerVisible;
+
+  @override
+  List<Object?> get props => [isOnScreenControllerVisible];
+}

@@ -13,6 +13,7 @@ import 'package:fnes/cubits/nes_emulator_cubit.dart';
 import 'package:fnes/cubits/nes_emulator_state.dart';
 import 'package:fnes/cubits/palette_debug_view_cubit.dart';
 import 'package:fnes/widgets/debug_panel.dart';
+import 'package:fnes/widgets/on_screen_controller.dart';
 
 void main() => runApp(const MainApp());
 
@@ -220,12 +221,25 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
               border: Border.all(color: Colors.grey[600]!),
             ),
             child: (snapshot.hasData)
-                ? RawImage(
-                    image: snapshot.data,
-                    width: 512,
-                    height: 480,
-                    fit: BoxFit.fill,
-                    filterQuality: _nesEmulatorCubit.filterQuality,
+                ? Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      RawImage(
+                        image: snapshot.data,
+                        width: 512,
+                        height: 480,
+                        fit: BoxFit.fill,
+                        filterQuality: _nesEmulatorCubit.filterQuality,
+                      ),
+                      if (_nesEmulatorCubit.showOnScreenController)
+                        Transform.scale(
+                          scale: 0.8,
+                          child: const Opacity(
+                            opacity: 0.8,
+                            child: OnScreenController(),
+                          ),
+                        ),
+                    ],
                   )
                 : const Center(
                     child: Text(
@@ -305,6 +319,26 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
               ],
             ),
             onTap: () => _nesEmulatorCubit.toggleAudio(),
+          ),
+          PopupMenuItem<String>(
+            value: 'toggle_on_screen_controller',
+            child: Row(
+              spacing: 16,
+              children: [
+                Icon(
+                  _nesEmulatorCubit.showOnScreenController
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  size: 16,
+                  color: Colors.black,
+                ),
+                const Text(
+                  'On-Screen Controller',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            onTap: () => _nesEmulatorCubit.toggleOnScreenController(),
           ),
           const PopupMenuDivider(),
           PopupMenuItem<String>(

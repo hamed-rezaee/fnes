@@ -30,6 +30,7 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
   Image? _screenImage;
   FilterQuality _filterQuality = FilterQuality.none;
   bool _isDebuggerVisible = true;
+  bool _isOnScreenControllerVisible = true;
 
   int _frameCount = 0;
   int _skipFrames = 0;
@@ -58,6 +59,8 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
   FilterQuality get filterQuality => _filterQuality;
 
   bool get showDebugger => _isDebuggerVisible;
+
+  bool get showOnScreenController => _isOnScreenControllerVisible;
 
   bool get audioEnabled => _audioEnabled;
 
@@ -303,6 +306,16 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
     emit(NESEmulatorDebuggerToggled(isDebuggerVisible: _isDebuggerVisible));
   }
 
+  void toggleOnScreenController() {
+    _isOnScreenControllerVisible = !_isOnScreenControllerVisible;
+
+    emit(
+      NESEmulatorOnScreenControllerToggled(
+        isOnScreenControllerVisible: _isOnScreenControllerVisible,
+      ),
+    );
+  }
+
   void toggleAudio() {
     _audioEnabled = !_audioEnabled;
 
@@ -310,6 +323,48 @@ class NESEmulatorCubit extends Cubit<NESEmulatorState> {
       _audioPlayer.resume();
     } else {
       _audioPlayer.pause();
+    }
+  }
+
+  void pressButton(String buttonName) {
+    switch (buttonName) {
+      case 'up':
+        bus.controller.first |= 0x08;
+      case 'down':
+        bus.controller.first |= 0x04;
+      case 'left':
+        bus.controller.first |= 0x02;
+      case 'right':
+        bus.controller.first |= 0x01;
+      case 'a':
+        bus.controller.first |= 0x80;
+      case 'b':
+        bus.controller.first |= 0x40;
+      case 'start':
+        bus.controller.first |= 0x10;
+      case 'select':
+        bus.controller.first |= 0x20;
+    }
+  }
+
+  void releaseButton(String buttonName) {
+    switch (buttonName) {
+      case 'up':
+        bus.controller.first &= ~0x08;
+      case 'down':
+        bus.controller.first &= ~0x04;
+      case 'left':
+        bus.controller.first &= ~0x02;
+      case 'right':
+        bus.controller.first &= ~0x01;
+      case 'a':
+        bus.controller.first &= ~0x80;
+      case 'b':
+        bus.controller.first &= ~0x40;
+      case 'start':
+        bus.controller.first &= ~0x10;
+      case 'select':
+        bus.controller.first &= ~0x20;
     }
   }
 
