@@ -30,23 +30,6 @@ class CpuDebugView extends StatelessWidget {
               ),
               children: [
                 const TextSpan(
-                  text: 'Flags\n\t\n\t',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(text: flags),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          RichText(
-            text: TextSpan(
-              style: const TextStyle(
-                fontSize: 9,
-                color: Colors.black,
-                fontFamily: 'MonospaceFont',
-              ),
-              children: [
-                const TextSpan(
                   text: 'PC ',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
@@ -96,13 +79,29 @@ class CpuDebugView extends StatelessWidget {
               ],
             ),
           ),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 9,
+                color: Colors.black,
+                fontFamily: 'MonospaceFont',
+              ),
+              children: [
+                const TextSpan(
+                  text: 'Flags ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: flags),
+              ],
+            ),
+          ),
           const SizedBox(height: 8),
           if (disassembly.isNotEmpty) ...[
             const Text(
               'Disassembler',
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
             RichText(
               text: _getDisassemblyRichText(),
             ),
@@ -122,6 +121,12 @@ class CpuDebugView extends StatelessWidget {
 
     final spans = <TextSpan>[];
 
+    const cpuDebugTextStyle = TextStyle(
+      fontSize: 9,
+      color: Colors.black,
+      fontFamily: 'MonospaceFont',
+    );
+
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i];
 
@@ -131,24 +136,11 @@ class CpuDebugView extends StatelessWidget {
 
         if (parts.isNotEmpty) {
           spans
-            ..add(
-              const TextSpan(
-                text: '-> ',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
+            ..add(const TextSpan(text: '➜ ', style: cpuDebugTextStyle))
             ..add(
               TextSpan(
                 text: '${parts[0]} ',
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
+                style: cpuDebugTextStyle.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -158,11 +150,7 @@ class CpuDebugView extends StatelessWidget {
             spans.add(
               TextSpan(
                 text: parts.sublist(1).join(' '),
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
-                ),
+                style: cpuDebugTextStyle,
               ),
             );
           }
@@ -173,23 +161,11 @@ class CpuDebugView extends StatelessWidget {
 
         if (parts.isNotEmpty) {
           spans
-            ..add(
-              const TextSpan(
-                text: '   ',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
-                ),
-              ),
-            )
+            ..add(const TextSpan(text: '   ', style: cpuDebugTextStyle))
             ..add(
               TextSpan(
                 text: '${parts[0]} ',
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
+                style: cpuDebugTextStyle.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -199,39 +175,17 @@ class CpuDebugView extends StatelessWidget {
             spans.add(
               TextSpan(
                 text: parts.sublist(1).join(' '),
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
-                ),
+                style: cpuDebugTextStyle,
               ),
             );
           }
         }
       } else {
-        spans.add(
-          TextSpan(
-            text: line,
-            style: const TextStyle(
-              fontSize: 9,
-              color: Colors.black,
-              fontFamily: 'MonospaceFont',
-            ),
-          ),
-        );
+        spans.add(TextSpan(text: line, style: cpuDebugTextStyle));
       }
 
       if (i < lines.length - 1) {
-        spans.add(
-          const TextSpan(
-            text: '\n',
-            style: TextStyle(
-              fontSize: 9,
-              color: Colors.black,
-              fontFamily: 'MonospaceFont',
-            ),
-          ),
-        );
+        spans.add(const TextSpan(text: '\n', style: cpuDebugTextStyle));
       }
     }
 
@@ -276,7 +230,7 @@ class CpuDebugView extends StatelessWidget {
     for (var i = 0; i < flagLabels.length; i++) {
       final color = rawFlags[i] == '1' ? '🟩' : '🟥';
 
-      buffer.write('$color${flagLabels[i]}  ');
+      buffer.write('$color${flagLabels[i]} ');
     }
 
     return '$buffer'.trim();

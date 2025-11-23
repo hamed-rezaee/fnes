@@ -177,6 +177,33 @@ class PaletteDebugView extends StatelessWidget {
                 spacing: 4,
                 children: [
                   _buildDropdown<int>(
+                    label: 'Pattern Table',
+                    value: selectedPatternTable,
+                    items: [
+                      for (var i = 0; i < PatternTable.values.length; i++)
+                        DropdownMenuItem(
+                          value: PatternTable.values[i].index,
+                          child: Text(
+                            PatternTable.values[i].title,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black,
+                              fontWeight: cubit.selectedPatternTable == i
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              fontFamily: 'MonospaceFont',
+                            ),
+                          ),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        cubit.changePatternTable(value);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  _buildDropdown<int>(
                     label: 'Palette      ',
                     value: selectedPalette,
                     items: List.generate(
@@ -201,33 +228,6 @@ class PaletteDebugView extends StatelessWidget {
                     onChanged: (value) {
                       if (value != null) {
                         cubit.changePalette(value);
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 16),
-                  _buildDropdown<int>(
-                    label: 'Pattern Table',
-                    value: selectedPatternTable,
-                    items: [
-                      for (var i = 0; i < PatternTable.values.length; i++)
-                        DropdownMenuItem(
-                          value: PatternTable.values[i].index,
-                          child: Text(
-                            PatternTable.values[i].title,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.black,
-                              fontWeight: cubit.selectedPatternTable == i
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontFamily: 'MonospaceFont',
-                            ),
-                          ),
-                        ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        cubit.changePatternTable(value);
                       }
                     },
                   ),
