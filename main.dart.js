@@ -69060,7 +69060,7 @@ r=t.N
 q=A.Gi(A.em(A.c([A.mv(l.ay?B.fk:B.fl,B.j,n,16),B.Sp],s),B.a1,B.Q,B.Z,16),new A.aah(m),"toggle_debugger",r)
 p=A.Gi(A.em(A.c([A.mv(l.ax===B.dQ?B.fk:B.fl,B.j,n,16),B.Sr],s),B.a1,B.Q,B.Z,16),new A.aai(m),"toggle_filter",r)
 o=A.Gi(A.em(A.c([A.mv(l.fr?B.fk:B.fl,B.j,n,16),B.Sq],s),B.a1,B.Q,B.Z,16),new A.aaj(m),"toggle_audio",r)
-return A.c([q,p,o,A.Gi(A.em(A.c([A.mv(l.ch?B.fk:B.fl,B.j,n,16),B.Si],s),B.a1,B.Q,B.Z,16),new A.aak(m),"toggle_on_screen_controller",r),B.L4,A.Gi(B.Lt,m.ga3g(),"rom_info",r)],t.Do)},
+return A.c([q,p,o,A.Gi(A.em(A.c([A.mv(l.ch?B.fk:B.fl,B.j,n,16),B.So],s),B.a1,B.Q,B.Z,16),new A.aak(m),"toggle_on_screen_controller",r),B.L4,A.Gi(B.Lt,m.ga3g(),"rom_info",r)],t.Do)},
 $S:433}
 A.aah.prototype={
 $0(){var s,r=this.a.r
@@ -69103,8 +69103,8 @@ if(p.a&&p.b&&p.c!=null){s=p.c
 r=A.i(s).h("dI<1,2>")
 r=A.vA(new A.dI(s,r),new A.aam(),r.h("u.E"),t.iF)
 s=A.Z(r,A.i(r).h("u.E"))
-q=A.hD(s,B.a1,B.Q,B.eb,0)}else q=B.So
-return new A.oi(B.Sn,A.a4n(q,o,B.ay),A.c([new A.Ii(new A.aan(a),o,o,o,o,o,o,!1,o,!0,o,B.Sj,o)],t.p),o)},
+q=A.hD(s,B.a1,B.Q,B.eb,0)}else q=B.Sn
+return new A.oi(B.Sm,A.a4n(q,o,B.ay),A.c([new A.Ii(new A.aan(a),o,o,o,o,o,o,!1,o,!0,o,B.Si,o)],t.p),o)},
 $S:434}
 A.aam.prototype={
 $1(a){var s=null
@@ -69384,7 +69384,7 @@ q=t.p
 s=A.c([l,r,o,A.ji(m,m,m,B.aD,m,m,!0,m,A.bZ(A.c([B.O1,A.bZ(m,m,m,p)],s),m,B.aP,m),B.ae,m,m,B.ax,B.a4),B.k4],q)
 l=n.y
 l===$&&A.a()
-if(l.length!==0)B.b.O(s,A.c([B.Sl,B.N9,A.ji(m,m,m,B.aD,m,m,!0,m,n.XP(),B.ae,m,m,B.ax,B.a4)],q))
+if(l.length!==0)B.b.O(s,A.c([B.Sk,B.N9,A.ji(m,m,m,B.aD,m,m,!0,m,n.XP(),B.ae,m,m,B.ax,B.a4)],q))
 return A.hD(s,B.aS,B.Q,B.Z,2)},
 XP(){var s,r,q,p,o,n,m,l,k=null,j=this.y
 j===$&&A.a()
@@ -73495,8 +73495,8 @@ B.IC=new A.c6([50,B.i_,100,B.lu,200,B.lr,300,B.cO,350,B.Bn,400,B.f1,500,B.lw,600
 B.J2=new A.kh(B.IC,1,0.6196078431372549,0.6196078431372549,0.6196078431372549,B.d)
 B.am=new A.fu(6,700)
 B.QK=new A.k(!0,B.J2,null,null,null,null,32,B.am,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-B.Sm=new A.ea("No ROM Loaded",null,B.QK,null,null,null,null,null,null)
-B.Ap=new A.oq(B.a7,null,null,B.Sm,null)
+B.Sl=new A.ea("No ROM Loaded",null,B.QK,null,null,null,null,null,null)
+B.Ap=new A.oq(B.a7,null,null,B.Sl,null)
 B.Aq=new A.or(0,0)
 B.Ar=new A.tz(null,null,null,null,null,null,null,null,null)
 B.cM=new A.os(0,0,"none")
@@ -75265,8 +75265,8 @@ B.bI=new A.a67(1,"down")
 B.DX=new A.cC(58173,"MaterialIcons",!1)
 B.Ea=new A.hK(B.DX,16,B.j,null,null)
 B.c2=new A.k(!0,null,null,null,null,null,12,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-B.Sk=new A.ea("Cartridge Information",null,B.c2,null,null,null,null,null,null)
-B.Fk=s([B.Ea,B.Sk],t.p)
+B.Sj=new A.ea("Cartridge Information",null,B.c2,null,null,null,null,null,null)
+B.Fk=s([B.Ea,B.Sj],t.p)
 B.Lt=new A.x7(B.aJ,B.Q,B.Z,B.a1,null,B.bI,null,16,B.Fk,null)
 B.Lu=new A.Hc(null,null)
 B.cy=new A.ni(0,"idle")
@@ -75801,12 +75801,12 @@ B.QZ=new A.k(!0,B.K,null,".AppleSystemUIFont",null,null,null,null,null,null,null
 B.Rj=new A.k(!0,B.j,null,".AppleSystemUIFont",null,null,null,null,null,null,null,null,null,null,null,null,null,B.f,null,null,null,"blackRedwoodCity labelMedium",null,null,null,null)
 B.Om=new A.k(!0,B.j,null,".AppleSystemUIFont",null,null,null,null,null,null,null,null,null,null,null,null,null,B.f,null,null,null,"blackRedwoodCity labelSmall",null,null,null,null)
 B.Sh=new A.cZ(B.Q3,B.P8,B.Q4,B.QA,B.OM,B.OT,B.Pq,B.Qp,B.PC,B.R4,B.Oe,B.Ou,B.QZ,B.Rj,B.Om)
-B.Si=new A.ea("On-Screen Control",null,B.c2,null,null,null,null,null,null)
-B.Sj=new A.ea("Close",null,B.c2,null,null,null,null,null,null)
-B.Sl=new A.ea("Disassembler",null,B.hc,null,null,null,null,null,null)
+B.Si=new A.ea("Close",null,B.c2,null,null,null,null,null,null)
+B.Sk=new A.ea("Disassembler",null,B.hc,null,null,null,null,null,null)
 B.QN=new A.k(!0,null,null,null,null,null,14,B.am,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-B.Sn=new A.ea("Cartridge Information",null,B.QN,null,null,null,null,null,null)
-B.So=new A.ea("No ROM loaded.",null,B.c2,null,null,null,null,null,null)
+B.Sm=new A.ea("Cartridge Information",null,B.QN,null,null,null,null,null,null)
+B.Sn=new A.ea("No ROM loaded.",null,B.c2,null,null,null,null,null,null)
+B.So=new A.ea("On-Screen Controller",null,B.c2,null,null,null,null,null,null)
 B.Sp=new A.ea("Debugger Panels",null,B.c2,null,null,null,null,null,null)
 B.Sq=new A.ea("Audio",null,B.c2,null,null,null,null,null,null)
 B.Sr=new A.ea("Video Filter",null,B.c2,null,null,null,null,null,null)
