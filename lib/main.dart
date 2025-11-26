@@ -101,7 +101,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   IconButton(
                     icon: const Icon(Icons.folder_open),
                     tooltip: 'Load ROM',
-                    onPressed: () => nesController.loadROMFile(),
+                    onPressed: nesController.loadROMFile,
                   ),
                   IconButton(
                     icon: Icon(
@@ -197,7 +197,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
     required bool showOnScreenController,
   }) =>
       GestureDetector(
-        onTap: () => _focusNode.requestFocus(),
+        onTap: _focusNode.requestFocus,
         child: StreamBuilder<Image>(
           stream: nesController.imageStream,
           builder: (context, snapshot) => Container(
@@ -254,7 +254,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
           icon: const Icon(Icons.settings),
           tooltip: 'Settings',
           itemBuilder: (BuildContext context) => [
-            // Emulation Settings
             PopupMenuItem<String>(
               value: 'toggle_filter',
               child: Row(
@@ -278,6 +277,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
             ),
             PopupMenuItem<String>(
               value: 'toggle_uncap_framerate',
+              onTap: nesController.toggleUncapFramerate,
               child: Row(
                 spacing: 16,
                 children: [
@@ -294,12 +294,11 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   ),
                 ],
               ),
-              onTap: () => nesController.toggleUncapFramerate(),
             ),
             const PopupMenuDivider(),
-            // Audio Settings
             PopupMenuItem<String>(
               value: 'toggle_audio',
+              onTap: nesController.toggleAudio,
               child: Row(
                 spacing: 16,
                 children: [
@@ -316,12 +315,11 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   ),
                 ],
               ),
-              onTap: () => nesController.toggleAudio(),
             ),
             const PopupMenuDivider(),
-            // UI Settings
             PopupMenuItem<String>(
               value: 'toggle_debugger',
+              onTap: nesController.toggleDebugger,
               child: Row(
                 spacing: 16,
                 children: [
@@ -338,10 +336,10 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   ),
                 ],
               ),
-              onTap: () => nesController.toggleDebugger(),
             ),
             PopupMenuItem<String>(
               value: 'toggle_on_screen_controller',
+              onTap: nesController.toggleOnScreenController,
               child: Row(
                 spacing: 16,
                 children: [
@@ -358,10 +356,8 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   ),
                 ],
               ),
-              onTap: () => nesController.toggleOnScreenController(),
             ),
             const PopupMenuDivider(),
-            // Information
             PopupMenuItem<String>(
               value: 'rom_info',
               onTap: _showROMInfoDialog,
