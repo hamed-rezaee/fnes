@@ -164,7 +164,7 @@ class NESEmulatorController {
 
   void resetEmulation() {
     bus.reset();
-    _audioPlayer.clear();
+
     startEmulation();
   }
 
