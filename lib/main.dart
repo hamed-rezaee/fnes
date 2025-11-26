@@ -254,26 +254,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
           icon: const Icon(Icons.settings),
           tooltip: 'Settings',
           itemBuilder: (BuildContext context) => [
-            PopupMenuItem<String>(
-              value: 'toggle_debugger',
-              child: Row(
-                spacing: 16,
-                children: [
-                  Icon(
-                    showDebugger
-                        ? Icons.check_box
-                        : Icons.check_box_outline_blank,
-                    size: 16,
-                    color: Colors.black,
-                  ),
-                  const Text(
-                    'Debugger Panels',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-              onTap: () => nesController.toggleDebugger(),
-            ),
+            // Emulation Settings
             PopupMenuItem<String>(
               value: 'toggle_filter',
               child: Row(
@@ -296,6 +277,28 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
               ),
             ),
             PopupMenuItem<String>(
+              value: 'toggle_uncap_framerate',
+              child: Row(
+                spacing: 16,
+                children: [
+                  Icon(
+                    uncapFramerate
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    size: 16,
+                    color: Colors.black,
+                  ),
+                  const Text(
+                    'Uncap Framerate',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+              onTap: () => nesController.toggleUncapFramerate(),
+            ),
+            const PopupMenuDivider(),
+            // Audio Settings
+            PopupMenuItem<String>(
               value: 'toggle_audio',
               child: Row(
                 spacing: 16,
@@ -314,6 +317,28 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
               onTap: () => nesController.toggleAudio(),
+            ),
+            const PopupMenuDivider(),
+            // UI Settings
+            PopupMenuItem<String>(
+              value: 'toggle_debugger',
+              child: Row(
+                spacing: 16,
+                children: [
+                  Icon(
+                    showDebugger
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    size: 16,
+                    color: Colors.black,
+                  ),
+                  const Text(
+                    'Debugger Panels',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+              onTap: () => nesController.toggleDebugger(),
             ),
             PopupMenuItem<String>(
               value: 'toggle_on_screen_controller',
@@ -335,27 +360,8 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
               ),
               onTap: () => nesController.toggleOnScreenController(),
             ),
-            PopupMenuItem<String>(
-              value: 'toggle_uncap_framerate',
-              child: Row(
-                spacing: 16,
-                children: [
-                  Icon(
-                    uncapFramerate
-                        ? Icons.check_box
-                        : Icons.check_box_outline_blank,
-                    size: 16,
-                    color: Colors.black,
-                  ),
-                  const Text(
-                    'Uncap Framerate',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-              onTap: () => nesController.toggleUncapFramerate(),
-            ),
             const PopupMenuDivider(),
+            // Information
             PopupMenuItem<String>(
               value: 'rom_info',
               onTap: _showROMInfoDialog,
