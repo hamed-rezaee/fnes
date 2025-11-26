@@ -26,6 +26,7 @@ class _DebugPanelState extends State<DebugPanel> {
   @override
   void initState() {
     super.initState();
+
     _expandedSections = {
       'registers': true,
       'memory': true,

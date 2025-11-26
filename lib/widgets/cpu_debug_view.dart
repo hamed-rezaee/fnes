@@ -87,22 +87,23 @@ class _CpuDebugViewState extends State<CpuDebugView> {
                 children: [
                   const TextSpan(
                     text: 'AC ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: acRegister),
                   const TextSpan(
                     text: ' | X ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: xRegister),
                   const TextSpan(
                     text: ' | Y ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: yRegister),
                 ],
               ),
             ),
+            const SizedBox(height: 4),
             RichText(
               text: TextSpan(
                 style: const TextStyle(
@@ -113,7 +114,7 @@ class _CpuDebugViewState extends State<CpuDebugView> {
                 children: [
                   const TextSpan(
                     text: 'Flags ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: flags),
                 ],
@@ -123,7 +124,7 @@ class _CpuDebugViewState extends State<CpuDebugView> {
             if (disassembly.isNotEmpty) ...[
               const Text(
                 'Disassembler',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 2),
               RichText(

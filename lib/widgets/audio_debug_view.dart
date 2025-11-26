@@ -43,14 +43,14 @@ class _AudioDebugViewState extends State<AudioDebugView> {
           children: [
             Container(
               width: 320,
-              height: 150,
+              height: 100,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey.shade300),
                 color: Colors.grey.shade100,
               ),
               child: CustomPaint(painter: WaveformPainter(samples: samples)),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             RichText(
               text: TextSpan(
                 style: const TextStyle(
@@ -61,17 +61,17 @@ class _AudioDebugViewState extends State<AudioDebugView> {
                 children: [
                   const TextSpan(
                     text: 'Current Level: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: _formatLevel(currentAmplitude)),
                   const TextSpan(
                     text: ' | Peak: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: _formatLevel(peakAmplitude)),
                   const TextSpan(
                     text: ' | RMS Level: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: _formatLevel(rmsLevel)),
                 ],
@@ -82,7 +82,7 @@ class _AudioDebugViewState extends State<AudioDebugView> {
       });
 
   static String _formatLevel(double level) {
-    final percentage = (level * 100).toStringAsFixed(1);
+    final percentage = (level * 50).toStringAsFixed(1);
 
     return '$percentage%';
   }
@@ -105,8 +105,8 @@ class WaveformPainter extends CustomPainter {
     if (samples.isEmpty) return;
 
     final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 0.5
+      ..color = Colors.blueGrey
+      ..strokeWidth = 0.8
       ..style = PaintingStyle.stroke;
 
     final centerY = size.height / 2;
@@ -131,22 +131,6 @@ class WaveformPainter extends CustomPainter {
     }
 
     canvas.drawPath(path, paint);
-
-    final thresholdPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.3)
-      ..strokeWidth = 0.5;
-
-    canvas
-      ..drawLine(
-        Offset(0, centerY - scaleY),
-        Offset(size.width, centerY - scaleY),
-        thresholdPaint,
-      )
-      ..drawLine(
-        Offset(0, centerY + scaleY),
-        Offset(size.width, centerY + scaleY),
-        thresholdPaint,
-      );
   }
 
   @override

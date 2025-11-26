@@ -50,7 +50,7 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
                         child: Text(
                           region.title,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: selectedRegion == region
                                 ? FontWeight.bold
                                 : FontWeight.normal,
@@ -90,7 +90,7 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 8),
           Container(

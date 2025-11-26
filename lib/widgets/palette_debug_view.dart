@@ -18,7 +18,7 @@ enum PatternTable {
   final String title;
 }
 
-class PaletteDebugView extends StatelessWidget {
+class PaletteDebugView extends StatefulWidget {
   const PaletteDebugView({
     required this.bus,
     required this.nesEmulatorController,
@@ -28,16 +28,28 @@ class PaletteDebugView extends StatelessWidget {
   final Bus bus;
   final NESEmulatorController nesEmulatorController;
 
+  @override
+  State<PaletteDebugView> createState() => _PaletteDebugViewState();
+}
+
+class _PaletteDebugViewState extends State<PaletteDebugView> {
   static const int _tileSize = 8;
   static const int _tilesPerRow = 16;
   static const int _imageSize = 128;
 
+  late final PaletteDebugViewController controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller = PaletteDebugViewController(
+      nesEmulatorController: widget.nesEmulatorController,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final controller = PaletteDebugViewController(
-      nesEmulatorController: nesEmulatorController,
-    );
-
     return Watch((_) {
       final selectedPalette = controller.selectedPalette.value;
       final selectedPatternTable = controller.selectedPatternTable.value;
@@ -58,7 +70,7 @@ class PaletteDebugView extends StatelessWidget {
                       child: Text(
                         PatternTable.values[i].title,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 10,
                           color: Colors.black,
                           fontWeight: selectedPatternTable == i
                               ? FontWeight.bold
@@ -84,7 +96,7 @@ class PaletteDebugView extends StatelessWidget {
                       child: Text(
                         '$index',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 10,
                           color: Colors.black,
                           fontWeight: selectedPalette == index
                               ? FontWeight.bold
@@ -103,6 +115,7 @@ class PaletteDebugView extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           FutureBuilder<Image>(
+            key: ValueKey('$selectedPatternTable-$selectedPalette'),
             future: _createPatternImage(selectedPatternTable, selectedPalette),
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const SizedBox.shrink();
@@ -117,20 +130,20 @@ class PaletteDebugView extends StatelessWidget {
 
   int _readCharData(int address) {
     try {
-      return bus.ppu.ppuRead(address);
+      return widget.bus.ppu.ppuRead(address);
     } on Exception catch (e) {
       developer.log('Error reading CHR data: $e');
 
-      if (bus.cart != null) {
+      if (widget.bus.cart != null) {
         var data = 0;
 
-        if (bus.cart!.ppuRead(address, (value) => data = value)) {
+        if (widget.bus.cart!.ppuRead(address, (value) => data = value)) {
           return data;
         }
       }
 
-      return (address < bus.ppu.patternTable.length)
-          ? bus.ppu.patternTable[address]
+      return (address < widget.bus.ppu.patternTable.length)
+          ? widget.bus.ppu.patternTable[address]
           : 0;
     }
   }
@@ -142,11 +155,11 @@ class PaletteDebugView extends StatelessWidget {
 
     try {
       final paletteAddress = 0x3F00 + (selectedPalette << 2) + pixelValue;
-      final colorIndex = bus.ppu.ppuRead(paletteAddress) & 0x3F;
+      final colorIndex = widget.bus.ppu.ppuRead(paletteAddress) & 0x3F;
 
-      return bus.ppu.palScreen[colorIndex.clamp(
+      return widget.bus.ppu.palScreen[colorIndex.clamp(
         0,
-        bus.ppu.palScreen.length - 1,
+        widget.bus.ppu.palScreen.length - 1,
       )];
     } on Exception catch (e) {
       developer.log('Error getting pixel color: $e');
@@ -222,7 +235,7 @@ class PaletteDebugView extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 8),
           Container(
@@ -238,7 +251,7 @@ class PaletteDebugView extends StatelessWidget {
                 onChanged: onChanged,
                 isDense: true,
                 focusColor: Colors.white,
-                style: const TextStyle(fontSize: 11, color: Colors.black),
+                style: const TextStyle(fontSize: 10, color: Colors.black),
               ),
             ),
           ),

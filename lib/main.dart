@@ -16,9 +16,9 @@ import 'package:signals/signals_flutter.dart';
 late final NESEmulatorController nesController;
 
 void main() {
-  nesController = NESEmulatorController(
-    bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU()),
-  );
+  nesController =
+      NESEmulatorController(bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU()));
+
   runApp(const MainApp());
 }
 
@@ -56,6 +56,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
   @override
   void initState() {
     super.initState();
+
     _emulationTicker = createTicker((_) => _updateEmulation());
     _focusNode = FocusNode();
 
@@ -92,7 +93,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
             elevation: 0,
             title: Text(
               'Flutter NES Emulator${romName != null ? ' - $romName' : ''}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             actions: [
               Row(
