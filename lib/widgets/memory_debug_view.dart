@@ -1,66 +1,75 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fnes/components/cpu.dart';
-import 'package:fnes/cubits/memory_debug_view_cubit.dart';
-import 'package:fnes/cubits/memory_debug_view_state.dart';
+import 'package:fnes/controllers/memory_debug_view_controller.dart';
+import 'package:signals/signals_flutter.dart';
 
-class MemoryDebugView extends StatelessWidget {
+class MemoryDebugView extends StatefulWidget {
   const MemoryDebugView({required this.cpu, super.key});
 
   final CPU cpu;
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-        create: (_) => MemoryDebugViewCubit(),
-        child: BlocBuilder<MemoryDebugViewCubit, MemoryDebugViewState>(
-          builder: (context, state) {
-            final cubit = context.read<MemoryDebugViewCubit>();
+  State<MemoryDebugView> createState() => _MemoryDebugViewState();
+}
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDropdown<MemoryRegion>(
-                  context: context,
-                  label: 'Region',
-                  value: state.selectedRegion,
-                  items: MemoryRegion.values
-                      .map(
-                        (region) => DropdownMenuItem(
-                          value: region,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(
-                              region.title,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: cubit.selectedRegion == region
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                fontFamily: 'MonospaceFont',
-                              ),
-                            ),
+class _MemoryDebugViewState extends State<MemoryDebugView> {
+  late final MemoryDebugViewController controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller = MemoryDebugViewController();
+  }
+
+  @override
+  Widget build(BuildContext context) => Watch((_) {
+        final selectedRegion = controller.selectedRegion.value;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDropdown<MemoryRegion>(
+              context: context,
+              label: 'Region',
+              value: selectedRegion,
+              items: MemoryRegion.values
+                  .map(
+                    (region) => DropdownMenuItem(
+                      value: region,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          region.title,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: selectedRegion == region
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontFamily: 'MonospaceFont',
                           ),
                         ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      cubit.selectRegion(value);
-                    }
-                  },
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) controller.selectRegion(value);
+              },
+            ),
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: RichText(
+                text: _getMemoryWindowRichText(
+                  cpu: widget.cpu,
+                  region: selectedRegion,
                 ),
-                const SizedBox(height: 16),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: RichText(
-                    text: _getMemoryWindowRichText(state.selectedRegion),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      );
+              ),
+            ),
+          ],
+        );
+      });
 
   Widget _buildDropdown<T>({
     required BuildContext context,
@@ -101,7 +110,10 @@ class MemoryDebugView extends StatelessWidget {
         ],
       );
 
-  TextSpan _getMemoryWindowRichText(MemoryRegion region) {
+  TextSpan _getMemoryWindowRichText({
+    required CPU cpu,
+    required MemoryRegion region,
+  }) {
     final spans = <TextSpan>[];
     final int startAddress;
     final int length;

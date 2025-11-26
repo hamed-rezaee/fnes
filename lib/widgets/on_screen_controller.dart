@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fnes/cubits/nes_emulator_cubit.dart';
+import 'package:fnes/controllers/nes_emulator_controller.dart';
 
 class OnScreenController extends StatefulWidget {
-  const OnScreenController({super.key});
+  const OnScreenController({required this.controller, super.key});
+
+  final NESEmulatorController controller;
 
   @override
   State<OnScreenController> createState() => _OnScreenControllerState();
@@ -15,13 +16,13 @@ class _OnScreenControllerState extends State<OnScreenController> {
   void _onButtonDown(String buttonName) {
     setState(() => _pressedButtons.add(buttonName));
 
-    context.read<NESEmulatorCubit>().pressButton(buttonName);
+    widget.controller.pressButton(buttonName);
   }
 
   void _onButtonUp(String buttonName) {
     setState(() => _pressedButtons.remove(buttonName));
 
-    context.read<NESEmulatorCubit>().releaseButton(buttonName);
+    widget.controller.releaseButton(buttonName);
   }
 
   @override

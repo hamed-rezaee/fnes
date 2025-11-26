@@ -4,10 +4,9 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart' hide Image;
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fnes/components/bus.dart';
-import 'package:fnes/cubits/palette_debug_view_cubit.dart';
-import 'package:fnes/cubits/palette_debug_view_state.dart';
+import 'package:fnes/controllers/palette_debug_view_controller.dart';
+import 'package:signals/signals_flutter.dart';
 
 enum PatternTable {
   background('Background'),
@@ -161,90 +160,83 @@ class PaletteDebugView extends StatelessWidget {
       );
 
   @override
-  Widget build(
-    BuildContext context,
-  ) =>
-      BlocBuilder<PaletteDebugViewCubit, PaletteDebugViewState>(
-        builder: (context, state) {
-          final cubit = context.read<PaletteDebugViewCubit>();
-          final selectedPalette = cubit.selectedPalette;
-          final selectedPatternTable = cubit.selectedPatternTable;
+  Widget build(BuildContext context) {
+    final controller = PaletteDebugViewController();
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Watch((_) {
+      final selectedPalette = controller.selectedPalette.value;
+      final selectedPatternTable = controller.selectedPatternTable.value;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            spacing: 4,
             children: [
-              Column(
-                spacing: 4,
-                children: [
-                  _buildDropdown<int>(
-                    label: 'Pattern Table',
-                    value: selectedPatternTable,
-                    items: [
-                      for (var i = 0; i < PatternTable.values.length; i++)
-                        DropdownMenuItem(
-                          value: PatternTable.values[i].index,
-                          child: Text(
-                            PatternTable.values[i].title,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.black,
-                              fontWeight: cubit.selectedPatternTable == i
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontFamily: 'MonospaceFont',
-                            ),
-                          ),
-                        ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        cubit.changePatternTable(value);
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 16),
-                  _buildDropdown<int>(
-                    label: 'Palette      ',
-                    value: selectedPalette,
-                    items: List.generate(
-                      8,
-                      (index) => DropdownMenuItem(
-                        value: index,
-                        child: Center(
-                          child: Text(
-                            '$index',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.black,
-                              fontWeight: cubit.selectedPalette == index
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontFamily: 'MonospaceFont',
-                            ),
-                          ),
+              _buildDropdown<int>(
+                label: 'Pattern Table',
+                value: selectedPatternTable,
+                items: [
+                  for (var i = 0; i < PatternTable.values.length; i++)
+                    DropdownMenuItem(
+                      value: PatternTable.values[i].index,
+                      child: Text(
+                        PatternTable.values[i].title,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.black,
+                          fontWeight: selectedPatternTable == i
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontFamily: 'MonospaceFont',
                         ),
                       ),
                     ),
-                    onChanged: (value) {
-                      if (value != null) {
-                        cubit.changePalette(value);
-                      }
-                    },
-                  ),
                 ],
+                onChanged: (value) {
+                  if (value != null) controller.changePatternTable(value);
+                },
               ),
-              const SizedBox(height: 8),
-              FutureBuilder<Image>(
-                future:
-                    _createPatternImage(selectedPatternTable, selectedPalette),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return const SizedBox.shrink();
-
-                  return _buildPatternTable(snapshot.data);
+              const SizedBox(width: 16),
+              _buildDropdown<int>(
+                label: 'Palette      ',
+                value: selectedPalette,
+                items: List.generate(
+                  8,
+                  (index) => DropdownMenuItem(
+                    value: index,
+                    child: Center(
+                      child: Text(
+                        '$index',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.black,
+                          fontWeight: selectedPalette == index
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontFamily: 'MonospaceFont',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                onChanged: (value) {
+                  if (value != null) controller.changePalette(value);
                 },
               ),
             ],
-          );
-        },
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<Image>(
+            future: _createPatternImage(selectedPatternTable, selectedPalette),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
+
+              return _buildPatternTable(snapshot.data);
+            },
+          ),
+        ],
       );
+    });
+  }
 }

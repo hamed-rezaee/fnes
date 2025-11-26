@@ -1,74 +1,88 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fnes/components/apu.dart';
-import 'package:fnes/cubits/audio_debug_view_cubit.dart';
-import 'package:fnes/cubits/audio_debug_view_state.dart';
+import 'package:fnes/controllers/audio_debug_view_controller.dart';
+import 'package:signals/signals_flutter.dart';
 
-class AudioDebugView extends StatelessWidget {
+class AudioDebugView extends StatefulWidget {
   const AudioDebugView({required this.apu, super.key});
 
   final APU apu;
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-        create: (_) => AudioDebugViewCubit(apu: apu),
-        child: BlocBuilder<AudioDebugViewCubit, AudioDebugViewState>(
-          builder: (context, state) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 320,
-                height: 150,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  color: Colors.grey.shade100,
-                ),
-                child: CustomPaint(
-                  painter: WaveformPainter(samples: state.waveformSamples),
-                ),
+  State<AudioDebugView> createState() => _AudioDebugViewState();
+}
+
+class _AudioDebugViewState extends State<AudioDebugView> {
+  late final AudioDebugViewController controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller = AudioDebugViewController(apu: widget.apu);
+  }
+
+  @override
+  Widget build(BuildContext context) => Watch((_) {
+        final samples = controller.waveformSamples.value;
+        final currentAmplitude = controller.currentAmplitude.value;
+        final peakAmplitude = controller.peakAmplitude.value;
+        final rmsLevel = controller.rmsLevel.value;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 320,
+              height: 150,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                color: Colors.grey.shade100,
               ),
-              const SizedBox(height: 8),
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 9,
-                    color: Colors.black,
-                    fontFamily: 'MonospaceFont',
+              child: CustomPaint(painter: WaveformPainter(samples: samples)),
+            ),
+            const SizedBox(height: 8),
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  fontSize: 9,
+                  color: Colors.black,
+                  fontFamily: 'MonospaceFont',
+                ),
+                children: [
+                  const TextSpan(
+                    text: 'Current Level: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  children: [
-                    const TextSpan(
-                      text: 'Current Level: ',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text: _formatLevel(state.currentAmplitude),
-                    ),
-                    const TextSpan(
-                      text: ' | Peak: ',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text: _formatLevel(state.peakAmplitude),
-                    ),
-                    const TextSpan(
-                      text: ' | RMS Level: ',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text: _formatLevel(state.rmsLevel),
-                    ),
-                  ],
-                ),
+                  TextSpan(text: _formatLevel(currentAmplitude)),
+                  const TextSpan(
+                    text: ' | Peak: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(text: _formatLevel(peakAmplitude)),
+                  const TextSpan(
+                    text: ' | RMS Level: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(text: _formatLevel(rmsLevel)),
+                ],
               ),
-            ],
-          ),
-        ),
-      );
+            ),
+          ],
+        );
+      });
 
   static String _formatLevel(double level) {
     final percentage = (level * 100).toStringAsFixed(1);
 
     return '$percentage%';
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+
+    super.dispose();
   }
 }
 
