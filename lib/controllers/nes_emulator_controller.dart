@@ -20,7 +20,7 @@ class NESEmulatorController {
       StreamController<Image>.broadcast();
 
   static const int _maxFrameSkip = 0;
-  static const double _targetFrameTime = 1000.0 / 60.0;
+  static const double _targetFrameTimeMs = 1000.0 / 60.0;
 
   final Signal<bool> isRunning = signal(false);
   final Signal<bool> isROMLoaded = signal(false);
@@ -46,6 +46,7 @@ class NESEmulatorController {
   int _frameCount = 0;
   int _skipFrames = 0;
   DateTime _lastFPSUpdate = DateTime.now();
+  late DateTime _lastFrameTime;
 
   final Stopwatch _frameStopwatch = Stopwatch();
 
@@ -147,6 +148,7 @@ class NESEmulatorController {
     _skipFrames = 0;
     _lastFPSUpdate = DateTime.now();
     _frameStopwatch.start();
+    _lastFrameTime = DateTime.now();
 
     if (audioEnabled.value) {
       _audioPlayer.resume();
@@ -178,12 +180,13 @@ class NESEmulatorController {
   void updateEmulation() {
     if (!isRunning.value) return;
 
-    final elapsed = _frameStopwatch.elapsedMicroseconds / 1000.0;
+    final now = DateTime.now();
+    final elapsedMicroseconds = now.difference(_lastFrameTime).inMicroseconds;
+    final elapsedMs = elapsedMicroseconds / 1000.0;
 
-    if (elapsed < _targetFrameTime) {
-      return;
-    }
-    _frameStopwatch.reset();
+    if (elapsedMs < _targetFrameTimeMs) return;
+
+    _lastFrameTime = now;
 
     try {
       if (isROMLoaded.value && bus.cart != null) {

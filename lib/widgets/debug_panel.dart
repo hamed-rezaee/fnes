@@ -49,8 +49,9 @@ class _DebugPanelState extends State<DebugPanel> {
                   key: 'registers',
                   title: 'Registers',
                   child: CpuDebugView(
-                      bus: widget.bus,
-                      nesEmulatorController: widget.nesEmulatorController),
+                    bus: widget.bus,
+                    nesEmulatorController: widget.nesEmulatorController,
+                  ),
                 ),
                 _buildCollapsibleSection(
                   key: 'memory',
