@@ -221,7 +221,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                         Transform.scale(
                           scale: 0.8,
                           child: Opacity(
-                            opacity: 0.8,
+                            opacity: 0.7,
                             child:
                                 OnScreenController(controller: nesController),
                           ),

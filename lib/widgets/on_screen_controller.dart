@@ -75,10 +75,10 @@ class _OnScreenControllerState extends State<OnScreenController> {
   Widget _buildDPadButton(String direction, IconData icon) {
     final isPressed = _pressedButtons.contains(direction);
 
-    return GestureDetector(
-      onTapDown: (_) => _onButtonDown(direction),
-      onTapUp: (_) => _onButtonUp(direction),
-      onTapCancel: () => _onButtonUp(direction),
+    return Listener(
+      onPointerDown: (_) => _onButtonDown(direction),
+      onPointerUp: (_) => _onButtonUp(direction),
+      onPointerCancel: (_) => _onButtonUp(direction),
       child: Container(
         width: 48,
         height: 48,
@@ -113,10 +113,10 @@ class _OnScreenControllerState extends State<OnScreenController> {
   Widget _buildUtilityButton(String buttonName, String label) {
     final isPressed = _pressedButtons.contains(buttonName);
 
-    return GestureDetector(
-      onTapDown: (_) => _onButtonDown(buttonName),
-      onTapUp: (_) => _onButtonUp(buttonName),
-      onTapCancel: () => _onButtonUp(buttonName),
+    return Listener(
+      onPointerDown: (_) => _onButtonDown(buttonName),
+      onPointerUp: (_) => _onButtonUp(buttonName),
+      onPointerCancel: (_) => _onButtonUp(buttonName),
       child: Container(
         width: 100,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -166,10 +166,10 @@ class _OnScreenControllerState extends State<OnScreenController> {
   ) {
     final isPressed = _pressedButtons.contains(buttonName);
 
-    return GestureDetector(
-      onTapDown: (_) => _onButtonDown(buttonName),
-      onTapUp: (_) => _onButtonUp(buttonName),
-      onTapCancel: () => _onButtonUp(buttonName),
+    return Listener(
+      onPointerDown: (_) => _onButtonDown(buttonName),
+      onPointerUp: (_) => _onButtonUp(buttonName),
+      onPointerCancel: (_) => _onButtonUp(buttonName),
       child: Container(
         width: size,
         height: size,
