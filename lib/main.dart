@@ -248,6 +248,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
         final audioEnabled = nesController.audioEnabled.value;
         final showOnScreenController =
             nesController.isOnScreenControllerVisible.value;
+        final uncapFramerate = nesController.uncapFramerate.value;
 
         return PopupMenuButton<String>(
           icon: const Icon(Icons.settings),
@@ -333,6 +334,26 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
               onTap: () => nesController.toggleOnScreenController(),
+            ),
+            PopupMenuItem<String>(
+              value: 'toggle_uncap_framerate',
+              child: Row(
+                spacing: 16,
+                children: [
+                  Icon(
+                    uncapFramerate
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    size: 16,
+                    color: Colors.black,
+                  ),
+                  const Text(
+                    'Uncap Framerate',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+              onTap: () => nesController.toggleUncapFramerate(),
             ),
             const PopupMenuDivider(),
             PopupMenuItem<String>(

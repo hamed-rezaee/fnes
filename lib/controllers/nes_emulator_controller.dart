@@ -32,6 +32,7 @@ class NESEmulatorController {
   final Signal<bool> isOnScreenControllerVisible = signal(false);
   final Signal<double> currentFPS = signal(0);
   final Signal<bool> audioEnabled = signal(true);
+  final Signal<bool> uncapFramerate = signal(true);
 
   final Signal<bool> isLoadingROM = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
@@ -184,7 +185,7 @@ class NESEmulatorController {
     final elapsedMicroseconds = now.difference(_lastFrameTime).inMicroseconds;
     final elapsedMs = elapsedMicroseconds / 1000.0;
 
-    if (elapsedMs < _targetFrameTimeMs) return;
+    if (!uncapFramerate.value && elapsedMs < _targetFrameTimeMs) return;
 
     _lastFrameTime = now;
 
@@ -280,6 +281,8 @@ class NESEmulatorController {
 
   void changeFilterQuality(FilterQuality quality) =>
       filterQuality.value = quality;
+
+  void toggleUncapFramerate() => uncapFramerate.value = !uncapFramerate.value;
 
   void toggleDebugger() => isDebuggerVisible.value = !isDebuggerVisible.value;
 
