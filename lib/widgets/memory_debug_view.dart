@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:fnes/components/cpu.dart';
 import 'package:fnes/controllers/memory_debug_view_controller.dart';
+import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:signals/signals_flutter.dart';
 
 class MemoryDebugView extends StatefulWidget {
-  const MemoryDebugView({required this.cpu, super.key});
+  const MemoryDebugView({
+    required this.nesEmulatorController,
+    required this.cpu,
+    super.key,
+  });
 
+  final NESEmulatorController nesEmulatorController;
   final CPU cpu;
 
   @override
@@ -25,6 +31,8 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
   @override
   Widget build(BuildContext context) => Watch((_) {
         final selectedRegion = controller.selectedRegion.value;
+
+        widget.nesEmulatorController.frameUpdateTrigger.value;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

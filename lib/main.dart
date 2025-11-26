@@ -180,7 +180,11 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     ),
                   ],
                 ),
-                if (isDebuggerVisible) DebugPanel(bus: nesController.bus),
+                if (isDebuggerVisible)
+                  DebugPanel(
+                    nesEmulatorController: nesController,
+                    bus: nesController.bus,
+                  ),
               ],
             ),
           ),

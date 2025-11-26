@@ -29,7 +29,7 @@ class NESEmulatorController {
   final Signal<FilterQuality> filterQuality =
       signal<FilterQuality>(FilterQuality.none);
   final Signal<bool> isDebuggerVisible = signal(true);
-  final Signal<bool> isOnScreenControllerVisible = signal(true);
+  final Signal<bool> isOnScreenControllerVisible = signal(false);
   final Signal<double> currentFPS = signal(0);
   final Signal<bool> audioEnabled = signal(true);
 

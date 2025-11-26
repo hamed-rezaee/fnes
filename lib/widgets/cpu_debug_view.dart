@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/controllers/cpu_debug_view_controller.dart';
+import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:signals/signals_flutter.dart';
 
 class CpuDebugView extends StatefulWidget {
-  const CpuDebugView({required this.bus, super.key});
+  const CpuDebugView({
+    required this.bus,
+    required this.nesEmulatorController,
+    super.key,
+  });
 
   final Bus bus;
+  final NESEmulatorController nesEmulatorController;
 
   @override
   State<CpuDebugView> createState() => _CpuDebugViewState();
@@ -18,7 +24,11 @@ class _CpuDebugViewState extends State<CpuDebugView> {
   @override
   void initState() {
     super.initState();
-    controller = CpuDebugViewController(bus: widget.bus);
+
+    controller = CpuDebugViewController(
+      bus: widget.bus,
+      nesEmulatorController: widget.nesEmulatorController,
+    );
   }
 
   @override

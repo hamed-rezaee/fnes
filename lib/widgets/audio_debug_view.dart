@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:fnes/components/apu.dart';
 import 'package:fnes/controllers/audio_debug_view_controller.dart';
+import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:signals/signals_flutter.dart';
 
 class AudioDebugView extends StatefulWidget {
-  const AudioDebugView({required this.apu, super.key});
+  const AudioDebugView({
+    required this.apu,
+    required this.nesEmulatorController,
+    super.key,
+  });
 
+  final NESEmulatorController nesEmulatorController;
   final APU apu;
 
   @override
@@ -19,7 +25,10 @@ class _AudioDebugViewState extends State<AudioDebugView> {
   void initState() {
     super.initState();
 
-    controller = AudioDebugViewController(apu: widget.apu);
+    controller = AudioDebugViewController(
+      apu: widget.apu,
+      nesEmulatorController: widget.nesEmulatorController,
+    );
   }
 
   @override

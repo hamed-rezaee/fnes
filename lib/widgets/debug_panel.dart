@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fnes/components/bus.dart';
+import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/widgets/audio_debug_view.dart';
 import 'package:fnes/widgets/cpu_debug_view.dart';
 import 'package:fnes/widgets/memory_debug_view.dart';
@@ -8,10 +9,12 @@ import 'package:fnes/widgets/palette_debug_view.dart';
 class DebugPanel extends StatefulWidget {
   const DebugPanel({
     required this.bus,
+    required this.nesEmulatorController,
     super.key,
   });
 
   final Bus bus;
+  final NESEmulatorController nesEmulatorController;
 
   @override
   State<DebugPanel> createState() => _DebugPanelState();
@@ -44,22 +47,33 @@ class _DebugPanelState extends State<DebugPanel> {
                 _buildCollapsibleSection(
                   key: 'registers',
                   title: 'Registers',
-                  child: CpuDebugView(bus: widget.bus),
+                  child: CpuDebugView(
+                      bus: widget.bus,
+                      nesEmulatorController: widget.nesEmulatorController),
                 ),
                 _buildCollapsibleSection(
                   key: 'memory',
                   title: 'Memory',
-                  child: MemoryDebugView(cpu: widget.bus.cpu),
+                  child: MemoryDebugView(
+                    cpu: widget.bus.cpu,
+                    nesEmulatorController: widget.nesEmulatorController,
+                  ),
                 ),
                 _buildCollapsibleSection(
                   key: 'palette',
                   title: 'Graphics',
-                  child: PaletteDebugView(bus: widget.bus),
+                  child: PaletteDebugView(
+                    bus: widget.bus,
+                    nesEmulatorController: widget.nesEmulatorController,
+                  ),
                 ),
                 _buildCollapsibleSection(
                   key: 'audio',
                   title: 'Audio',
-                  child: AudioDebugView(apu: widget.bus.apu),
+                  child: AudioDebugView(
+                    apu: widget.bus.apu,
+                    nesEmulatorController: widget.nesEmulatorController,
+                  ),
                 ),
               ],
             ),
@@ -107,10 +121,10 @@ class _DebugPanelState extends State<DebugPanel> {
                   const SizedBox(width: 8),
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 10,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],

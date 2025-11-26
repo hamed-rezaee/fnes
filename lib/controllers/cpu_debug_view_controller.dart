@@ -1,17 +1,21 @@
 import 'package:fnes/components/bus.dart';
-import 'package:fnes/main.dart';
+import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:signals/signals_flutter.dart';
 
 class CpuDebugViewController {
-  CpuDebugViewController({required this.bus}) {
+  CpuDebugViewController({
+    required this.bus,
+    required this.nesEmulatorController,
+  }) {
     effect(() {
-      nesController.frameUpdateTrigger.value;
+      nesEmulatorController.frameUpdateTrigger.value;
 
       _updateDebugger();
     });
   }
 
   final Bus bus;
+  final NESEmulatorController nesEmulatorController;
 
   late final Signal<String> flags = signal('');
   late final Signal<String> pc = signal('');

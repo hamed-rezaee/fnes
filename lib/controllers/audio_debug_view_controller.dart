@@ -1,17 +1,22 @@
 import 'package:fnes/components/apu.dart';
-import 'package:fnes/main.dart';
+import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:signals/signals_flutter.dart';
 
 class AudioDebugViewController {
-  AudioDebugViewController({required this.apu}) {
+  AudioDebugViewController({
+    required this.apu,
+    required this.nesEmulatorController,
+  }) {
     effect(() {
-      nesController.frameUpdateTrigger.value;
+      nesEmulatorController.frameUpdateTrigger.value;
 
       updateAudioData();
     });
   }
 
   final APU apu;
+  final NESEmulatorController nesEmulatorController;
+
   static const int _maxSamples = 256;
 
   final List<double> _sampleBuffer = List.generate(_maxSamples, (_) => 0);

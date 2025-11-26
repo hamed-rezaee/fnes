@@ -1,4 +1,3 @@
-import 'package:fnes/main.dart';
 import 'package:signals/signals_flutter.dart';
 
 enum MemoryRegion {
@@ -12,10 +11,6 @@ enum MemoryRegion {
 }
 
 class MemoryDebugViewController {
-  MemoryDebugViewController() {
-    effect(() => nesController.frameUpdateTrigger.value);
-  }
-
   final Signal<MemoryRegion> selectedRegion = signal(MemoryRegion.zeroPage);
 
   void selectRegion(MemoryRegion region) => selectedRegion.value = region;
