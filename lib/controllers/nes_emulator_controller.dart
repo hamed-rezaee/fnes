@@ -36,6 +36,8 @@ class NESEmulatorController {
   final Signal<bool> isLoadingROM = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
 
+  final Signal<int> frameUpdateTrigger = signal(0);
+
   late final Computed<String?> romName = computed(() {
     final fileName = romFileName.value;
     return fileName?.split('.').first;
@@ -92,6 +94,8 @@ class NESEmulatorController {
 
     final image = await _createScreenImage(pixelBuffer);
     screenImage.value = image;
+
+    frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 1000000;
 
     if (!_imageStreamController.isClosed) {
       _imageStreamController.add(image);

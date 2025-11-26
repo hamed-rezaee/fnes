@@ -1,28 +1,27 @@
 import 'package:fnes/components/apu.dart';
+import 'package:fnes/main.dart';
 import 'package:signals/signals_flutter.dart';
 
 class AudioDebugViewController {
   AudioDebugViewController({required this.apu}) {
-    _updateTimer();
+    effect(() {
+      nesController.frameUpdateTrigger.value;
+
+      updateAudioData();
+    });
   }
 
   final APU apu;
-  final List<double> _sampleBuffer = [];
   static const int _maxSamples = 256;
-  static const int _updateIntervalMs = 50;
 
-  final Signal<List<double>> waveformSamples = signal<List<double>>([]);
+  final List<double> _sampleBuffer = List.generate(_maxSamples, (_) => 0);
+
+  final Signal<List<double>> waveformSamples =
+      signal<List<double>>(List.generate(_maxSamples, (_) => 0));
   final Signal<double> currentAmplitude = signal(0);
   final Signal<double> peakAmplitude = signal(0);
   final Signal<double> rmsLevel = signal(0);
   final Signal<int> bufferSize = signal(0);
-
-  void _updateTimer() {
-    Future.delayed(const Duration(milliseconds: _updateIntervalMs), () {
-      updateAudioData();
-      _updateTimer();
-    });
-  }
 
   void updateAudioData() {
     final lastSample = apu.getOutputSample().clamp(-1.0, 1.0);
