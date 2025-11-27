@@ -33,14 +33,46 @@ class _AudioDebugViewState extends State<AudioDebugView> {
 
   @override
   Widget build(BuildContext context) => Watch((_) {
-        final samples = controller.waveformSamples.value;
-        final currentAmplitude = controller.currentAmplitude.value;
-        final peakAmplitude = controller.peakAmplitude.value;
-        final rmsLevel = controller.rmsLevel.value;
+        final selectedChannel = controller.selectedChannel.value;
+
+        final (samples, peak, rms) = switch (selectedChannel) {
+          AudioChannel.pulse1 => (
+              controller.pulse1Samples.value,
+              controller.pulse1Peak.value,
+              controller.pulse1RMS.value,
+            ),
+          AudioChannel.pulse2 => (
+              controller.pulse2Samples.value,
+              controller.pulse2Peak.value,
+              controller.pulse2RMS.value,
+            ),
+          AudioChannel.triangle => (
+              controller.triangleSamples.value,
+              controller.trianglePeak.value,
+              controller.triangleRMS.value,
+            ),
+          AudioChannel.noise => (
+              controller.noiseSamples.value,
+              controller.noisePeak.value,
+              controller.noiseRMS.value,
+            ),
+          AudioChannel.dmc => (
+              controller.dmcSamples.value,
+              controller.dmcPeak.value,
+              controller.dmcRMS.value,
+            ),
+          AudioChannel.mixed => (
+              controller.waveformSamples.value,
+              controller.peakAmplitude.value,
+              controller.rmsLevel.value,
+            ),
+        };
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildChannelSelector(),
+            const SizedBox(height: 10),
             Container(
               width: 320,
               height: 100,
@@ -48,7 +80,12 @@ class _AudioDebugViewState extends State<AudioDebugView> {
                 border: Border.all(color: Colors.grey.shade300),
                 color: Colors.grey.shade100,
               ),
-              child: CustomPaint(painter: WaveformPainter(samples: samples)),
+              child: CustomPaint(
+                painter: WaveformPainter(
+                  samples: samples,
+                  color: _getChannelColor(selectedChannel),
+                ),
+              ),
             ),
             const SizedBox(height: 10),
             RichText(
@@ -60,20 +97,15 @@ class _AudioDebugViewState extends State<AudioDebugView> {
                 ),
                 children: [
                   const TextSpan(
-                    text: 'Current Level: ',
+                    text: 'Peak: ',
                     style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
-                  TextSpan(text: _formatLevel(currentAmplitude)),
+                  TextSpan(text: _formatLevel(peak)),
                   const TextSpan(
-                    text: ' | Peak: ',
+                    text: ' | RMS: ',
                     style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
                   ),
-                  TextSpan(text: _formatLevel(peakAmplitude)),
-                  const TextSpan(
-                    text: ' | RMS Level: ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(text: _formatLevel(rmsLevel)),
+                  TextSpan(text: _formatLevel(rms)),
                 ],
               ),
             ),
@@ -81,8 +113,59 @@ class _AudioDebugViewState extends State<AudioDebugView> {
         );
       });
 
+  Widget _buildChannelSelector() => Watch((_) {
+        final selectedChannel = controller.selectedChannel.value;
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            spacing: 4,
+            children: [
+              for (final channel in AudioChannel.values)
+                _buildChannelButton(channel, selectedChannel == channel),
+            ],
+          ),
+        );
+      });
+
+  Widget _buildChannelButton(AudioChannel channel, bool isSelected) => Material(
+        child: InkWell(
+          onTap: () => controller.selectedChannel.value = channel,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color:
+                  isSelected ? _getChannelColor(channel) : Colors.grey.shade300,
+              border: Border.all(
+                color: isSelected ? Colors.black : Colors.grey.shade400,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              channel.label,
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+        ),
+      );
+
+  Color _getChannelColor(AudioChannel channel) {
+    return switch (channel) {
+      AudioChannel.pulse1 => Colors.red,
+      AudioChannel.pulse2 => Colors.orange,
+      AudioChannel.triangle => Colors.blue,
+      AudioChannel.noise => Colors.green,
+      AudioChannel.dmc => Colors.purple,
+      AudioChannel.mixed => Colors.blueGrey,
+    };
+  }
+
   static String _formatLevel(double level) {
-    final percentage = (level * 50).toStringAsFixed(1);
+    final percentage = (level * 100).toStringAsFixed(1);
 
     return '$percentage%';
   }
@@ -96,16 +179,17 @@ class _AudioDebugViewState extends State<AudioDebugView> {
 }
 
 class WaveformPainter extends CustomPainter {
-  WaveformPainter({required this.samples});
+  WaveformPainter({required this.samples, this.color = Colors.blueGrey});
 
   final List<double> samples;
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (samples.isEmpty) return;
 
     final paint = Paint()
-      ..color = Colors.blueGrey
+      ..color = color
       ..strokeWidth = 0.8
       ..style = PaintingStyle.stroke;
 
@@ -135,5 +219,5 @@ class WaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WaveformPainter oldDelegate) =>
-      oldDelegate.samples != samples;
+      oldDelegate.samples != samples || oldDelegate.color != color;
 }
