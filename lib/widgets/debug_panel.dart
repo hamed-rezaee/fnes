@@ -93,7 +93,7 @@ class _DebugPanelState extends State<DebugPanel> {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade400),
-        color: Colors.grey[50],
+        color: Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

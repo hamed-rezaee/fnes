@@ -30,9 +30,19 @@ class MainApp extends StatelessWidget {
         title: 'Flutter NES Emulator',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          useMaterial3: false,
           fontFamily: 'MonospaceFont',
-          primarySwatch: Colors.blueGrey,
+          colorScheme: const ColorScheme(
+            brightness: Brightness.light,
+            primary: Colors.black,
+            onPrimary: Colors.white,
+            secondary: Colors.white,
+            onSecondary: Colors.black,
+            error: Colors.red,
+            onError: Colors.white,
+            surface: Colors.white,
+            onSurface: Colors.black,
+          ),
+          dialogTheme: const DialogThemeData(shape: RoundedRectangleBorder()),
         ),
         home: Focus(
           onKeyEvent: (focus, onKey) => KeyEventResult.handled,
@@ -257,7 +267,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
             PopupMenuItem<String>(
               value: 'toggle_filter',
               child: Row(
-                spacing: 16,
+                spacing: 12,
                 children: [
                   Icon(
                     filterQuality == FilterQuality.high
@@ -279,7 +289,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
               value: 'toggle_uncap_framerate',
               onTap: nesController.toggleUncapFramerate,
               child: Row(
-                spacing: 16,
+                spacing: 12,
                 children: [
                   Icon(
                     uncapFramerate
@@ -288,19 +298,16 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     size: 16,
                     color: Colors.black,
                   ),
-                  const Text(
-                    'Uncap Framerate',
-                    style: TextStyle(fontSize: 12),
-                  ),
+                  const Text('Uncap Framerate', style: TextStyle(fontSize: 12)),
                 ],
               ),
             ),
-            const PopupMenuDivider(),
+            const PopupMenuDivider(thickness: 0.15),
             PopupMenuItem<String>(
               value: 'toggle_audio',
               onTap: nesController.toggleAudio,
               child: Row(
-                spacing: 16,
+                spacing: 12,
                 children: [
                   Icon(
                     audioEnabled
@@ -309,39 +316,16 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     size: 16,
                     color: Colors.black,
                   ),
-                  const Text(
-                    'Audio',
-                    style: TextStyle(fontSize: 12),
-                  ),
+                  const Text('Audio', style: TextStyle(fontSize: 12)),
                 ],
               ),
             ),
-            const PopupMenuDivider(),
-            PopupMenuItem<String>(
-              value: 'toggle_debugger',
-              onTap: nesController.toggleDebugger,
-              child: Row(
-                spacing: 16,
-                children: [
-                  Icon(
-                    showDebugger
-                        ? Icons.check_box
-                        : Icons.check_box_outline_blank,
-                    size: 16,
-                    color: Colors.black,
-                  ),
-                  const Text(
-                    'Debugger Panels',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
+            const PopupMenuDivider(thickness: 0.15),
             PopupMenuItem<String>(
               value: 'toggle_on_screen_controller',
               onTap: nesController.toggleOnScreenController,
               child: Row(
-                spacing: 16,
+                spacing: 12,
                 children: [
                   Icon(
                     showOnScreenController
@@ -357,12 +341,30 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
             ),
-            const PopupMenuDivider(),
+            const PopupMenuDivider(thickness: 0.15),
+            PopupMenuItem<String>(
+              value: 'toggle_debugger',
+              onTap: nesController.toggleDebugger,
+              child: Row(
+                spacing: 12,
+                children: [
+                  Icon(
+                    showDebugger
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    size: 16,
+                    color: Colors.black,
+                  ),
+                  const Text('Debugger Panels', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(thickness: 0.15),
             PopupMenuItem<String>(
               value: 'rom_info',
               onTap: _showROMInfoDialog,
               child: const Row(
-                spacing: 16,
+                spacing: 12,
                 children: [
                   Icon(Icons.info_outline, size: 16, color: Colors.black),
                   Text('Cartridge Information', style: TextStyle(fontSize: 12)),
@@ -398,7 +400,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                             e.key,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 10,
                             ),
                           ),
                         ),
@@ -407,7 +409,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                           child: Text(
                             e.value,
                             textAlign: TextAlign.right,
-                            style: const TextStyle(fontSize: 12),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                       ],
@@ -417,21 +419,19 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 .toList(),
           );
         } else {
-          content = const Text(
-            'No ROM loaded.',
-            style: TextStyle(fontSize: 12),
-          );
+          content =
+              const Text('No ROM loaded.', style: TextStyle(fontSize: 12));
         }
 
         return AlertDialog(
           title: const Text(
             'Cartridge Information',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           ),
           content: SingleChildScrollView(child: content),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: Navigator.of(context).pop,
               child: const Text('Close', style: TextStyle(fontSize: 12)),
             ),
           ],

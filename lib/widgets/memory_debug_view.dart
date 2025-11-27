@@ -95,18 +95,16 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
+            decoration:
+                BoxDecoration(border: Border.all(color: Colors.grey.shade300)),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<T>(
                 value: value,
                 items: items,
-                onChanged: onChanged,
                 isDense: true,
+                onChanged: onChanged,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   color: Colors.black,
                   fontFamily: 'MonospaceFont',
                 ),
