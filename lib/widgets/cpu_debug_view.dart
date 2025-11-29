@@ -121,29 +121,27 @@ class _CpuDebugViewState extends State<CpuDebugView> {
               ),
             ),
             const SizedBox(height: 8),
-            if (disassembly.isNotEmpty) ...[
-              const Text(
-                'Disassembler',
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 2),
-              RichText(
-                text: _getDisassemblyRichText(disassembly),
-              ),
-            ],
+            const Text(
+              'Disassembler',
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 2),
+            SingleChildScrollView(
+              child: RichText(text: _getDisassemblyRichText(disassembly)),
+            ),
           ],
         );
       });
 
   TextSpan _getDisassemblyRichText(String disassembly) {
-    var lines = disassembly.split('\n');
+    final lines = disassembly.split('\n');
     final pcIndex = lines.indexWhere((String line) => line.startsWith('-> '));
 
     if (pcIndex == -1) return const TextSpan();
 
     final startIndex = (pcIndex - 10).clamp(0, lines.length);
     final endIndex = (pcIndex + 11).clamp(0, lines.length);
-    lines = lines.sublist(startIndex, endIndex);
+    final filteredLines = lines.sublist(startIndex, endIndex);
 
     final spans = <TextSpan>[];
 
@@ -153,64 +151,31 @@ class _CpuDebugViewState extends State<CpuDebugView> {
       fontFamily: 'MonospaceFont',
     );
 
-    for (var i = 0; i < lines.length; i++) {
-      final line = lines[i];
+    for (var i = 0; i < filteredLines.length; i++) {
+      final line = filteredLines[i];
 
       if (line.startsWith('-> ')) {
-        final content = line.substring(3);
-        final parts = content.split(' ');
-
-        if (parts.isNotEmpty) {
-          spans
-            ..add(const TextSpan(text: '➜ ', style: cpuDebugTextStyle))
-            ..add(
-              TextSpan(
-                text: '${parts[0]} ',
-                style: cpuDebugTextStyle.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+        final content = line.substring(2);
+        spans
+          ..add(const TextSpan(text: '➜', style: cpuDebugTextStyle))
+          ..add(
+            TextSpan(
+              text: content,
+              style: cpuDebugTextStyle.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-            );
-
-          if (parts.length > 1) {
-            spans.add(
-              TextSpan(
-                text: parts.sublist(1).join(' '),
-                style: cpuDebugTextStyle,
-              ),
-            );
-          }
-        }
+            ),
+          );
       } else if (line.startsWith('  ')) {
-        final content = line.substring(3);
-        final parts = content.split(' ');
-
-        if (parts.isNotEmpty) {
-          spans
-            ..add(const TextSpan(text: '   ', style: cpuDebugTextStyle))
-            ..add(
-              TextSpan(
-                text: '${parts[0]} ',
-                style: cpuDebugTextStyle.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            );
-
-          if (parts.length > 1) {
-            spans.add(
-              TextSpan(
-                text: parts.sublist(1).join(' '),
-                style: cpuDebugTextStyle,
-              ),
-            );
-          }
-        }
+        final content = line.substring(2);
+        spans
+          ..add(const TextSpan(text: '  ', style: cpuDebugTextStyle))
+          ..add(TextSpan(text: content, style: cpuDebugTextStyle));
       } else {
         spans.add(TextSpan(text: line, style: cpuDebugTextStyle));
       }
 
-      if (i < lines.length - 1) {
+      if (i < filteredLines.length - 1) {
         spans.add(const TextSpan(text: '\n', style: cpuDebugTextStyle));
       }
     }

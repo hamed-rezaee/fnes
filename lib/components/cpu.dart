@@ -1136,74 +1136,77 @@ class CPU {
 
     while (currentAddress <= stopAtAddress) {
       final lineAddress = currentAddress;
-      var sInst = '';
-
-      sInst += '0x${hex(currentAddress, 4)} ';
+      final addressHex = '0x${hex(currentAddress, 4)}';
       final opcode = bus!.cpuRead(currentAddress, readOnly: true);
-      currentAddress++;
-      sInst += '${lookup[opcode].instructionType.name.toUpperCase()} ';
 
+      currentAddress++;
+
+      final instruction = lookup[opcode].instructionType.name.toUpperCase();
       final addressMode = lookup[opcode].addressMode;
       final addressModeName = addressMode.name.toUpperCase();
 
+      var operand = '';
+
       if (addressMode == AddressMode.imp) {
-        sInst += ' {$addressModeName}';
+        operand = '';
       } else if (addressMode == AddressMode.imm) {
         value = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '#\$${hex(value, 2)} {$addressModeName}';
+        operand = '#\$${hex(value, 2)}';
       } else if (addressMode == AddressMode.zp0) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '\$${hex(lowByte, 2)} {$addressModeName}';
+        operand = '\$${hex(lowByte, 2)}';
       } else if (addressMode == AddressMode.zpx) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '\$${hex(lowByte, 2)}, X {$addressModeName}';
+        operand = '\$${hex(lowByte, 2)}, X';
       } else if (addressMode == AddressMode.zpy) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '\$${hex(lowByte, 2)}, Y {$addressModeName}';
+        operand = '\$${hex(lowByte, 2)}, Y';
       } else if (addressMode == AddressMode.izx) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '(\$${hex(lowByte, 2)}, X) {$addressModeName}';
+        operand = '(\$${hex(lowByte, 2)}, X)';
       } else if (addressMode == AddressMode.izy) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '(\$${hex(lowByte, 2)}), Y {$addressModeName}';
+        operand = '(\$${hex(lowByte, 2)}), Y';
       } else if (addressMode == AddressMode.abs) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
         highByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '\$${hex((highByte << 8) | lowByte, 4)} {$addressModeName}';
+        operand = '\$${hex((highByte << 8) | lowByte, 4)}';
       } else if (addressMode == AddressMode.abx) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
         highByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '\$${hex((highByte << 8) | lowByte, 4)}, X {$addressModeName}';
+        operand = '\$${hex((highByte << 8) | lowByte, 4)}, X';
       } else if (addressMode == AddressMode.aby) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
         highByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '\$${hex((highByte << 8) | lowByte, 4)}, Y {$addressModeName}';
+        operand = '\$${hex((highByte << 8) | lowByte, 4)}, Y';
       } else if (addressMode == AddressMode.ind) {
         lowByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
         highByte = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst += '(\$${hex((highByte << 8) | lowByte, 4)}) {$addressModeName}';
+        operand = '(\$${hex((highByte << 8) | lowByte, 4)})';
       } else if (addressMode == AddressMode.rel) {
         value = bus!.cpuRead(currentAddress, readOnly: true);
         currentAddress++;
-        sInst +=
-            '\$${hex(value, 2)} [\$${hex(currentAddress + value, 4)}] {$addressModeName}';
+        operand = '\$${hex(value, 2)} [\$${hex(currentAddress + value, 4)}]';
       }
 
-      mapLines[lineAddress] = sInst;
+      final instructionSet =
+          '$addressHex  ${instruction.padRight(6)}  ${operand.padRight(18)}  {$addressModeName}';
+
+      mapLines[lineAddress] = instructionSet;
     }
 
     return mapLines;

@@ -45,15 +45,17 @@ class CpuDebugViewController {
     final calculatedEndAddress = (currentPC + 30) & 0xFFFF;
     final disassembledMap = cpu.disassemble(baseAddress, calculatedEndAddress);
 
-    disassembly.value = disassembledMap.entries.map((entry) {
-      final instruction = entry.value;
+    final lines = <String>[
+      ...disassembledMap.entries.map((entry) {
+        final instruction = entry.value;
 
-      if (entry.key == currentPC) {
-        return '-> $instruction';
-      }
+        if (entry.key == currentPC) return '-> $instruction';
 
-      return '   $instruction';
-    }).join('\n');
+        return '   $instruction';
+      }),
+    ];
+
+    disassembly.value = lines.join('\n');
   }
 
   String _formatFlags(String rawFlags) {
