@@ -32,7 +32,7 @@ class NESEmulatorController {
   final Signal<bool> isOnScreenControllerVisible = signal(false);
   final Signal<double> currentFPS = signal(0);
   final Signal<bool> audioEnabled = signal(true);
-  final Signal<bool> uncapFramerate = signal(true);
+  final Signal<bool> uncapFramerate = signal(false);
 
   final Signal<bool> isLoadingROM = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
@@ -185,7 +185,23 @@ class NESEmulatorController {
     final elapsedMicroseconds = now.difference(_lastFrameTime).inMicroseconds;
     final elapsedMs = elapsedMicroseconds / 1000.0;
 
-    if (!uncapFramerate.value && elapsedMs < _targetFrameTimeMs) return;
+    final shouldUpdateFrame =
+        uncapFramerate.value || elapsedMs >= _targetFrameTimeMs;
+
+    if (!shouldUpdateFrame) {
+      final isAudioReady = isROMLoaded.value &&
+          bus.cart != null &&
+          audioEnabled.value &&
+          bus.hasAudioData();
+
+      if (isAudioReady) {
+        final audioBuffer = bus.getAudioBuffer();
+
+        _audioPlayer.addSamples(audioBuffer);
+      }
+
+      return;
+    }
 
     _lastFrameTime = now;
 
