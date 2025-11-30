@@ -265,6 +265,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
           icon: const Icon(Icons.settings),
           tooltip: 'Settings',
           itemBuilder: (BuildContext context) => [
+            _buildMenuGroupHeader('VIDEO'),
             PopupMenuItem<String>(
               value: 'toggle_filter',
               child: Row(
@@ -303,7 +304,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
             ),
-            const PopupMenuDivider(thickness: 0.15),
+            _buildMenuGroupHeader('RENDERING'),
             PopupMenuItem<String>(
               value: 'render_mode_both',
               onTap: () => nesController.setRenderMode(RenderMode.both),
@@ -318,7 +319,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     color: Colors.black,
                   ),
                   const Text(
-                    'Render Both Layers',
+                    'Background and Sprites',
                     style: TextStyle(fontSize: 12),
                   ),
                 ],
@@ -337,7 +338,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     size: 16,
                     color: Colors.black,
                   ),
-                  const Text('Background Only', style: TextStyle(fontSize: 12)),
+                  const Text('Background', style: TextStyle(fontSize: 12)),
                 ],
               ),
             ),
@@ -354,11 +355,11 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     size: 16,
                     color: Colors.black,
                   ),
-                  const Text('Sprites Only', style: TextStyle(fontSize: 12)),
+                  const Text('Sprites', style: TextStyle(fontSize: 12)),
                 ],
               ),
             ),
-            const PopupMenuDivider(thickness: 0.15),
+            _buildMenuGroupHeader('AUDIO'),
             PopupMenuItem<String>(
               value: 'toggle_audio',
               onTap: nesController.toggleAudio,
@@ -376,7 +377,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
             ),
-            const PopupMenuDivider(thickness: 0.15),
+            _buildMenuGroupHeader('USER INTERFACE'),
             PopupMenuItem<String>(
               value: 'toggle_on_screen_controller',
               onTap: nesController.toggleOnScreenController,
@@ -397,7 +398,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
             ),
-            const PopupMenuDivider(thickness: 0.15),
+            _buildMenuGroupHeader('DEBUG'),
             PopupMenuItem<String>(
               value: 'toggle_debugger',
               onTap: nesController.toggleDebugger,
@@ -415,7 +416,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
             ),
-            const PopupMenuDivider(thickness: 0.15),
+            _buildMenuGroupHeader('INFORMATION'),
             PopupMenuItem<String>(
               value: 'rom_info',
               onTap: _showROMInfoDialog,
@@ -430,6 +431,21 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
           ],
         );
       });
+
+  PopupMenuItem<String> _buildMenuGroupHeader(String label) => PopupMenuItem(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      );
 
   Future<void> _showROMInfoDialog() async {
     final info = nesController.bus.cart?.getMapperInfoMap();
