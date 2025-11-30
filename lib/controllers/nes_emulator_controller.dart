@@ -9,6 +9,8 @@ import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cartridge.dart';
 import 'package:signals/signals_flutter.dart';
 
+enum RenderMode { both, background, sprites }
+
 class NESEmulatorController {
   NESEmulatorController({required this.bus}) {
     bus.setSampleFrequency(44100);
@@ -33,6 +35,7 @@ class NESEmulatorController {
   final Signal<double> currentFPS = signal(0);
   final Signal<bool> audioEnabled = signal(true);
   final Signal<bool> uncapFramerate = signal(false);
+  final Signal<RenderMode> renderMode = signal(RenderMode.both);
 
   final Signal<bool> isLoadingROM = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
@@ -181,6 +184,8 @@ class NESEmulatorController {
   void updateEmulation() {
     if (!isRunning.value) return;
 
+    bus.ppu.renderMode = renderMode.value;
+
     final now = DateTime.now();
     final elapsedMicroseconds = now.difference(_lastFrameTime).inMicroseconds;
     final elapsedMs = elapsedMicroseconds / 1000.0;
@@ -308,12 +313,12 @@ class NESEmulatorController {
   void toggleAudio() {
     audioEnabled.value = !audioEnabled.value;
 
-    if (audioEnabled.value && isRunning.value) {
-      _audioPlayer.resume();
-    } else {
-      _audioPlayer.pause();
-    }
+    (audioEnabled.value && isRunning.value)
+        ? _audioPlayer.resume()
+        : _audioPlayer.pause();
   }
+
+  void setRenderMode(RenderMode mode) => renderMode.value = mode;
 
   void pressButton(String buttonName) {
     switch (buttonName) {

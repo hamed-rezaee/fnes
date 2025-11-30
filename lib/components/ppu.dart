@@ -2,10 +2,11 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:fnes/components/cartridge.dart';
+import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/mappers/mapper.dart';
 
 class PPU {
-  PPU() {
+  PPU({this.renderMode = RenderMode.both}) {
     status = PPUStatus();
     mask = PPUMask();
     control = PPUControl();
@@ -96,6 +97,8 @@ class PPU {
   late PPUControl control;
   late LoopyRegister vramAddress;
   late LoopyRegister temporaryAddressRegister;
+
+  RenderMode renderMode;
 
   int fineX = 0x00;
   int addressLatch = 0x00;
@@ -704,22 +707,30 @@ class PPU {
     var pixel = 0x00;
     var palette = 0x00;
 
-    if (backgroundPixel == 0 && fgPixel == 0) {
-      pixel = 0x00;
-      palette = 0x00;
-    } else if (backgroundPixel == 0 && fgPixel > 0) {
-      pixel = fgPixel;
-      palette = fgPalette;
-    } else if (backgroundPixel > 0 && fgPixel == 0) {
+    if (renderMode == RenderMode.background) {
       pixel = backgroundPixel;
       palette = backgroundPalette;
-    } else if (backgroundPixel > 0 && fgPixel > 0) {
-      if (fgPriority != 0) {
+    } else if (renderMode == RenderMode.sprites) {
+      pixel = fgPixel;
+      palette = fgPalette;
+    } else {
+      if (backgroundPixel == 0 && fgPixel == 0) {
+        pixel = 0x00;
+        palette = 0x00;
+      } else if (backgroundPixel == 0 && fgPixel > 0) {
         pixel = fgPixel;
         palette = fgPalette;
-      } else {
+      } else if (backgroundPixel > 0 && fgPixel == 0) {
         pixel = backgroundPixel;
         palette = backgroundPalette;
+      } else if (backgroundPixel > 0 && fgPixel > 0) {
+        if (fgPriority != 0) {
+          pixel = fgPixel;
+          palette = fgPalette;
+        } else {
+          pixel = backgroundPixel;
+          palette = backgroundPalette;
+        }
       }
     }
 
