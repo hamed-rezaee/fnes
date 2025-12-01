@@ -116,15 +116,47 @@ class _AudioDebugViewState extends State<AudioDebugView> {
   Widget _buildChannelSelector() => Watch((_) {
         final selectedChannel = controller.selectedChannel.value;
 
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            spacing: 4,
-            children: [
-              for (final channel in AudioChannel.values)
-                _buildChannelButton(channel, selectedChannel == channel),
-            ],
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                spacing: 4,
+                children: [
+                  for (final channel in AudioChannel.values)
+                    _buildChannelButton(channel, selectedChannel == channel),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                spacing: 8,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildChannelToggle(
+                    AudioChannel.pulse1,
+                    controller.pulse1Enabled,
+                  ),
+                  _buildChannelToggle(
+                    AudioChannel.pulse2,
+                    controller.pulse2Enabled,
+                  ),
+                  _buildChannelToggle(
+                    AudioChannel.triangle,
+                    controller.triangleEnabled,
+                  ),
+                  _buildChannelToggle(
+                    AudioChannel.noise,
+                    controller.noiseEnabled,
+                  ),
+                  _buildChannelToggle(AudioChannel.dmc, controller.dmcEnabled),
+                ],
+              ),
+            ),
+          ],
         );
       });
 
@@ -136,10 +168,7 @@ class _AudioDebugViewState extends State<AudioDebugView> {
             decoration: BoxDecoration(
               color:
                   isSelected ? _getChannelColor(channel) : Colors.grey.shade300,
-              border: Border.all(
-                color: isSelected ? Colors.black : Colors.grey.shade400,
-              ),
-              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.grey),
             ),
             child: Text(
               channel.label,
@@ -152,6 +181,41 @@ class _AudioDebugViewState extends State<AudioDebugView> {
           ),
         ),
       );
+
+  Widget _buildChannelToggle(
+    AudioChannel channel,
+    Signal<bool> enabledSignal,
+  ) =>
+      Watch((_) {
+        final isEnabled = enabledSignal.value;
+
+        return GestureDetector(
+          onTap: () => controller.toggleChannel(channel),
+          child: Row(
+            spacing: 4,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: GestureDetector(
+                  onTap: () => controller.toggleChannel(channel),
+                  child: Icon(
+                    isEnabled ? Icons.check_box : Icons.check_box_outline_blank,
+                    size: 16,
+                    color: isEnabled ? Colors.black : Colors.grey,
+                  ),
+                ),
+              ),
+              Text(
+                channel.label,
+                style:
+                    const TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        );
+      });
 
   Color _getChannelColor(AudioChannel channel) {
     return switch (channel) {

@@ -28,8 +28,8 @@ class _DebugPanelState extends State<DebugPanel> {
     super.initState();
 
     _expandedSections = {
-      'registers': true,
-      'memory': true,
+      'registers': false,
+      'memory': false,
       'palette': false,
       'audio': false,
     };

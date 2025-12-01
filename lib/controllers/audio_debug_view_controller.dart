@@ -72,6 +72,12 @@ class AudioDebugViewController {
 
   final Signal<AudioChannel> selectedChannel = signal(AudioChannel.mixed);
 
+  final Signal<bool> pulse1Enabled = signal(true);
+  final Signal<bool> pulse2Enabled = signal(true);
+  final Signal<bool> triangleEnabled = signal(true);
+  final Signal<bool> noiseEnabled = signal(true);
+  final Signal<bool> dmcEnabled = signal(true);
+
   void updateAudioData() {
     final p1Out = apu.pulse1.output().toDouble().clamp(-1.0, 1.0);
     final p2Out = apu.pulse2.output().toDouble().clamp(-1.0, 1.0);
@@ -136,6 +142,104 @@ class AudioDebugViewController {
         buffer.fold<double>(0, (sum, sample) => sum + (sample * sample));
 
     return (sumSquares / buffer.length).clamp(0.0, 1.0);
+  }
+
+  void enableChannel(AudioChannel channel) {
+    switch (channel) {
+      case AudioChannel.pulse1:
+        pulse1Enabled.value = true;
+        apu.pulse1.enable = true;
+      case AudioChannel.pulse2:
+        pulse2Enabled.value = true;
+        apu.pulse2.enable = true;
+      case AudioChannel.triangle:
+        triangleEnabled.value = true;
+        apu.triangle.enable = true;
+      case AudioChannel.noise:
+        noiseEnabled.value = true;
+        apu.noise.enable = true;
+      case AudioChannel.dmc:
+        dmcEnabled.value = true;
+        apu.dmc.enable = true;
+      case AudioChannel.mixed:
+        pulse1Enabled.value = true;
+        pulse2Enabled.value = true;
+        triangleEnabled.value = true;
+        noiseEnabled.value = true;
+        dmcEnabled.value = true;
+        apu.pulse1.enable = true;
+        apu.pulse2.enable = true;
+        apu.triangle.enable = true;
+        apu.noise.enable = true;
+        apu.dmc.enable = true;
+    }
+  }
+
+  void disableChannel(AudioChannel channel) {
+    switch (channel) {
+      case AudioChannel.pulse1:
+        pulse1Enabled.value = false;
+        apu.pulse1.enable = false;
+      case AudioChannel.pulse2:
+        pulse2Enabled.value = false;
+        apu.pulse2.enable = false;
+      case AudioChannel.triangle:
+        triangleEnabled.value = false;
+        apu.triangle.enable = false;
+      case AudioChannel.noise:
+        noiseEnabled.value = false;
+        apu.noise.enable = false;
+      case AudioChannel.dmc:
+        dmcEnabled.value = false;
+        apu.dmc.enable = false;
+      case AudioChannel.mixed:
+        pulse1Enabled.value = false;
+        pulse2Enabled.value = false;
+        triangleEnabled.value = false;
+        noiseEnabled.value = false;
+        dmcEnabled.value = false;
+        apu.pulse1.enable = false;
+        apu.pulse2.enable = false;
+        apu.triangle.enable = false;
+        apu.noise.enable = false;
+        apu.dmc.enable = false;
+    }
+  }
+
+  void toggleChannel(AudioChannel channel) {
+    switch (channel) {
+      case AudioChannel.pulse1:
+        pulse1Enabled.value = !pulse1Enabled.value;
+        apu.pulse1.enable = pulse1Enabled.value;
+      case AudioChannel.pulse2:
+        pulse2Enabled.value = !pulse2Enabled.value;
+        apu.pulse2.enable = pulse2Enabled.value;
+      case AudioChannel.triangle:
+        triangleEnabled.value = !triangleEnabled.value;
+        apu.triangle.enable = triangleEnabled.value;
+      case AudioChannel.noise:
+        noiseEnabled.value = !noiseEnabled.value;
+        apu.noise.enable = noiseEnabled.value;
+      case AudioChannel.dmc:
+        dmcEnabled.value = !dmcEnabled.value;
+        apu.dmc.enable = dmcEnabled.value;
+      case AudioChannel.mixed:
+        final allEnabled = pulse1Enabled.value &&
+            pulse2Enabled.value &&
+            triangleEnabled.value &&
+            noiseEnabled.value &&
+            dmcEnabled.value;
+        pulse1Enabled.value = !allEnabled;
+        pulse2Enabled.value = !allEnabled;
+        triangleEnabled.value = !allEnabled;
+        noiseEnabled.value = !allEnabled;
+        dmcEnabled.value = !allEnabled;
+        apu.pulse1.enable = !allEnabled;
+        apu.pulse2.enable = !allEnabled;
+        apu.triangle.enable = !allEnabled;
+        apu.noise.enable = !allEnabled;
+        apu.dmc.enable = !allEnabled;
+    }
   }
 
   void dispose() {
