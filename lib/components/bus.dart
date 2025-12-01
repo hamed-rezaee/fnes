@@ -157,6 +157,12 @@ class Bus {
 
     if (cart?.getMapper().irqState() ?? false) {
       cpu.irq();
+      cart?.getMapper().irqClear();
+    }
+
+    if (apu.frameIrq) {
+      apu.frameIrq = false;
+      cpu.irq();
     }
 
     _systemClockCounter++;
