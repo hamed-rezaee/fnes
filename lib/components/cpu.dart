@@ -2,7 +2,7 @@ import 'package:fnes/components/bus.dart';
 
 class CPU {
   CPU() {
-    lookup[0x00] = Instruction(InstructionType.brk, AddressMode.imm, 7);
+    lookup[0x00] = Instruction(InstructionType.brk, AddressMode.imp, 7);
     lookup[0x01] = Instruction(InstructionType.ora, AddressMode.izx, 6);
     lookup[0x02] = Instruction(InstructionType.nop, AddressMode.imp, 2);
     lookup[0x03] = Instruction(InstructionType.slo, AddressMode.izx, 8);
@@ -613,7 +613,7 @@ class CPU {
     x = fetched;
     _setFlag(zeroFlag, isFlagSet: x == 0);
     _setFlag(negativeFlag, isFlagSet: (x & 0x80) != 0);
-    return 1;
+    return 0;
   }
 
   int _ldy() {
@@ -621,7 +621,7 @@ class CPU {
     y = fetched;
     _setFlag(zeroFlag, isFlagSet: y == 0);
     _setFlag(negativeFlag, isFlagSet: (y & 0x80) != 0);
-    return 1;
+    return 0;
   }
 
   int _stx() {
@@ -640,7 +640,7 @@ class CPU {
     x = a;
     _setFlag(zeroFlag, isFlagSet: a == 0);
     _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
-    return 1;
+    return 0;
   }
 
   int _sax() {
@@ -829,106 +829,100 @@ class CPU {
   }
 
   int _imm() {
-    addrAbs = pc++;
+    addrAbs = pc;
+    pc = (pc + 1) & 0xFFFF;
     return 0;
   }
 
   int _zp0() {
     addrAbs = read(pc) & 0x00FF;
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     return 0;
   }
 
   int _zpx() {
     addrAbs = (read(pc) + x) & 0x00FF;
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     return 0;
   }
 
   int _zpy() {
     addrAbs = (read(pc) + y) & 0x00FF;
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     return 0;
   }
 
   int _rel() {
-    addrRel = read(pc);
-    pc++;
-
-    if ((addrRel & 0x80) != 0) addrRel |= 0xFF00;
-
+    addrRel = read(pc) & 0xFF;
+    pc = (pc + 1) & 0xFFFF;
+    if ((addrRel & 0x80) != 0) {
+      addrRel |= 0xFF00;
+    }
     return 0;
   }
 
   int _abs() {
     final lowByte = read(pc);
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     final highByte = read(pc);
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     addrAbs = (highByte << 8) | lowByte;
-
     return 0;
   }
 
   int _abx() {
     final lowByte = read(pc);
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     final highByte = read(pc);
-    pc++;
-    addrAbs = ((highByte << 8) | lowByte) + x;
-    if ((addrAbs & 0xFF00) != (highByte << 8)) return 1;
-    addrAbs &= 0xFFFF;
+    pc = (pc + 1) & 0xFFFF;
+    final baseAddress = (highByte << 8) | lowByte;
+    addrAbs = (baseAddress + x) & 0xFFFF;
+    if ((baseAddress & 0xFF00) != (addrAbs & 0xFF00)) return 1;
     return 0;
   }
 
   int _aby() {
     final lowByte = read(pc);
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     final highByte = read(pc);
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     final baseAddress = (highByte << 8) | lowByte;
     addrAbs = (baseAddress + y) & 0xFFFF;
-
     if ((baseAddress & 0xFF00) != (addrAbs & 0xFF00)) return 1;
-
     return 0;
   }
 
   int _ind() {
     final ptrLow = read(pc);
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     final ptrHigh = read(pc);
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     final ptr = (ptrHigh << 8) | ptrLow;
     if (ptrLow == 0xFF) {
       addrAbs = (read(ptr & 0xFF00) << 8) | read(ptr);
     } else {
       addrAbs = (read(ptr + 1) << 8) | read(ptr);
     }
-
     return 0;
   }
 
   int _izx() {
     final temp = (read(pc) + x) & 0x00FF;
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     final lowByte = read(temp & 0x00FF);
     final highByte = read((temp + 1) & 0x00FF);
     addrAbs = (highByte << 8) | lowByte;
-
     return 0;
   }
 
   int _izy() {
     final temp = read(pc) & 0x00FF;
-    pc++;
+    pc = (pc + 1) & 0xFFFF;
     final lowByte = read(temp & 0x00FF);
     final highByte = read((temp + 1) & 0x00FF);
     final baseAddress = (highByte << 8) | lowByte;
     addrAbs = (baseAddress + y) & 0xFFFF;
-
     if ((baseAddress & 0xFF00) != (addrAbs & 0xFF00)) return 1;
-
     return 0;
   }
 
@@ -998,7 +992,7 @@ class CPU {
     a = fetched;
     _setFlag(zeroFlag, isFlagSet: a == 0x00);
     _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
-    return 1;
+    return 0;
   }
 
   int _sta() {
@@ -1114,6 +1108,29 @@ class CPU {
     return 0;
   }
 
+  int _alr() {
+    _fetch();
+    a = a & fetched;
+    _setFlag(carryFlag, isFlagSet: (a & 0x01) != 0);
+    a = (a >> 1) & 0xFF;
+    _setFlag(zeroFlag, isFlagSet: a == 0);
+    _setFlag(negativeFlag, isFlagSet: false);
+    return 0;
+  }
+
+  int _arr() {
+    _fetch();
+    a = a & fetched;
+    final bit7Before = (a & 0x80) >> 7;
+    a = ((a >> 1) | (_getFlag(carryFlag) << 7)) & 0xFF;
+    _setFlag(carryFlag, isFlagSet: bit7Before != 0);
+    final bit6 = (a & 0x40) >> 6;
+    _setFlag(overflowFlag, isFlagSet: (bit7Before ^ bit6) != 0);
+    _setFlag(zeroFlag, isFlagSet: a == 0);
+    _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
+    return 0;
+  }
+
   int _axs() {
     _fetch();
     final temp = (a & x) - fetched;
@@ -1121,6 +1138,45 @@ class CPU {
     x = temp & 0xFF;
     _setFlag(zeroFlag, isFlagSet: x == 0);
     _setFlag(negativeFlag, isFlagSet: (x & 0x80) != 0);
+    return 0;
+  }
+
+  int _ahx() {
+    write(addrAbs, a & x & ((addrAbs >> 8) + 1));
+    return 0;
+  }
+
+  int _las() {
+    _fetch();
+    final temp = fetched & stkp;
+    a = temp;
+    x = temp;
+    stkp = temp;
+    _setFlag(zeroFlag, isFlagSet: a == 0);
+    _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
+    return 0;
+  }
+
+  int _shx() {
+    write(addrAbs, x & ((addrAbs >> 8) + 1));
+    return 0;
+  }
+
+  int _shy() {
+    write(addrAbs, y & ((addrAbs >> 8) + 1));
+    return 0;
+  }
+
+  int _tas() {
+    stkp = a & x;
+    write(addrAbs, a & x & ((addrAbs >> 8) + 1));
+    return 0;
+  }
+
+  int _xaa() {
+    a = (a | 0xEE) & x & fetched;
+    _setFlag(zeroFlag, isFlagSet: a == 0);
+    _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
     return 0;
   }
 
@@ -1386,17 +1442,17 @@ enum InstructionType {
         InstructionType.dcp => cpu._dcp,
         InstructionType.isc => cpu._isc,
         InstructionType.axs => cpu._axs,
-        InstructionType.ahx => cpu._xxx,
-        InstructionType.alr => cpu._xxx,
-        InstructionType.arr => cpu._xxx,
-        InstructionType.las => cpu._xxx,
+        InstructionType.ahx => cpu._ahx,
+        InstructionType.alr => cpu._alr,
+        InstructionType.arr => cpu._arr,
+        InstructionType.las => cpu._las,
         InstructionType.lax => cpu._lax,
         InstructionType.sax => cpu._sax,
-        InstructionType.shx => cpu._xxx,
-        InstructionType.shy => cpu._xxx,
+        InstructionType.shx => cpu._shx,
+        InstructionType.shy => cpu._shy,
         InstructionType.sre => cpu._sre,
-        InstructionType.tas => cpu._xxx,
-        InstructionType.xaa => cpu._xxx,
+        InstructionType.tas => cpu._tas,
+        InstructionType.xaa => cpu._xaa,
         InstructionType.xxx => cpu._xxx,
       };
 }
