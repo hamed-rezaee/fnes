@@ -135,6 +135,332 @@ class PPU {
   bool frameComplete = false;
   bool nmi = false;
 
+  void _incrementScrollX() {
+    if (mask.renderBackground || mask.renderSprites) {
+      if (vramAddress.coarseX == 31) {
+        vramAddress.coarseX = 0;
+        vramAddress.nametableX = ~vramAddress.nametableX;
+      } else {
+        vramAddress.coarseX++;
+      }
+    }
+  }
+
+  void _incrementScrollY() {
+    if (mask.renderBackground || mask.renderSprites) {
+      if (vramAddress.fineY < 7) {
+        vramAddress.fineY++;
+      } else {
+        vramAddress.fineY = 0;
+        if (vramAddress.coarseY == 29) {
+          vramAddress.coarseY = 0;
+          vramAddress.nametableY = ~vramAddress.nametableY;
+        } else if (vramAddress.coarseY == 31) {
+          vramAddress.coarseY = 0;
+        } else {
+          vramAddress.coarseY++;
+        }
+      }
+    }
+  }
+
+  void _transferAddressX() {
+    if (mask.renderBackground || mask.renderSprites) {
+      vramAddress.nametableX = temporaryAddressRegister.nametableX;
+      vramAddress.coarseX = temporaryAddressRegister.coarseX;
+    }
+  }
+
+  void _transferAddressY() {
+    if (mask.renderBackground || mask.renderSprites) {
+      vramAddress.fineY = temporaryAddressRegister.fineY;
+      vramAddress.nametableY = temporaryAddressRegister.nametableY;
+      vramAddress.coarseY = temporaryAddressRegister.coarseY;
+    }
+  }
+
+  void _loadBackgroundShifters() {
+    backgroundShifterPatternLow =
+        (backgroundShifterPatternLow & 0xFF00) | backgroundNextTileLsb;
+    backgroundShifterPatternHigh =
+        (backgroundShifterPatternHigh & 0xFF00) | backgroundNextTileMsb;
+
+    backgroundShifterAttribLow = (backgroundShifterAttribLow & 0xFF00) |
+        ((backgroundNextTileAttrib & 0x01) != 0 ? 0xFF : 0x00);
+    backgroundShifterAttribHigh = (backgroundShifterAttribHigh & 0xFF00) |
+        ((backgroundNextTileAttrib & 0x02) != 0 ? 0xFF : 0x00);
+  }
+
+  void _updateShifters() {
+    if (mask.renderBackground) {
+      backgroundShifterPatternLow <<= 1;
+      backgroundShifterPatternHigh <<= 1;
+      backgroundShifterAttribLow <<= 1;
+      backgroundShifterAttribHigh <<= 1;
+    }
+
+    if (mask.renderSprites && cycle >= 1 && cycle < 258) {
+      for (var i = 0; i < spriteCount; i++) {
+        if (spriteScanline[i].x > 0) {
+          spriteScanline[i].x--;
+        } else {
+          spriteShifterPatternLow[i] <<= 1;
+          spriteShifterPatternHigh[i] <<= 1;
+        }
+      }
+    }
+  }
+
+  void _fetchBackgroundTile() {
+    switch ((cycle - 1) % 8) {
+      case 0:
+        _loadBackgroundShifters();
+        backgroundNextTileId = ppuRead(0x2000 | (vramAddress.reg & 0x0FFF));
+      case 2:
+        backgroundNextTileAttrib = ppuRead(
+          0x23C0 |
+              (vramAddress.nametableY << 11) |
+              (vramAddress.nametableX << 10) |
+              ((vramAddress.coarseY >> 2) << 3) |
+              (vramAddress.coarseX >> 2),
+        );
+
+        if ((vramAddress.coarseY & 0x02) != 0) {
+          backgroundNextTileAttrib >>= 4;
+        }
+        if ((vramAddress.coarseX & 0x02) != 0) {
+          backgroundNextTileAttrib >>= 2;
+        }
+        backgroundNextTileAttrib &= 0x03;
+      case 4:
+        backgroundNextTileLsb = ppuRead(
+          (control.patternBackground << 12) +
+              (backgroundNextTileId << 4) +
+              (vramAddress.fineY) +
+              0,
+        );
+      case 6:
+        backgroundNextTileMsb = ppuRead(
+          (control.patternBackground << 12) +
+              (backgroundNextTileId << 4) +
+              (vramAddress.fineY) +
+              8,
+        );
+      case 7:
+        _incrementScrollX();
+    }
+  }
+
+  void _evaluateSprites() {
+    for (var i = 0; i < spriteScanline.length; i++) {
+      spriteScanline[i] = ObjectAttributeEntry();
+    }
+    spriteCount = 0;
+
+    for (var i = 0; i < 8; i++) {
+      spriteShifterPatternLow[i] = 0;
+      spriteShifterPatternHigh[i] = 0;
+    }
+
+    var nOAMEntry = 0;
+    spriteZeroHitPossible = false;
+    while (nOAMEntry < 64 && spriteCount < 8) {
+      final diff = scanline - pOAM[nOAMEntry * 4];
+      if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
+        if (nOAMEntry == 0) {
+          spriteZeroHitPossible = true;
+        }
+
+        spriteScanline[spriteCount].y = pOAM[nOAMEntry * 4];
+        spriteScanline[spriteCount].id = pOAM[nOAMEntry * 4 + 1];
+        spriteScanline[spriteCount].attribute = pOAM[nOAMEntry * 4 + 2];
+        spriteScanline[spriteCount].x = pOAM[nOAMEntry * 4 + 3];
+        spriteCount++;
+      }
+      nOAMEntry++;
+    }
+
+    while (nOAMEntry < 64) {
+      final diff = scanline - pOAM[nOAMEntry * 4];
+      if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
+        status.spriteOverflow = true;
+        break;
+      }
+      nOAMEntry++;
+    }
+  }
+
+  void _loadSpritePatterns() {
+    for (var i = 0; i < spriteCount; i++) {
+      int spritePatternBitsLow;
+      int spritePatternBitsHigh;
+      int spritePatternAddrLow;
+      int spritePatternAddrHigh;
+
+      if (!control.spriteSize) {
+        if ((spriteScanline[i].attribute & 0x80) == 0) {
+          spritePatternAddrLow = (control.patternSprite << 12) |
+              (spriteScanline[i].id << 4) |
+              (scanline - spriteScanline[i].y);
+        } else {
+          spritePatternAddrLow = (control.patternSprite << 12) |
+              (spriteScanline[i].id << 4) |
+              (7 - (scanline - spriteScanline[i].y));
+        }
+      } else {
+        if ((spriteScanline[i].attribute & 0x80) == 0) {
+          if (scanline - spriteScanline[i].y < 8) {
+            spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
+                ((spriteScanline[i].id & 0xFE) << 4) |
+                ((scanline - spriteScanline[i].y) & 0x07);
+          } else {
+            spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
+                (((spriteScanline[i].id & 0xFE) + 1) << 4) |
+                ((scanline - spriteScanline[i].y) & 0x07);
+          }
+        } else {
+          if (scanline - spriteScanline[i].y < 8) {
+            spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
+                (((spriteScanline[i].id & 0xFE) + 1) << 4) |
+                ((7 - (scanline - spriteScanline[i].y)) & 0x07);
+          } else {
+            spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
+                ((spriteScanline[i].id & 0xFE) << 4) |
+                ((7 - (scanline - spriteScanline[i].y)) & 0x07);
+          }
+        }
+      }
+
+      spritePatternAddrHigh = spritePatternAddrLow + 8;
+      spritePatternBitsLow = ppuRead(spritePatternAddrLow);
+      spritePatternBitsHigh = ppuRead(spritePatternAddrHigh);
+
+      if ((spriteScanline[i].attribute & 0x40) != 0) {
+        spritePatternBitsLow = _flipByte(spritePatternBitsLow);
+        spritePatternBitsHigh = _flipByte(spritePatternBitsHigh);
+      }
+
+      spriteShifterPatternLow[i] = spritePatternBitsLow;
+      spriteShifterPatternHigh[i] = spritePatternBitsHigh;
+    }
+  }
+
+  int _flipByte(int value) {
+    var result = value;
+    result = ((result & 0xF0) >> 4) | ((result & 0x0F) << 4);
+    result = ((result & 0xCC) >> 2) | ((result & 0x33) << 2);
+    result = ((result & 0xAA) >> 1) | ((result & 0x55) << 1);
+    return result;
+  }
+
+  void _composeScanline() {
+    var backgroundPixel = 0x00;
+    var backgroundPalette = 0x00;
+
+    if (mask.renderBackground) {
+      if (mask.renderBackgroundLeft || (cycle >= 9)) {
+        final bitMux = 0x8000 >> fineX;
+
+        final p0Pixel = (backgroundShifterPatternLow & bitMux) > 0 ? 1 : 0;
+        final p1Pixel = (backgroundShifterPatternHigh & bitMux) > 0 ? 1 : 0;
+        backgroundPixel = (p1Pixel << 1) | p0Pixel;
+
+        final backgroundPal0 =
+            (backgroundShifterAttribLow & bitMux) > 0 ? 1 : 0;
+        final backgroundPal1 =
+            (backgroundShifterAttribHigh & bitMux) > 0 ? 1 : 0;
+        backgroundPalette = (backgroundPal1 << 1) | backgroundPal0;
+      }
+    }
+
+    var fgPixel = 0x00;
+    var fgPalette = 0x00;
+    var fgPriority = 0x00;
+
+    if (mask.renderSprites) {
+      if (mask.renderSpritesLeft || (cycle >= 9)) {
+        spriteZeroBeingRendered = false;
+
+        for (var i = 0; i < spriteCount; i++) {
+          if (spriteScanline[i].x == 0) {
+            final fgPixelLow = (spriteShifterPatternLow[i] & 0x80) > 0 ? 1 : 0;
+            final fgPixelHigh =
+                (spriteShifterPatternHigh[i] & 0x80) > 0 ? 1 : 0;
+            fgPixel = (fgPixelHigh << 1) | fgPixelLow;
+
+            fgPalette = (spriteScanline[i].attribute & 0x03) + 0x04;
+            fgPriority = (spriteScanline[i].attribute & 0x20) == 0 ? 1 : 0;
+
+            if (fgPixel != 0) {
+              if (i == 0) {
+                spriteZeroBeingRendered = true;
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    _checkSpriteZeroHit(backgroundPixel, fgPixel);
+
+    var pixel = 0x00;
+    var palette = 0x00;
+
+    if (renderMode == RenderMode.background) {
+      pixel = backgroundPixel;
+      palette = backgroundPalette;
+    } else if (renderMode == RenderMode.sprites) {
+      pixel = fgPixel;
+      palette = fgPalette;
+    } else {
+      if (backgroundPixel == 0 && fgPixel == 0) {
+        pixel = 0x00;
+        palette = 0x00;
+      } else if (backgroundPixel == 0 && fgPixel > 0) {
+        pixel = fgPixel;
+        palette = fgPalette;
+      } else if (backgroundPixel > 0 && fgPixel == 0) {
+        pixel = backgroundPixel;
+        palette = backgroundPalette;
+      } else if (backgroundPixel > 0 && fgPixel > 0) {
+        if (fgPriority != 0) {
+          pixel = fgPixel;
+          palette = fgPalette;
+        } else {
+          pixel = backgroundPixel;
+          palette = backgroundPalette;
+        }
+      }
+    }
+
+    final colorIndex = ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F;
+
+    if (scanline >= 0 && scanline < 240 && cycle >= 1 && cycle < 257) {
+      screenPixels[scanline][cycle - 1] = colorIndex;
+    }
+  }
+
+  void _checkSpriteZeroHit(int backgroundPixel, int fgPixel) {
+    if (backgroundPixel != 0 && fgPixel != 0) {
+      if (mask.renderBackground && mask.renderSprites) {
+        if (mask.renderBackgroundLeft && mask.renderSpritesLeft) {
+          if (cycle >= 1 && cycle < 258) {
+            if (spriteZeroHitPossible && spriteZeroBeingRendered) {
+              status.spriteZeroHit = true;
+            }
+          }
+        } else {
+          if (cycle >= 9 && cycle < 258) {
+            if (spriteZeroHitPossible && spriteZeroBeingRendered) {
+              status.spriteZeroHit = true;
+            }
+          }
+        }
+      }
+    }
+  }
+
   void reset() {
     fineX = 0x00;
     addressLatch = 0;
@@ -355,390 +681,21 @@ class PPU {
       if (memoryAddress == 0x0014) memoryAddress = 0x0004;
       if (memoryAddress == 0x0018) memoryAddress = 0x0008;
       if (memoryAddress == 0x001C) memoryAddress = 0x000C;
+
       paletteTable[memoryAddress] = data;
     }
   }
 
   void clock() {
-    void incrementScrollX() {
-      if (mask.renderBackground || mask.renderSprites) {
-        if (vramAddress.coarseX == 31) {
-          vramAddress.coarseX = 0;
-          vramAddress.nametableX = ~vramAddress.nametableX;
-        } else {
-          vramAddress.coarseX++;
-        }
-      }
-    }
-
-    void incrementScrollY() {
-      if (mask.renderBackground || mask.renderSprites) {
-        if (vramAddress.fineY < 7) {
-          vramAddress.fineY++;
-        } else {
-          vramAddress.fineY = 0;
-          if (vramAddress.coarseY == 29) {
-            vramAddress.coarseY = 0;
-            vramAddress.nametableY = ~vramAddress.nametableY;
-          } else if (vramAddress.coarseY == 31) {
-            vramAddress.coarseY = 0;
-          } else {
-            vramAddress.coarseY++;
-          }
-        }
-      }
-    }
-
-    void transferAddressX() {
-      if (mask.renderBackground || mask.renderSprites) {
-        vramAddress.nametableX = temporaryAddressRegister.nametableX;
-        vramAddress.coarseX = temporaryAddressRegister.coarseX;
-      }
-    }
-
-    void transferAddressY() {
-      if (mask.renderBackground || mask.renderSprites) {
-        vramAddress.fineY = temporaryAddressRegister.fineY;
-        vramAddress.nametableY = temporaryAddressRegister.nametableY;
-        vramAddress.coarseY = temporaryAddressRegister.coarseY;
-      }
-    }
-
-    void loadBackgroundShifters() {
-      backgroundShifterPatternLow =
-          (backgroundShifterPatternLow & 0xFF00) | backgroundNextTileLsb;
-      backgroundShifterPatternHigh =
-          (backgroundShifterPatternHigh & 0xFF00) | backgroundNextTileMsb;
-
-      backgroundShifterAttribLow = (backgroundShifterAttribLow & 0xFF00) |
-          ((backgroundNextTileAttrib & 0x01) != 0 ? 0xFF : 0x00);
-      backgroundShifterAttribHigh = (backgroundShifterAttribHigh & 0xFF00) |
-          ((backgroundNextTileAttrib & 0x02) != 0 ? 0xFF : 0x00);
-    }
-
-    void updateShifters() {
-      if (mask.renderBackground) {
-        backgroundShifterPatternLow <<= 1;
-        backgroundShifterPatternHigh <<= 1;
-        backgroundShifterAttribLow <<= 1;
-        backgroundShifterAttribHigh <<= 1;
-      }
-
-      if (mask.renderSprites && cycle >= 1 && cycle < 258) {
-        for (var i = 0; i < spriteCount; i++) {
-          if (spriteScanline[i].x > 0) {
-            spriteScanline[i].x--;
-          } else {
-            spriteShifterPatternLow[i] <<= 1;
-            spriteShifterPatternHigh[i] <<= 1;
-          }
-        }
-      }
-    }
-
     if (scanline >= -1 && scanline < 240) {
-      if (scanline == 0 &&
-          cycle == 0 &&
-          (mask.renderBackground || mask.renderSprites) &&
-          (frameCounter & 1) == 1) {
-        cycle = 1;
-      }
-
-      if (scanline == -1 && cycle == 1) {
-        status.verticalBlank = false;
-
-        status.spriteOverflow = false;
-
-        status.spriteZeroHit = false;
-
-        for (var i = 0; i < 8; i++) {
-          spriteShifterPatternLow[i] = 0;
-          spriteShifterPatternHigh[i] = 0;
-        }
-      }
-
-      if ((cycle >= 2 && cycle < 258) || (cycle >= 321 && cycle < 338)) {
-        updateShifters();
-
-        switch ((cycle - 1) % 8) {
-          case 0:
-            loadBackgroundShifters();
-
-            backgroundNextTileId = ppuRead(0x2000 | (vramAddress.reg & 0x0FFF));
-          case 2:
-            backgroundNextTileAttrib = ppuRead(
-              0x23C0 |
-                  (vramAddress.nametableY << 11) |
-                  (vramAddress.nametableX << 10) |
-                  ((vramAddress.coarseY >> 2) << 3) |
-                  (vramAddress.coarseX >> 2),
-            );
-
-            if ((vramAddress.coarseY & 0x02) != 0) {
-              backgroundNextTileAttrib >>= 4;
-            }
-            if ((vramAddress.coarseX & 0x02) != 0) {
-              backgroundNextTileAttrib >>= 2;
-            }
-            backgroundNextTileAttrib &= 0x03;
-          case 4:
-            backgroundNextTileLsb = ppuRead(
-              (control.patternBackground << 12) +
-                  (backgroundNextTileId << 4) +
-                  (vramAddress.fineY) +
-                  0,
-            );
-          case 6:
-            backgroundNextTileMsb = ppuRead(
-              (control.patternBackground << 12) +
-                  (backgroundNextTileId << 4) +
-                  (vramAddress.fineY) +
-                  8,
-            );
-          case 7:
-            incrementScrollX();
-        }
-      }
-
-      if (cycle == 256) {
-        incrementScrollY();
-      }
-
-      if (cycle == 257) {
-        loadBackgroundShifters();
-        transferAddressX();
-      }
-
-      if (cycle == 260) {
-        if (mask.renderBackground || mask.renderSprites) {
-          cart?.getMapper().scanline();
-        }
-      }
-
-      if (cycle == 338 || cycle == 340) {
-        backgroundNextTileId = ppuRead(0x2000 | (vramAddress.reg & 0x0FFF));
-      }
-
-      if (scanline == -1 && cycle >= 280 && cycle < 305) {
-        transferAddressY();
-      }
-
-      if (cycle == 257 && scanline >= 0) {
-        for (var i = 0; i < spriteScanline.length; i++) {
-          spriteScanline[i] = ObjectAttributeEntry();
-        }
-        spriteCount = 0;
-
-        for (var i = 0; i < 8; i++) {
-          spriteShifterPatternLow[i] = 0;
-          spriteShifterPatternHigh[i] = 0;
-        }
-
-        var nOAMEntry = 0;
-        spriteZeroHitPossible = false;
-        while (nOAMEntry < 64 && spriteCount < 8) {
-          final diff = scanline - pOAM[nOAMEntry * 4];
-          if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
-            if (nOAMEntry == 0) {
-              spriteZeroHitPossible = true;
-            }
-
-            spriteScanline[spriteCount].y = pOAM[nOAMEntry * 4];
-            spriteScanline[spriteCount].id = pOAM[nOAMEntry * 4 + 1];
-            spriteScanline[spriteCount].attribute = pOAM[nOAMEntry * 4 + 2];
-            spriteScanline[spriteCount].x = pOAM[nOAMEntry * 4 + 3];
-            spriteCount++;
-          }
-          nOAMEntry++;
-        }
-
-        while (nOAMEntry < 64) {
-          final diff = scanline - pOAM[nOAMEntry * 4];
-          if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
-            status.spriteOverflow = true;
-            break;
-          }
-          nOAMEntry++;
-        }
-      }
-
-      if (cycle == 340) {
-        for (var i = 0; i < spriteCount; i++) {
-          int spritePatternBitsLow;
-          int spritePatternBitsHigh;
-          int spritePatternAddrLow;
-          int spritePatternAddrHigh;
-
-          if (!control.spriteSize) {
-            if ((spriteScanline[i].attribute & 0x80) == 0) {
-              spritePatternAddrLow = (control.patternSprite << 12) |
-                  (spriteScanline[i].id << 4) |
-                  (scanline - spriteScanline[i].y);
-            } else {
-              spritePatternAddrLow = (control.patternSprite << 12) |
-                  (spriteScanline[i].id << 4) |
-                  (7 - (scanline - spriteScanline[i].y));
-            }
-          } else {
-            if ((spriteScanline[i].attribute & 0x80) == 0) {
-              if (scanline - spriteScanline[i].y < 8) {
-                spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
-                    ((spriteScanline[i].id & 0xFE) << 4) |
-                    ((scanline - spriteScanline[i].y) & 0x07);
-              } else {
-                spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
-                    (((spriteScanline[i].id & 0xFE) + 1) << 4) |
-                    ((scanline - spriteScanline[i].y) & 0x07);
-              }
-            } else {
-              if (scanline - spriteScanline[i].y < 8) {
-                spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
-                    (((spriteScanline[i].id & 0xFE) + 1) << 4) |
-                    ((7 - (scanline - spriteScanline[i].y)) & 0x07);
-              } else {
-                spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
-                    ((spriteScanline[i].id & 0xFE) << 4) |
-                    ((7 - (scanline - spriteScanline[i].y)) & 0x07);
-              }
-            }
-          }
-
-          spritePatternAddrHigh = spritePatternAddrLow + 8;
-          spritePatternBitsLow = ppuRead(spritePatternAddrLow);
-          spritePatternBitsHigh = ppuRead(spritePatternAddrHigh);
-
-          if ((spriteScanline[i].attribute & 0x40) != 0) {
-            spritePatternBitsLow = ((spritePatternBitsLow & 0xF0) >> 4) |
-                ((spritePatternBitsLow & 0x0F) << 4);
-            spritePatternBitsLow = ((spritePatternBitsLow & 0xCC) >> 2) |
-                ((spritePatternBitsLow & 0x33) << 2);
-            spritePatternBitsLow = ((spritePatternBitsLow & 0xAA) >> 1) |
-                ((spritePatternBitsLow & 0x55) << 1);
-
-            spritePatternBitsHigh = ((spritePatternBitsHigh & 0xF0) >> 4) |
-                ((spritePatternBitsHigh & 0x0F) << 4);
-            spritePatternBitsHigh = ((spritePatternBitsHigh & 0xCC) >> 2) |
-                ((spritePatternBitsHigh & 0x33) << 2);
-            spritePatternBitsHigh = ((spritePatternBitsHigh & 0xAA) >> 1) |
-                ((spritePatternBitsHigh & 0x55) << 1);
-          }
-
-          spriteShifterPatternLow[i] = spritePatternBitsLow;
-          spriteShifterPatternHigh[i] = spritePatternBitsHigh;
-        }
-      }
+      _handleVisibleScanline();
     }
 
     if (scanline >= 241 && scanline < 261) {
-      if (scanline == 241 && cycle == 1) {
-        status.verticalBlank = true;
-        if (control.enableNmi) {
-          nmi = true;
-        }
-      }
+      _handleVerticalBlank();
     }
 
-    var backgroundPixel = 0x00;
-    var backgroundPalette = 0x00;
-
-    if (mask.renderBackground) {
-      if (mask.renderBackgroundLeft || (cycle >= 9)) {
-        final bitMux = 0x8000 >> fineX;
-
-        final p0Pixel = (backgroundShifterPatternLow & bitMux) > 0 ? 1 : 0;
-        final p1Pixel = (backgroundShifterPatternHigh & bitMux) > 0 ? 1 : 0;
-        backgroundPixel = (p1Pixel << 1) | p0Pixel;
-
-        final backgroundPal0 =
-            (backgroundShifterAttribLow & bitMux) > 0 ? 1 : 0;
-        final backgroundPal1 =
-            (backgroundShifterAttribHigh & bitMux) > 0 ? 1 : 0;
-        backgroundPalette = (backgroundPal1 << 1) | backgroundPal0;
-      }
-    }
-
-    var fgPixel = 0x00;
-    var fgPalette = 0x00;
-    var fgPriority = 0x00;
-
-    if (mask.renderSprites) {
-      if (mask.renderSpritesLeft || (cycle >= 9)) {
-        spriteZeroBeingRendered = false;
-
-        for (var i = 0; i < spriteCount; i++) {
-          if (spriteScanline[i].x == 0) {
-            final fgPixelLow = (spriteShifterPatternLow[i] & 0x80) > 0 ? 1 : 0;
-            final fgPixelHigh =
-                (spriteShifterPatternHigh[i] & 0x80) > 0 ? 1 : 0;
-            fgPixel = (fgPixelHigh << 1) | fgPixelLow;
-
-            fgPalette = (spriteScanline[i].attribute & 0x03) + 0x04;
-            fgPriority = (spriteScanline[i].attribute & 0x20) == 0 ? 1 : 0;
-
-            if (fgPixel != 0) {
-              if (i == 0) {
-                spriteZeroBeingRendered = true;
-              }
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    if (backgroundPixel != 0 && fgPixel != 0) {
-      if (mask.renderBackground && mask.renderSprites) {
-        if (mask.renderBackgroundLeft && mask.renderSpritesLeft) {
-          if (cycle >= 1 && cycle < 258) {
-            if (spriteZeroHitPossible && spriteZeroBeingRendered) {
-              status.spriteZeroHit = true;
-            }
-          }
-        } else {
-          if (cycle >= 9 && cycle < 258) {
-            if (spriteZeroHitPossible && spriteZeroBeingRendered) {
-              status.spriteZeroHit = true;
-            }
-          }
-        }
-      }
-    }
-
-    var pixel = 0x00;
-    var palette = 0x00;
-
-    if (renderMode == RenderMode.background) {
-      pixel = backgroundPixel;
-      palette = backgroundPalette;
-    } else if (renderMode == RenderMode.sprites) {
-      pixel = fgPixel;
-      palette = fgPalette;
-    } else {
-      if (backgroundPixel == 0 && fgPixel == 0) {
-        pixel = 0x00;
-        palette = 0x00;
-      } else if (backgroundPixel == 0 && fgPixel > 0) {
-        pixel = fgPixel;
-        palette = fgPalette;
-      } else if (backgroundPixel > 0 && fgPixel == 0) {
-        pixel = backgroundPixel;
-        palette = backgroundPalette;
-      } else if (backgroundPixel > 0 && fgPixel > 0) {
-        if (fgPriority != 0) {
-          pixel = fgPixel;
-          palette = fgPalette;
-        } else {
-          pixel = backgroundPixel;
-          palette = backgroundPalette;
-        }
-      }
-    }
-
-    final colorIndex = ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F;
-
-    if (scanline >= 0 && scanline < 240 && cycle >= 1 && cycle < 257) {
-      screenPixels[scanline][cycle - 1] = colorIndex;
-    }
+    _composeScanline();
 
     cycle++;
     if (cycle >= 341) {
@@ -748,6 +705,71 @@ class PPU {
         scanline = -1;
         frameComplete = true;
         frameCounter++;
+      }
+    }
+  }
+
+  void _handleVisibleScanline() {
+    if (scanline == 0 &&
+        cycle == 0 &&
+        (mask.renderBackground || mask.renderSprites) &&
+        (frameCounter & 1) == 1) {
+      cycle = 1;
+    }
+
+    if (scanline == -1 && cycle == 1) {
+      status.verticalBlank = false;
+      status.spriteOverflow = false;
+      status.spriteZeroHit = false;
+
+      for (var i = 0; i < 8; i++) {
+        spriteShifterPatternLow[i] = 0;
+        spriteShifterPatternHigh[i] = 0;
+      }
+    }
+
+    if ((cycle >= 2 && cycle < 258) || (cycle >= 321 && cycle < 338)) {
+      _updateShifters();
+      _fetchBackgroundTile();
+    }
+
+    if (cycle == 256) {
+      _incrementScrollY();
+    }
+
+    if (cycle == 257) {
+      _loadBackgroundShifters();
+      _transferAddressX();
+    }
+
+    if (cycle == 260) {
+      if (mask.renderBackground || mask.renderSprites) {
+        cart?.getMapper().scanline();
+      }
+    }
+
+    if (cycle == 338 || cycle == 340) {
+      backgroundNextTileId = ppuRead(0x2000 | (vramAddress.reg & 0x0FFF));
+    }
+
+    if (scanline == -1 && cycle >= 280 && cycle < 305) {
+      _transferAddressY();
+    }
+
+    if (cycle == 257 && scanline >= 0) {
+      _evaluateSprites();
+    }
+
+    if (cycle == 340) {
+      _loadSpritePatterns();
+    }
+  }
+
+  void _handleVerticalBlank() {
+    if (scanline == 241 && cycle == 1) {
+      status.verticalBlank = true;
+      if (control.enableNmi) {
+        nmi = true;
       }
     }
   }
