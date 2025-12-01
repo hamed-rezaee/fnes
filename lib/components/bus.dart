@@ -23,9 +23,9 @@ class Bus {
   double _audioTime = 0;
   double _audioTimePerNESClock = 0;
   double _audioTimePerSystemSample = 0;
-
   final List<double> _audioBuffer = [];
-  final int _audioBufferSize = 1024;
+  static const int _audioBufferSize = 1024;
+  int _audioBufferIndex = 0;
 
   int _systemClockCounter = 0;
 
@@ -43,8 +43,9 @@ class Bus {
   }
 
   void cpuWrite(int address, int data) {
-    if (cart?.cpuWrite(address, data) ?? false) {
-    } else if (address >= 0x0000 && address <= 0x1FFF) {
+    if (cart?.cpuWrite(address, data) ?? false) return;
+
+    if (address >= 0x0000 && address <= 0x1FFF) {
       _cpuRam[address & 0x07FF] = data;
     } else if (address >= 0x2000 && address <= 0x3FFF) {
       ppu.cpuWrite(address & 0x0007, data);
@@ -57,7 +58,9 @@ class Bus {
       _dmaAddress = 0x00;
       _dmaTransfer = true;
     } else if (address >= 0x4016 && address <= 0x4017) {
-      _controllerState[address & 0x0001] = controller[address & 0x0001];
+      if ((data & 0x01) == 0) {
+        _controllerState[address & 0x0001] = controller[address & 0x0001];
+      }
     }
   }
 
@@ -65,7 +68,10 @@ class Bus {
     var data = 0x00;
 
     if (cart?.cpuRead(address, (v) => data = v) ?? false) {
-    } else if (address >= 0x0000 && address <= 0x1FFF) {
+      return data;
+    }
+
+    if (address >= 0x0000 && address <= 0x1FFF) {
       data = _cpuRam[address & 0x07FF];
     } else if (address >= 0x2000 && address <= 0x3FFF) {
       data = ppu.cpuRead(address & 0x0007, readOnly: readOnly);
@@ -73,8 +79,10 @@ class Bus {
       data = apu.cpuRead(address);
     } else if (address >= 0x4016 && address <= 0x4017) {
       data = (_controllerState[address & 0x0001] & 0x80) > 0 ? 1 : 0;
-      _controllerState[address & 0x0001] =
-          (_controllerState[address & 0x0001] << 1) & 0xFF;
+      if (!readOnly) {
+        _controllerState[address & 0x0001] =
+            (_controllerState[address & 0x0001] << 1) & 0xFF;
+      }
     }
 
     return data;
@@ -132,10 +140,11 @@ class Bus {
       _audioTime -= _audioTimePerSystemSample;
       _audioSample = apu.getOutputSample();
 
-      _audioBuffer.add(_audioSample);
-
-      if (_audioBuffer.length > _audioBufferSize) {
-        _audioBuffer.removeAt(0);
+      if (_audioBuffer.length < _audioBufferSize) {
+        _audioBuffer.add(_audioSample);
+      } else {
+        _audioBuffer[_audioBufferIndex] = _audioSample;
+        _audioBufferIndex = (_audioBufferIndex + 1) % _audioBufferSize;
       }
 
       audioSampleReady = true;
@@ -156,8 +165,18 @@ class Bus {
   }
 
   List<double> getAudioBuffer() {
-    final buffer = List<double>.from(_audioBuffer);
+    final buffer = <double>[];
+
+    if (_audioBuffer.length < _audioBufferSize) {
+      buffer.addAll(_audioBuffer);
+    } else {
+      buffer
+        ..addAll(_audioBuffer.sublist(_audioBufferIndex))
+        ..addAll(_audioBuffer.sublist(0, _audioBufferIndex));
+    }
+
     _audioBuffer.clear();
+    _audioBufferIndex = 0;
 
     return buffer;
   }
