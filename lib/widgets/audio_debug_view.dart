@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fnes/components/apu.dart';
 import 'package:fnes/controllers/audio_debug_view_controller.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
+import 'package:fnes/widgets/custom_segmented_button.dart';
 import 'package:signals/signals_flutter.dart';
 
 class AudioDebugView extends StatefulWidget {
@@ -40,10 +41,10 @@ class _AudioDebugViewState extends State<AudioDebugView> {
         );
 
         return Column(
+          spacing: 8,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildChannelSelector(),
-            const SizedBox(height: 10),
             Container(
               width: 320,
               height: 100,
@@ -51,13 +52,8 @@ class _AudioDebugViewState extends State<AudioDebugView> {
                 border: Border.all(color: Colors.grey.shade300),
                 color: Colors.grey.shade100,
               ),
-              child: CustomPaint(
-                painter: WaveformPainter(
-                  samples: samples,
-                ),
-              ),
+              child: CustomPaint(painter: WaveformPainter(samples: samples)),
             ),
-            const SizedBox(height: 10),
             RichText(
               text: TextSpan(
                 style: const TextStyle(
@@ -68,12 +64,12 @@ class _AudioDebugViewState extends State<AudioDebugView> {
                 children: [
                   const TextSpan(
                     text: 'Peak: ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: _formatLevel(peak)),
                   const TextSpan(
                     text: ' | RMS: ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: _formatLevel(rms)),
                 ],
@@ -84,42 +80,20 @@ class _AudioDebugViewState extends State<AudioDebugView> {
       });
 
   Widget _buildChannelSelector() => Watch(
-        (_) => SegmentedButton<AudioChannel>(
+        (_) => CustomSegmentedButton<AudioChannel>(
           showSelectedIcon: false,
           multiSelectionEnabled: true,
-          emptySelectionAllowed: true,
-          style: ButtonStyle(
-            shape: WidgetStateProperty.all(const RoundedRectangleBorder()),
-            textStyle: WidgetStateProperty.resolveWith(
-              (states) => TextStyle(
-                fontSize: 8,
-                fontWeight: states.contains(WidgetState.selected)
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-                fontFamily: 'MonospaceFont',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            backgroundColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return Colors.grey.shade300;
-              }
-
-              return null;
-            }),
-          ),
-          segments: [
-            for (final channel in AudioChannel.values)
-              ButtonSegment(value: channel, label: Text(channel.label)),
-          ],
-          selected: {
+          isEmptySelectionAllowed: true,
+          toLabel: (channel) => channel.label,
+          items: AudioChannel.values,
+          selectedItems: {
             if (controller.pulse1Enabled.value) AudioChannel.pulse1,
             if (controller.pulse2Enabled.value) AudioChannel.pulse2,
             if (controller.triangleEnabled.value) AudioChannel.triangle,
             if (controller.noiseEnabled.value) AudioChannel.noise,
             if (controller.dmcEnabled.value) AudioChannel.dmc,
           },
-          onSelectionChanged: (Set<AudioChannel> selected) {
+          onSelectedPatternTableChanged: (Set<AudioChannel> selected) {
             controller.pulse1Enabled.value =
                 selected.contains(AudioChannel.pulse1);
             controller.pulse2Enabled.value =

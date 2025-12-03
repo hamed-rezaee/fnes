@@ -7,16 +7,8 @@ import 'package:flutter/material.dart' hide Image;
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/controllers/palette_debug_view_controller.dart';
+import 'package:fnes/widgets/custom_segmented_button.dart';
 import 'package:signals/signals_flutter.dart';
-
-enum PatternTable {
-  background('Background'),
-  sprite('Sprite');
-
-  const PatternTable(this.title);
-
-  final String title;
-}
 
 class PaletteDebugView extends StatefulWidget {
   const PaletteDebugView({
@@ -92,62 +84,69 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
                   }
                 },
               ),
-              _buildDropdown<int>(
-                label: 'Pattern Table',
-                value: selectedPatternTable,
-                items: [
-                  for (var i = 0; i < PatternTable.values.length; i++)
-                    DropdownMenuItem(
-                      value: PatternTable.values[i].index,
-                      child: Text(
-                        PatternTable.values[i].title,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.black,
-                          fontWeight: selectedPatternTable == i
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontFamily: 'MonospaceFont',
-                        ),
-                      ),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value != null) controller.changePatternTable(value);
-                },
-              ),
-              _buildDropdown<int>(
-                label: 'Palette      ',
-                value: selectedPalette,
-                items: List.generate(
-                  8,
-                  (index) => DropdownMenuItem(
-                    value: index,
-                    child: Text(
-                      '$index',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.black,
-                        fontWeight: selectedPalette == index
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontFamily: 'MonospaceFont',
-                      ),
+              Row(
+                spacing: 8,
+                children: [
+                  const Text(
+                    'Pattern Table',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'MonospaceFont',
                     ),
                   ),
-                ),
-                onChanged: (value) {
-                  if (value != null) controller.changePalette(value);
-                },
+                  Expanded(
+                    child: CustomSegmentedButton<PatternTable>(
+                      showSelectedIcon: false,
+                      multiSelectionEnabled: false,
+                      isEmptySelectionAllowed: true,
+                      items: PatternTable.values,
+                      selectedItems: {selectedPatternTable},
+                      toLabel: (table) => table.label,
+                      onSelectedPatternTableChanged:
+                          (Set<PatternTable> selected) {
+                        if (selected.isNotEmpty) {
+                          controller.changePatternTable(selected.first);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                spacing: 8,
+                children: [
+                  const Text(
+                    'Palette      ',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                  Expanded(
+                    child: CustomSegmentedButton<int>(
+                      showSelectedIcon: false,
+                      multiSelectionEnabled: false,
+                      isEmptySelectionAllowed: true,
+                      items: List.generate(8, (index) => index),
+                      selectedItems: {selectedPalette},
+                      toLabel: (palette) => '$palette',
+                      onSelectedPatternTableChanged: (Set<int> selected) {
+                        if (selected.isNotEmpty) {
+                          controller.changePalette(selected.first);
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Center(
             child: FutureBuilder<Image>(
               key: ValueKey('$selectedPatternTable-$selectedPalette'),
-              future:
-                  _createPatternImage(selectedPatternTable, selectedPalette),
+              future: _createPatternImage(
+                selectedPatternTable.index,
+                selectedPalette,
+              ),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const SizedBox.shrink();
 
@@ -267,7 +266,7 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: 8),
           Expanded(

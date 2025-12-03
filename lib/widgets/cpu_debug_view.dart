@@ -87,17 +87,17 @@ class _CpuDebugViewState extends State<CpuDebugView> {
                 children: [
                   const TextSpan(
                     text: 'AC ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: acRegister),
                   const TextSpan(
                     text: ' | X ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: xRegister),
                   const TextSpan(
                     text: ' | Y ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: yRegister),
                 ],
@@ -114,7 +114,7 @@ class _CpuDebugViewState extends State<CpuDebugView> {
                 children: [
                   const TextSpan(
                     text: 'Flags ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: flags),
                 ],
@@ -123,7 +123,7 @@ class _CpuDebugViewState extends State<CpuDebugView> {
             const SizedBox(height: 8),
             const Text(
               'Disassembler',
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 2),
             SingleChildScrollView(

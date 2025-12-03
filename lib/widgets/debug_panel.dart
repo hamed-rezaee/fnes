@@ -126,7 +126,7 @@ class _DebugPanelState extends State<DebugPanel> {
                     style: const TextStyle(
                       fontSize: 10,
                       color: Colors.black,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

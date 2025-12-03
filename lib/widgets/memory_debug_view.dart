@@ -92,7 +92,7 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: 8),
           Expanded(
