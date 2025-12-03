@@ -9,7 +9,15 @@ import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cartridge.dart';
 import 'package:signals/signals_flutter.dart';
 
-enum RenderMode { both, background, sprites }
+enum RenderMode {
+  both('Background & Sprites'),
+  background('Background'),
+  sprites('Sprites');
+
+  const RenderMode(this.title);
+
+  final String title;
+}
 
 class NESEmulatorController {
   NESEmulatorController({required this.bus}) {

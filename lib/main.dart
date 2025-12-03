@@ -259,7 +259,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
         final showOnScreenController =
             nesController.isOnScreenControllerVisible.value;
         final uncapFramerate = nesController.uncapFramerate.value;
-        final renderMode = nesController.renderMode.value;
 
         return PopupMenuButton<String>(
           icon: const Icon(Icons.settings),
@@ -301,61 +300,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     color: Colors.black,
                   ),
                   const Text('Uncap Framerate', style: TextStyle(fontSize: 12)),
-                ],
-              ),
-            ),
-            _buildMenuGroupHeader('RENDERING'),
-            PopupMenuItem<String>(
-              value: 'render_mode_both',
-              onTap: () => nesController.setRenderMode(RenderMode.both),
-              child: Row(
-                spacing: 12,
-                children: [
-                  Icon(
-                    renderMode == RenderMode.both
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_unchecked,
-                    size: 16,
-                    color: Colors.black,
-                  ),
-                  const Text(
-                    'Background and Sprites',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: 'render_mode_bg',
-              onTap: () => nesController.setRenderMode(RenderMode.background),
-              child: Row(
-                spacing: 12,
-                children: [
-                  Icon(
-                    renderMode == RenderMode.background
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_unchecked,
-                    size: 16,
-                    color: Colors.black,
-                  ),
-                  const Text('Background', style: TextStyle(fontSize: 12)),
-                ],
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: 'render_mode_sp',
-              onTap: () => nesController.setRenderMode(RenderMode.sprites),
-              child: Row(
-                spacing: 12,
-                children: [
-                  Icon(
-                    renderMode == RenderMode.sprites
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_unchecked,
-                    size: 16,
-                    color: Colors.black,
-                  ),
-                  const Text('Sprites', style: TextStyle(fontSize: 12)),
                 ],
               ),
             ),

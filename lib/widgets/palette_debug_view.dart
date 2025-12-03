@@ -53,6 +53,7 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
     return Watch((_) {
       final selectedPalette = controller.selectedPalette.value;
       final selectedPatternTable = controller.selectedPatternTable.value;
+      final renderMode = widget.nesEmulatorController.renderMode.value;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,6 +61,36 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
           Column(
             spacing: 4,
             children: [
+              _buildDropdown<RenderMode>(
+                label: 'Render Mode  ',
+                value: renderMode,
+                items: RenderMode.values
+                    .map((mode) => DropdownMenuItem(
+                          value: mode,
+                          child: Row(
+                            children: [
+                              Text(
+                                mode.title,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.black,
+                                  fontWeight: renderMode == mode
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  fontFamily: 'MonospaceFont',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    widget.nesEmulatorController.setRenderMode(value);
+                  }
+                },
+              ),
+              const SizedBox(width: 16),
               _buildDropdown<int>(
                 label: 'Pattern Table',
                 value: selectedPatternTable,
