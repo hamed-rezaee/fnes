@@ -14,9 +14,9 @@ enum RenderMode {
   background('Background'),
   sprites('Sprites');
 
-  const RenderMode(this.title);
+  const RenderMode(this.label);
 
-  final String title;
+  final String label;
 }
 
 class NESEmulatorController {

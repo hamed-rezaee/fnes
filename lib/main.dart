@@ -255,7 +255,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
   Widget _buildSettingsMenu() => Watch((_) {
         final showDebugger = nesController.isDebuggerVisible.value;
         final filterQuality = nesController.filterQuality.value;
-        final audioEnabled = nesController.audioEnabled.value;
         final showOnScreenController =
             nesController.isOnScreenControllerVisible.value;
         final uncapFramerate = nesController.uncapFramerate.value;
@@ -300,24 +299,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     color: Colors.black,
                   ),
                   const Text('Uncap Framerate', style: TextStyle(fontSize: 12)),
-                ],
-              ),
-            ),
-            _buildMenuGroupHeader('AUDIO'),
-            PopupMenuItem<String>(
-              value: 'toggle_audio',
-              onTap: nesController.toggleAudio,
-              child: Row(
-                spacing: 12,
-                children: [
-                  Icon(
-                    audioEnabled
-                        ? Icons.check_box
-                        : Icons.check_box_outline_blank,
-                    size: 16,
-                    color: Colors.black,
-                  ),
-                  const Text('Audio', style: TextStyle(fontSize: 12)),
                 ],
               ),
             ),

@@ -65,24 +65,26 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
                 label: 'Render Mode  ',
                 value: renderMode,
                 items: RenderMode.values
-                    .map((mode) => DropdownMenuItem(
-                          value: mode,
-                          child: Row(
-                            children: [
-                              Text(
-                                mode.title,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.black,
-                                  fontWeight: renderMode == mode
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  fontFamily: 'MonospaceFont',
-                                ),
+                    .map(
+                      (mode) => DropdownMenuItem(
+                        value: mode,
+                        child: Row(
+                          children: [
+                            Text(
+                              mode.label,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.black,
+                                fontWeight: renderMode == mode
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                fontFamily: 'MonospaceFont',
                               ),
-                            ],
-                          ),
-                        ))
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
                     .toList(),
                 onChanged: (value) {
                   if (value != null) {

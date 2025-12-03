@@ -7,10 +7,10 @@ enum AudioChannel {
   pulse2('Pulse 2'),
   triangle('Triangle'),
   noise('Noise'),
-  dmc('DMC'),
-  mixed('Mixed');
+  dmc('DMC');
 
   const AudioChannel(this.label);
+
   final String label;
 }
 
@@ -70,7 +70,7 @@ class AudioDebugViewController {
   final Signal<double> dmcPeak = signal(0);
   final Signal<double> dmcRMS = signal(0);
 
-  final Signal<AudioChannel> selectedChannel = signal(AudioChannel.mixed);
+  final Signal<AudioChannel> selectedChannel = signal(AudioChannel.pulse1);
 
   final Signal<bool> pulse1Enabled = signal(true);
   final Signal<bool> pulse2Enabled = signal(true);
@@ -161,17 +161,6 @@ class AudioDebugViewController {
       case AudioChannel.dmc:
         dmcEnabled.value = true;
         apu.dmc.enable = true;
-      case AudioChannel.mixed:
-        pulse1Enabled.value = true;
-        pulse2Enabled.value = true;
-        triangleEnabled.value = true;
-        noiseEnabled.value = true;
-        dmcEnabled.value = true;
-        apu.pulse1.enable = true;
-        apu.pulse2.enable = true;
-        apu.triangle.enable = true;
-        apu.noise.enable = true;
-        apu.dmc.enable = true;
     }
   }
 
@@ -191,17 +180,6 @@ class AudioDebugViewController {
         apu.noise.enable = false;
       case AudioChannel.dmc:
         dmcEnabled.value = false;
-        apu.dmc.enable = false;
-      case AudioChannel.mixed:
-        pulse1Enabled.value = false;
-        pulse2Enabled.value = false;
-        triangleEnabled.value = false;
-        noiseEnabled.value = false;
-        dmcEnabled.value = false;
-        apu.pulse1.enable = false;
-        apu.pulse2.enable = false;
-        apu.triangle.enable = false;
-        apu.noise.enable = false;
         apu.dmc.enable = false;
     }
   }
@@ -223,22 +201,6 @@ class AudioDebugViewController {
       case AudioChannel.dmc:
         dmcEnabled.value = !dmcEnabled.value;
         apu.dmc.enable = dmcEnabled.value;
-      case AudioChannel.mixed:
-        final allEnabled = pulse1Enabled.value &&
-            pulse2Enabled.value &&
-            triangleEnabled.value &&
-            noiseEnabled.value &&
-            dmcEnabled.value;
-        pulse1Enabled.value = !allEnabled;
-        pulse2Enabled.value = !allEnabled;
-        triangleEnabled.value = !allEnabled;
-        noiseEnabled.value = !allEnabled;
-        dmcEnabled.value = !allEnabled;
-        apu.pulse1.enable = !allEnabled;
-        apu.pulse2.enable = !allEnabled;
-        apu.triangle.enable = !allEnabled;
-        apu.noise.enable = !allEnabled;
-        apu.dmc.enable = !allEnabled;
     }
   }
 

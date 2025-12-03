@@ -33,40 +33,11 @@ class _AudioDebugViewState extends State<AudioDebugView> {
 
   @override
   Widget build(BuildContext context) => Watch((_) {
-        final selectedChannel = controller.selectedChannel.value;
-
-        final (samples, peak, rms) = switch (selectedChannel) {
-          AudioChannel.pulse1 => (
-              controller.pulse1Samples.value,
-              controller.pulse1Peak.value,
-              controller.pulse1RMS.value,
-            ),
-          AudioChannel.pulse2 => (
-              controller.pulse2Samples.value,
-              controller.pulse2Peak.value,
-              controller.pulse2RMS.value,
-            ),
-          AudioChannel.triangle => (
-              controller.triangleSamples.value,
-              controller.trianglePeak.value,
-              controller.triangleRMS.value,
-            ),
-          AudioChannel.noise => (
-              controller.noiseSamples.value,
-              controller.noisePeak.value,
-              controller.noiseRMS.value,
-            ),
-          AudioChannel.dmc => (
-              controller.dmcSamples.value,
-              controller.dmcPeak.value,
-              controller.dmcRMS.value,
-            ),
-          AudioChannel.mixed => (
-              controller.waveformSamples.value,
-              controller.peakAmplitude.value,
-              controller.rmsLevel.value,
-            ),
-        };
+        final (samples, peak, rms) = (
+          controller.waveformSamples.value,
+          controller.peakAmplitude.value,
+          controller.rmsLevel.value,
+        );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +54,6 @@ class _AudioDebugViewState extends State<AudioDebugView> {
               child: CustomPaint(
                 painter: WaveformPainter(
                   samples: samples,
-                  color: _getChannelColor(selectedChannel),
                 ),
               ),
             ),
@@ -113,120 +83,60 @@ class _AudioDebugViewState extends State<AudioDebugView> {
         );
       });
 
-  Widget _buildChannelSelector() => Watch((_) {
-        final selectedChannel = controller.selectedChannel.value;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                spacing: 4,
-                children: [
-                  for (final channel in AudioChannel.values)
-                    _buildChannelButton(channel, selectedChannel == channel),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                spacing: 8,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildChannelToggle(
-                    AudioChannel.pulse1,
-                    controller.pulse1Enabled,
-                  ),
-                  _buildChannelToggle(
-                    AudioChannel.pulse2,
-                    controller.pulse2Enabled,
-                  ),
-                  _buildChannelToggle(
-                    AudioChannel.triangle,
-                    controller.triangleEnabled,
-                  ),
-                  _buildChannelToggle(
-                    AudioChannel.noise,
-                    controller.noiseEnabled,
-                  ),
-                  _buildChannelToggle(AudioChannel.dmc, controller.dmcEnabled),
-                ],
-              ),
-            ),
-          ],
-        );
-      });
-
-  Widget _buildChannelButton(AudioChannel channel, bool isSelected) => Material(
-        child: InkWell(
-          onTap: () => controller.selectedChannel.value = channel,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color:
-                  isSelected ? _getChannelColor(channel) : Colors.grey.shade300,
-              border: Border.all(color: Colors.grey),
-            ),
-            child: Text(
-              channel.label,
-              style: TextStyle(
+  Widget _buildChannelSelector() => Watch(
+        (_) => SegmentedButton<AudioChannel>(
+          showSelectedIcon: false,
+          multiSelectionEnabled: true,
+          emptySelectionAllowed: true,
+          style: ButtonStyle(
+            shape: WidgetStateProperty.all(const RoundedRectangleBorder()),
+            textStyle: WidgetStateProperty.resolveWith(
+              (states) => TextStyle(
                 fontSize: 8,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? Colors.white : Colors.black,
+                fontWeight: states.contains(WidgetState.selected)
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+                fontFamily: 'MonospaceFont',
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return Colors.grey.shade300;
+              }
+
+              return null;
+            }),
           ),
+          segments: [
+            for (final channel in AudioChannel.values)
+              ButtonSegment(value: channel, label: Text(channel.label)),
+          ],
+          selected: {
+            if (controller.pulse1Enabled.value) AudioChannel.pulse1,
+            if (controller.pulse2Enabled.value) AudioChannel.pulse2,
+            if (controller.triangleEnabled.value) AudioChannel.triangle,
+            if (controller.noiseEnabled.value) AudioChannel.noise,
+            if (controller.dmcEnabled.value) AudioChannel.dmc,
+          },
+          onSelectionChanged: (Set<AudioChannel> selected) {
+            controller.pulse1Enabled.value =
+                selected.contains(AudioChannel.pulse1);
+            controller.pulse2Enabled.value =
+                selected.contains(AudioChannel.pulse2);
+            controller.triangleEnabled.value =
+                selected.contains(AudioChannel.triangle);
+            controller.noiseEnabled.value =
+                selected.contains(AudioChannel.noise);
+            controller.dmcEnabled.value = selected.contains(AudioChannel.dmc);
+            widget.apu.pulse1.enable = controller.pulse1Enabled.value;
+            widget.apu.pulse2.enable = controller.pulse2Enabled.value;
+            widget.apu.triangle.enable = controller.triangleEnabled.value;
+            widget.apu.noise.enable = controller.noiseEnabled.value;
+            widget.apu.dmc.enable = controller.dmcEnabled.value;
+          },
         ),
       );
-
-  Widget _buildChannelToggle(
-    AudioChannel channel,
-    Signal<bool> enabledSignal,
-  ) =>
-      Watch((_) {
-        final isEnabled = enabledSignal.value;
-
-        return GestureDetector(
-          onTap: () => controller.toggleChannel(channel),
-          child: Row(
-            spacing: 4,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: GestureDetector(
-                  onTap: () => controller.toggleChannel(channel),
-                  child: Icon(
-                    isEnabled ? Icons.check_box : Icons.check_box_outline_blank,
-                    size: 16,
-                    color: isEnabled ? Colors.black : Colors.grey,
-                  ),
-                ),
-              ),
-              Text(
-                channel.label,
-                style:
-                    const TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        );
-      });
-
-  Color _getChannelColor(AudioChannel channel) {
-    return switch (channel) {
-      AudioChannel.pulse1 => Colors.red,
-      AudioChannel.pulse2 => Colors.orange,
-      AudioChannel.triangle => Colors.blue,
-      AudioChannel.noise => Colors.green,
-      AudioChannel.dmc => Colors.purple,
-      AudioChannel.mixed => Colors.blueGrey,
-    };
-  }
 
   static String _formatLevel(double level) {
     final percentage = (level * 100).toStringAsFixed(1);
@@ -243,7 +153,7 @@ class _AudioDebugViewState extends State<AudioDebugView> {
 }
 
 class WaveformPainter extends CustomPainter {
-  WaveformPainter({required this.samples, this.color = Colors.blueGrey});
+  WaveformPainter({required this.samples, this.color = Colors.black});
 
   final List<double> samples;
   final Color color;
