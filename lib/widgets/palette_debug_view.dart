@@ -59,7 +59,7 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Column(
-            spacing: 4,
+            spacing: 8,
             children: [
               _buildDropdown<RenderMode>(
                 label: 'Render Mode  ',
@@ -92,7 +92,6 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
                   }
                 },
               ),
-              const SizedBox(width: 16),
               _buildDropdown<int>(
                 label: 'Pattern Table',
                 value: selectedPatternTable,
@@ -117,7 +116,6 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
                   if (value != null) controller.changePatternTable(value);
                 },
               ),
-              const SizedBox(width: 16),
               _buildDropdown<int>(
                 label: 'Palette      ',
                 value: selectedPalette,
@@ -125,17 +123,15 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
                   8,
                   (index) => DropdownMenuItem(
                     value: index,
-                    child: Center(
-                      child: Text(
-                        '$index',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.black,
-                          fontWeight: selectedPalette == index
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontFamily: 'MonospaceFont',
-                        ),
+                    child: Text(
+                      '$index',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.black,
+                        fontWeight: selectedPalette == index
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontFamily: 'MonospaceFont',
                       ),
                     ),
                   ),
@@ -146,15 +142,18 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          FutureBuilder<Image>(
-            key: ValueKey('$selectedPatternTable-$selectedPalette'),
-            future: _createPatternImage(selectedPatternTable, selectedPalette),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
+          const SizedBox(height: 16),
+          Center(
+            child: FutureBuilder<Image>(
+              key: ValueKey('$selectedPatternTable-$selectedPalette'),
+              future:
+                  _createPatternImage(selectedPatternTable, selectedPalette),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const SizedBox.shrink();
 
-              return _buildPatternTable(snapshot.data);
-            },
+                return _buildPatternTable(snapshot.data);
+              },
+            ),
           ),
         ],
       );
@@ -271,19 +270,21 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<T>(
-                value: value,
-                items: items,
-                onChanged: onChanged,
-                isDense: true,
-                focusColor: Colors.white,
-                style: const TextStyle(fontSize: 10, color: Colors.black),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<T>(
+                  value: value,
+                  items: items,
+                  onChanged: onChanged,
+                  isDense: true,
+                  focusColor: Colors.white,
+                  style: const TextStyle(fontSize: 10, color: Colors.black),
+                ),
               ),
             ),
           ),

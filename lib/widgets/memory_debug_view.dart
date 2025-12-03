@@ -36,6 +36,7 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 16,
           children: [
             _buildDropdown<MemoryRegion>(
               context: context,
@@ -65,13 +66,14 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
                 if (value != null) controller.selectRegion(value);
               },
             ),
-            const SizedBox(height: 16),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: RichText(
-                text: _getMemoryWindowRichText(
-                  cpu: widget.cpu,
-                  region: selectedRegion,
+            Center(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: RichText(
+                  text: _getMemoryWindowRichText(
+                    cpu: widget.cpu,
+                    region: selectedRegion,
+                  ),
                 ),
               ),
             ),
@@ -93,23 +95,26 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration:
-                BoxDecoration(border: Border.all(color: Colors.grey.shade300)),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<T>(
-                value: value,
-                items: items,
-                isDense: true,
-                onChanged: onChanged,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<T>(
+                  value: value,
+                  items: items,
+                  isDense: true,
+                  onChanged: onChanged,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.black,
+                    fontFamily: 'MonospaceFont',
+                  ),
+                  dropdownColor: Colors.white,
+                  focusColor: Colors.white,
                 ),
-                dropdownColor: Colors.white,
-                focusColor: Colors.white,
               ),
             ),
           ),
