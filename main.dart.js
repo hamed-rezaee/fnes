@@ -65768,10 +65768,11 @@ if(r)p.d=!1
 p.a=0
 if(s)p.wJ()
 break}},
-D2(){var s=this,r=s.e.ij(),q=s.f.ij(),p=s.r.ij(),o=s.w.ij(),n=s.x.e,m=B.h.cg(r+q,0,30),l=$.anz()[m],k=B.h.cg(p*3+o*2+n,0,202),j=l+$.anA()[k],i=j-s.y+0.99925*s.z
-s.z=i
+D2(){var s=this,r=s.e.ij(),q=s.f.ij(),p=s.r.ij(),o=s.w.ij(),n=s.x.e,m=B.h.cg(r+q,0,30),l=$.anz()[m],k=B.h.cg(p*3+o*2+n,0,202),j=l*3+$.anA()[k]
+l=j-s.y+0.99925*s.z
+s.z=l
 s.y=j
-j=0.8*i+0.2*s.Q
+j=1.5*l+0.7*s.Q
 s.Q=j
 return B.c.cg(j,-1,1)},
 wJ(){var s=this,r=++s.as
