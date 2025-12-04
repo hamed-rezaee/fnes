@@ -67990,7 +67990,7 @@ ac1(a){var s,r=this,q=r.c
 if(q>=0&&q<r.b.length-1){s=r.b
 B.b.acp(s,q+1,s.length)}q=r.b
 q.push(a)
-while(s=q.length,s>300)B.b.eb(q,0)
+while(s=q.length,s>1200)B.b.eb(q,0)
 r.c=s-1},
 abQ(){var s,r=this.b
 if(r.length===0)return null
@@ -68826,7 +68826,7 @@ if(t.c.b(m)){o=m
 A.rx(A.l(o))
 h.O7()
 h.ax.ao(A.l(o))}else throw i}},
-JZ(){this.CW.ao(this.cx.b.length/300)},
+JZ(){this.CW.ao(this.cx.b.length/1200)},
 E_(){var s=this
 if(!s.d.gn()||s.cx.b.length===0)return
 s.ch.ao(!0)
