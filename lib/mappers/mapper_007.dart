@@ -58,4 +58,16 @@ class Mapper007 extends Mapper {
   MapperMirror mirror() => _singleScreenHigh
       ? MapperMirror.oneScreenHigh
       : MapperMirror.oneScreenLow;
+
+  @override
+  Map<String, dynamic> saveState() => {
+        'programBankSelect': _programBankSelect,
+        'singleScreenHigh': _singleScreenHigh,
+      };
+
+  @override
+  void restoreState(Map<String, dynamic> state) {
+    _programBankSelect = state['programBankSelect'] as int;
+    _singleScreenHigh = state['singleScreenHigh'] as bool;
+  }
 }

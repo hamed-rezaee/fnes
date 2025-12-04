@@ -48,4 +48,16 @@ class Mapper066 extends Mapper {
 
   @override
   int? ppuMapWrite(int address) => null;
+
+  @override
+  Map<String, dynamic> saveState() => {
+        'charBankSelect': _charBankSelect,
+        'programBankSelect': _programBankSelect,
+      };
+
+  @override
+  void restoreState(Map<String, dynamic> state) {
+    _charBankSelect = state['charBankSelect'] as int;
+    _programBankSelect = state['programBankSelect'] as int;
+  }
 }

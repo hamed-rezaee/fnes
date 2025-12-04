@@ -176,4 +176,36 @@ class Mapper001 extends Mapper {
 
   @override
   MapperMirror mirror() => _mirrorMode;
+
+  @override
+  Map<String, dynamic> saveState() => {
+        'selectedCharBankLow': _selectedCharBankLow,
+        'selectedCharBankHigh': _selectedCharBankHigh,
+        'selectedCharBank': _selectedCharBank,
+        'selectedProgramBankLow': _selectedProgramBankLow,
+        'selectedProgramBankHigh': _selectedProgramBankHigh,
+        'selectedProgramBank': _selectedProgramBank,
+        'loadRegister': _loadRegister,
+        'loadRegisterCount': _loadRegisterCount,
+        'controlRegister': _controlRegister,
+        'programRamEnable': _programRamEnable,
+        'mirrorMode': _mirrorMode.index,
+        'programRAM': programRAM.toList(),
+      };
+
+  @override
+  void restoreState(Map<String, dynamic> state) {
+    _selectedCharBankLow = state['selectedCharBankLow'] as int;
+    _selectedCharBankHigh = state['selectedCharBankHigh'] as int;
+    _selectedCharBank = state['selectedCharBank'] as int;
+    _selectedProgramBankLow = state['selectedProgramBankLow'] as int;
+    _selectedProgramBankHigh = state['selectedProgramBankHigh'] as int;
+    _selectedProgramBank = state['selectedProgramBank'] as int;
+    _loadRegister = state['loadRegister'] as int;
+    _loadRegisterCount = state['loadRegisterCount'] as int;
+    _controlRegister = state['controlRegister'] as int;
+    _programRamEnable = state['programRamEnable'] as bool;
+    _mirrorMode = MapperMirror.values[state['mirrorMode'] as int];
+    programRAM.setAll(0, (state['programRAM'] as List).cast<int>());
+  }
 }

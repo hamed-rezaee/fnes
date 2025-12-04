@@ -200,4 +200,19 @@ class Cartridge {
 
   Map<String, String>? getMapperInfoMap() =>
       MapperFactory.getMapperInfoMap(_mapperId);
+
+  Map<String, dynamic> saveMapperState() => {
+        ..._mapper.saveState(),
+        'charMemory': _charMemory.toList(),
+      };
+
+  void restoreMapperState(Map<String, dynamic> state) {
+    _mapper.restoreState(state);
+
+    if (state.containsKey('charMemory')) {
+      final charMem = (state['charMemory'] as List).cast<int>();
+
+      _charMemory.setAll(0, charMem);
+    }
+  }
 }

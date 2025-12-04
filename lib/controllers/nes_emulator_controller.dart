@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:ui';
 
@@ -8,6 +9,7 @@ import 'package:fnes/components/audio_manager.dart';
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cartridge.dart';
 import 'package:fnes/components/emulator_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals_flutter.dart';
 
 enum RenderMode {
@@ -56,6 +58,8 @@ class NESEmulatorController {
   final RewindBuffer _rewindBuffer = RewindBuffer();
   int _statesSavedSinceLastFrame = 0;
   static const int _saveStateEveryNFrames = 1;
+
+  final Signal<bool> hasSaveState = signal(false);
 
   late final Computed<String?> romName = computed(() {
     final fileName = romFileName.value;
@@ -147,6 +151,7 @@ class NESEmulatorController {
 
             isROMLoaded.value = true;
             romFileName.value = file.name;
+            unawaited(_checkSaveStateExists());
             startEmulation();
           } else {
             errorMessage.value = 'Invalid ROM file format';
@@ -342,6 +347,73 @@ class NESEmulatorController {
   bool get canRewind => _rewindBuffer.canRewind;
 
   double get rewindBufferSeconds => _rewindBuffer.availableRewindSeconds;
+
+  String _getSaveStateKey() {
+    final name = romName.value ?? 'unknown';
+    return 'save_state_$name';
+  }
+
+  Future<void> _checkSaveStateExists() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _getSaveStateKey();
+    hasSaveState.value = prefs.containsKey(key);
+  }
+
+  Future<bool> saveState() async {
+    if (!isROMLoaded.value) return false;
+
+    try {
+      final state = bus.saveState();
+      final jsonString = jsonEncode(state.toJson());
+
+      final prefs = await SharedPreferences.getInstance();
+      final key = _getSaveStateKey();
+      await prefs.setString(key, jsonString);
+
+      hasSaveState.value = true;
+      developer.log('Save state saved for ${romName.value}');
+      return true;
+    } on Exception catch (e) {
+      developer.log('Failed to save state: $e');
+      errorMessage.value = 'Failed to save state: $e';
+      return false;
+    }
+  }
+
+  Future<bool> loadState() async {
+    if (!isROMLoaded.value) return false;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = _getSaveStateKey();
+      final jsonString = prefs.getString(key);
+
+      if (jsonString == null) {
+        errorMessage.value = 'No save state found';
+        return false;
+      }
+
+      final json = jsonDecode(jsonString) as Map<String, dynamic>;
+      final state = EmulatorStateSerialization.fromJson(json);
+
+      bus.restoreState(state);
+
+      bus.controller[0] = 0;
+      bus.controller[1] = 0;
+
+      bus.getAudioBuffer();
+
+      clearRewindBuffer();
+      unawaited(updatePixelBuffer());
+
+      developer.log('Save state loaded for ${romName.value}');
+      return true;
+    } on Exception catch (e) {
+      developer.log('Failed to load state: $e');
+      errorMessage.value = 'Failed to load state: $e';
+      return false;
+    }
+  }
 
   void handleKeyDown(LogicalKeyboardKey key) {
     switch (key) {

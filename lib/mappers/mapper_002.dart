@@ -57,4 +57,16 @@ class Mapper002 extends Mapper {
 
     return null;
   }
+
+  @override
+  Map<String, dynamic> saveState() => {
+        'selectedProgramBankLow': _selectedProgramBankLow,
+        'selectedProgramBankHigh': _selectedProgramBankHigh,
+      };
+
+  @override
+  void restoreState(Map<String, dynamic> state) {
+    _selectedProgramBankLow = state['selectedProgramBankLow'] as int;
+    _selectedProgramBankHigh = state['selectedProgramBankHigh'] as int;
+  }
 }

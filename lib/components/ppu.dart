@@ -789,6 +789,7 @@ class PPU {
         fineX: fineX,
         addressLatch: addressLatch,
         ppuDataBuffer: ppuDataBuffer,
+        oamAddress: oamAddress,
         backgroundNextTileId: backgroundNextTileId,
         backgroundNextTileAttrib: backgroundNextTileAttrib,
         backgroundNextTileLsb: backgroundNextTileLsb,
@@ -833,6 +834,7 @@ class PPU {
     fineX = state.fineX;
     addressLatch = state.addressLatch;
     ppuDataBuffer = state.ppuDataBuffer;
+    oamAddress = state.oamAddress;
     backgroundNextTileId = state.backgroundNextTileId;
     backgroundNextTileAttrib = state.backgroundNextTileAttrib;
     backgroundNextTileLsb = state.backgroundNextTileLsb;

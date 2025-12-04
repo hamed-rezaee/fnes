@@ -36,4 +36,8 @@ abstract class Mapper {
   void scanline() {}
 
   void ppuWriteNotify(int address, int data) {}
+
+  Map<String, dynamic> saveState() => {};
+
+  void restoreState(Map<String, dynamic> state) {}
 }

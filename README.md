@@ -2,6 +2,14 @@
 
 A cycle-accurate Nintendo Entertainment System emulator written in Dart with a Flutter UI. This emulator faithfully reproduces the hardware behavior of the original NES by implementing the MOS 6502 CPU, PPU graphics processor, APU audio unit, and multiple game cartridge mappers.
 
+## Screenshots
+
+|                                                 |                                                 |
+| :---------------------------------------------: | :---------------------------------------------: |
+| ![Screenshot 01](screenshots/screenshot_01.png) | ![Screenshot 02](screenshots/screenshot_02.png) |
+| ![Screenshot 03](screenshots/screenshot_03.png) | ![Screenshot 04](screenshots/screenshot_04.png) |
+| ![Screenshot 05](screenshots/screenshot_05.png) | ![Screenshot 06](screenshots/screenshot_06.png) |
+
 ## System Architecture
 
 ### Hardware Component Overview
@@ -447,14 +455,6 @@ PPU registers map at 0x2000-0x3FFF (mirrored every 8 bytes):
 - **0x2005**: Scroll X/Y (write twice: X then Y)
 - **0x2006**: VRAM Address (write twice: Hi then Lo)
 - **0x2007**: VRAM Data (reads/writes nametable, palette, or CHR)
-
-## Screenshots
-
-|                                                 |                                                 |
-| :---------------------------------------------: | :---------------------------------------------: |
-| ![Screenshot 01](screenshots/screenshot_01.png) | ![Screenshot 02](screenshots/screenshot_02.png) |
-| ![Screenshot 03](screenshots/screenshot_03.png) | ![Screenshot 04](screenshots/screenshot_04.png) |
-| ![Screenshot 05](screenshots/screenshot_05.png) | ![Screenshot 06](screenshots/screenshot_06.png) |
 
 ## Demo
 

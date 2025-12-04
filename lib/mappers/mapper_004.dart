@@ -199,4 +199,55 @@ class Mapper004 extends Mapper {
 
   @override
   MapperMirror mirror() => _mirrorMode;
+
+  @override
+  Map<String, dynamic> saveState() => {
+        'targetRegister': _targetRegister,
+        'programBankMode': _programBankMode,
+        'charA12Inversion': _charA12Inversion,
+        'mirrorMode': _mirrorMode.index,
+        'programRamEnabled': _programRamEnabled,
+        'programRamWriteProtect': _programRamWriteProtect,
+        'bankRegisters': _bankRegisters.toList(),
+        'charBanks': _charBanks.toList(),
+        'programBanks': _programBanks.toList(),
+        'irqActive': _irqActive,
+        'irqEnabled': _irqEnabled,
+        'irqReloadPending': _irqReloadPending,
+        'irqCounter': _irqCounter,
+        'irqLatch': _irqLatch,
+        'programRam': programRam.toList(),
+      };
+
+  @override
+  void restoreState(Map<String, dynamic> state) {
+    _targetRegister = state['targetRegister'] as int;
+    _programBankMode = state['programBankMode'] as bool;
+    _charA12Inversion = state['charA12Inversion'] as bool;
+    _mirrorMode = MapperMirror.values[state['mirrorMode'] as int];
+    _programRamEnabled = state['programRamEnabled'] as bool;
+    _programRamWriteProtect = state['programRamWriteProtect'] as bool;
+
+    final bankRegs = (state['bankRegisters'] as List).cast<int>();
+    for (var i = 0; i < bankRegs.length; i++) {
+      _bankRegisters[i] = bankRegs[i];
+    }
+
+    final charBanks = (state['charBanks'] as List).cast<int>();
+    for (var i = 0; i < charBanks.length; i++) {
+      _charBanks[i] = charBanks[i];
+    }
+
+    final programBanks = (state['programBanks'] as List).cast<int>();
+    for (var i = 0; i < programBanks.length; i++) {
+      _programBanks[i] = programBanks[i];
+    }
+
+    _irqActive = state['irqActive'] as bool;
+    _irqEnabled = state['irqEnabled'] as bool;
+    _irqReloadPending = state['irqReloadPending'] as bool;
+    _irqCounter = state['irqCounter'] as int;
+    _irqLatch = state['irqLatch'] as int;
+    programRam.setAll(0, (state['programRam'] as List).cast<int>());
+  }
 }

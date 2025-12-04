@@ -205,6 +205,7 @@ class Bus {
           dmaDummy: _dmaDummy,
           dmaTransfer: _dmaTransfer,
         ),
+        mapperState: cart?.saveMapperState() ?? {},
         timestamp: DateTime.now(),
       );
 
@@ -212,6 +213,8 @@ class Bus {
     cpu.restoreState(state.cpuState);
     ppu.restoreState(state.ppuState);
     apu.restoreState(state.apuState);
+
+    cart?.restoreMapperState(state.mapperState);
 
     final busState = state.busState;
 

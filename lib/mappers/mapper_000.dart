@@ -46,4 +46,10 @@ class Mapper000 extends Mapper {
 
     return null;
   }
+
+  @override
+  Map<String, dynamic> saveState() => {};
+
+  @override
+  void restoreState(Map<String, dynamic> state) {}
 }

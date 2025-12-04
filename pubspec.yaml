@@ -14,6 +14,7 @@ dependencies:
   flutter:
     sdk: flutter
   mp_audio_stream: ^0.2.2
+  shared_preferences: ^2.3.4
   signals: ^6.2.0
 
 dev_dependencies:

@@ -115,6 +115,11 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     tooltip: 'Load ROM',
                     onPressed: nesController.loadROMFile,
                   ),
+                  const VerticalDivider(
+                    indent: 16,
+                    endIndent: 16,
+                    color: Colors.grey,
+                  ),
                   IconButton(
                     icon: Icon(
                       isRunning ? Icons.pause : Icons.play_arrow,
@@ -138,9 +143,31 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                         : null,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.refresh),
+                    icon: const Icon(Icons.restart_alt_rounded),
                     tooltip: 'Reset',
                     onPressed: romLoaded ? nesController.resetEmulation : null,
+                  ),
+                  const VerticalDivider(
+                    indent: 16,
+                    endIndent: 16,
+                    color: Colors.grey,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.save),
+                    tooltip: 'Save State',
+                    onPressed: romLoaded ? nesController.saveState : null,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.reset_tv_rounded),
+                    tooltip: 'Load State',
+                    onPressed: romLoaded && nesController.hasSaveState.value
+                        ? nesController.loadState
+                        : null,
+                  ),
+                  const VerticalDivider(
+                    indent: 16,
+                    endIndent: 16,
+                    color: Colors.grey,
                   ),
                   _buildSettingsMenu(),
                 ],
@@ -314,7 +341,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
               ),
               const SizedBox(height: 4),
               Text(
-                '${(progress * 100).toStringAsFixed(0)}% buffer remaining',
+                '${(progress * 100).toStringAsFixed(0).padLeft(2, '0')}% buffer remaining',
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 10,
