@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:fnes/components/cartridge.dart';
+import 'package:fnes/components/emulator_state.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/mappers/mapper.dart';
 
@@ -775,6 +776,95 @@ class PPU {
   }
 
   int oamAddress = 0x00;
+
+  PPUState saveState() => PPUState(
+        tableData: Uint8List.fromList(tableData),
+        paletteTable: Uint8List.fromList(paletteTable),
+        patternTable: Uint8List.fromList(patternTable),
+        statusReg: status.reg,
+        maskReg: mask.reg,
+        controlReg: control.reg,
+        vramAddressReg: vramAddress.reg,
+        tempAddressReg: temporaryAddressRegister.reg,
+        fineX: fineX,
+        addressLatch: addressLatch,
+        ppuDataBuffer: ppuDataBuffer,
+        backgroundNextTileId: backgroundNextTileId,
+        backgroundNextTileAttrib: backgroundNextTileAttrib,
+        backgroundNextTileLsb: backgroundNextTileLsb,
+        backgroundNextTileMsb: backgroundNextTileMsb,
+        backgroundShifterPatternLow: backgroundShifterPatternLow,
+        backgroundShifterPatternHigh: backgroundShifterPatternHigh,
+        backgroundShifterAttribLow: backgroundShifterAttribLow,
+        backgroundShifterAttribHigh: backgroundShifterAttribHigh,
+        spriteShifterPatternLow: List<int>.from(spriteShifterPatternLow),
+        spriteShifterPatternHigh: List<int>.from(spriteShifterPatternHigh),
+        spriteCount: spriteCount,
+        spriteZeroHitPossible: spriteZeroHitPossible,
+        spriteZeroBeingRendered: spriteZeroBeingRendered,
+        scanline: scanline,
+        cycle: cycle,
+        frameCounter: frameCounter,
+        pOAM: Uint8List.fromList(pOAM),
+        screenPixels: screenPixels.map(List<int>.from).toList(),
+        nmi: nmi,
+        frameComplete: frameComplete,
+        spriteScanlineData: spriteScanline
+            .map(
+              (entry) => SpriteScanlineEntry(
+                y: entry.y,
+                id: entry.id,
+                attribute: entry.attribute,
+                x: entry.x,
+              ),
+            )
+            .toList(),
+      );
+
+  void restoreState(PPUState state) {
+    tableData.setAll(0, state.tableData);
+    paletteTable.setAll(0, state.paletteTable);
+    patternTable.setAll(0, state.patternTable);
+    status.reg = state.statusReg;
+    mask.reg = state.maskReg;
+    control.reg = state.controlReg;
+    vramAddress.reg = state.vramAddressReg;
+    temporaryAddressRegister.reg = state.tempAddressReg;
+    fineX = state.fineX;
+    addressLatch = state.addressLatch;
+    ppuDataBuffer = state.ppuDataBuffer;
+    backgroundNextTileId = state.backgroundNextTileId;
+    backgroundNextTileAttrib = state.backgroundNextTileAttrib;
+    backgroundNextTileLsb = state.backgroundNextTileLsb;
+    backgroundNextTileMsb = state.backgroundNextTileMsb;
+    backgroundShifterPatternLow = state.backgroundShifterPatternLow;
+    backgroundShifterPatternHigh = state.backgroundShifterPatternHigh;
+    backgroundShifterAttribLow = state.backgroundShifterAttribLow;
+    backgroundShifterAttribHigh = state.backgroundShifterAttribHigh;
+    spriteShifterPatternLow = List<int>.from(state.spriteShifterPatternLow);
+    spriteShifterPatternHigh = List<int>.from(state.spriteShifterPatternHigh);
+    spriteCount = state.spriteCount;
+    spriteZeroHitPossible = state.spriteZeroHitPossible;
+    spriteZeroBeingRendered = state.spriteZeroBeingRendered;
+    scanline = state.scanline;
+    cycle = state.cycle;
+    frameCounter = state.frameCounter;
+    pOAM.setAll(0, state.pOAM);
+    for (var i = 0; i < 240; i++) {
+      screenPixels[i] = List<int>.from(state.screenPixels[i]);
+    }
+    nmi = state.nmi;
+    frameComplete = state.frameComplete;
+
+    for (var i = 0;
+        i < spriteScanline.length && i < state.spriteScanlineData.length;
+        i++) {
+      spriteScanline[i].y = state.spriteScanlineData[i].y;
+      spriteScanline[i].id = state.spriteScanlineData[i].id;
+      spriteScanline[i].attribute = state.spriteScanlineData[i].attribute;
+      spriteScanline[i].x = state.spriteScanlineData[i].x;
+    }
+  }
 }
 
 class PPUStatus {

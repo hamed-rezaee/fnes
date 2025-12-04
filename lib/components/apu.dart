@@ -1,3 +1,5 @@
+import 'package:fnes/components/emulator_state.dart';
+
 class APU {
   APU();
 
@@ -307,6 +309,37 @@ class APU {
     pulse2.sweeper
         .clock(pulse2.reload, (v) => pulse2.reload = v, isPulse1: false);
   }
+
+  APUState saveState() => APUState(
+        globalTime: globalTime,
+        frameCounterMode: frameCounterMode,
+        irqDisable: irqDisable,
+        frameIrq: frameIrq,
+        frameStep: _frameStep,
+        pulse1State: pulse1.saveState(),
+        pulse2State: pulse2.saveState(),
+        triangleState: triangle.saveState(),
+        noiseState: noise.saveState(),
+        dmcState: dmc.saveState(),
+      );
+
+  void restoreState(APUState state) {
+    globalTime = state.globalTime;
+    frameCounterMode = state.frameCounterMode;
+    irqDisable = state.irqDisable;
+    frameIrq = state.frameIrq;
+    _frameStep = state.frameStep;
+
+    pulse1.restoreState(state.pulse1State);
+    pulse2.restoreState(state.pulse2State);
+    triangle.restoreState(state.triangleState);
+    noise.restoreState(state.noiseState);
+    dmc.restoreState(state.dmcState);
+
+    _highPassPrev = 0;
+    _highPassOut = 0;
+    _lowPassPrev = 0;
+  }
 }
 
 class Sequencer {
@@ -361,6 +394,26 @@ class Envelope {
 
     output = disable ? volume : decayCount;
   }
+
+  EnvelopeState saveState() => EnvelopeState(
+        start: start,
+        disable: disable,
+        dividerCount: dividerCount,
+        volume: volume,
+        output: output,
+        decayCount: decayCount,
+        loop: loop,
+      );
+
+  void restoreState(EnvelopeState state) {
+    start = state.start;
+    disable = state.disable;
+    dividerCount = state.dividerCount;
+    volume = state.volume;
+    output = state.output;
+    decayCount = state.decayCount;
+    loop = state.loop;
+  }
 }
 
 class LengthCounter {
@@ -412,6 +465,16 @@ class LengthCounter {
     if (!halt && counter > 0) {
       counter--;
     }
+  }
+
+  LengthCounterState saveState() => LengthCounterState(
+        counter: counter,
+        halt: halt,
+      );
+
+  void restoreState(LengthCounterState state) {
+    counter = state.counter;
+    halt = state.halt;
   }
 }
 
@@ -466,6 +529,29 @@ class PulseWave {
 
     return APU._dutySequences[duty][phase] * envelope.output;
   }
+
+  PulseWaveState saveState() => PulseWaveState(
+        enable: enable,
+        dutycycle: dutycycle,
+        timer: timer,
+        reload: reload,
+        phase: phase,
+        envelopeState: envelope.saveState(),
+        lengthCounterState: lengthCounter.saveState(),
+        sweeperState: sweeper.saveState(),
+      );
+
+  void restoreState(PulseWaveState state) {
+    enable = state.enable;
+    dutycycle = state.dutycycle;
+    timer = state.timer;
+    reload = state.reload;
+    phase = state.phase;
+
+    envelope.restoreState(state.envelopeState);
+    lengthCounter.restoreState(state.lengthCounterState);
+    sweeper.restoreState(state.sweeperState);
+  }
 }
 
 class Sweeper {
@@ -514,6 +600,26 @@ class Sweeper {
       if (futureValue > 0x7FF) mute = true;
     }
   }
+
+  SweeperState saveState() => SweeperState(
+        enabled: enabled,
+        down: down,
+        reload: reload,
+        shift: shift,
+        timer: timer,
+        period: period,
+        mute: mute,
+      );
+
+  void restoreState(SweeperState state) {
+    enabled = state.enabled;
+    down = state.down;
+    reload = state.reload;
+    shift = state.shift;
+    timer = state.timer;
+    period = state.period;
+    mute = state.mute;
+  }
 }
 
 class LinearCounter {
@@ -534,6 +640,20 @@ class LinearCounter {
     }
 
     if (!controlFlag) reloadFlag = false;
+  }
+
+  LinearCounterState saveState() => LinearCounterState(
+        counter: counter,
+        reload: reload,
+        controlFlag: controlFlag,
+        reloadFlag: reloadFlag,
+      );
+
+  void restoreState(LinearCounterState state) {
+    counter = state.counter;
+    reload = state.reload;
+    controlFlag = state.controlFlag;
+    reloadFlag = state.reloadFlag;
   }
 }
 
@@ -611,6 +731,25 @@ class TriangleWave {
 
     return _sequence[phase];
   }
+
+  TriangleWaveState saveState() => TriangleWaveState(
+        enable: enable,
+        timer: timer,
+        reload: reload,
+        phase: phase,
+        lengthCounterState: lengthCounter.saveState(),
+        linearCounterState: linearCounter.saveState(),
+      );
+
+  void restoreState(TriangleWaveState state) {
+    enable = state.enable;
+    timer = state.timer;
+    reload = state.reload;
+    phase = state.phase;
+
+    lengthCounter.restoreState(state.lengthCounterState);
+    linearCounter.restoreState(state.linearCounterState);
+  }
 }
 
 class NoiseWave {
@@ -655,6 +794,27 @@ class NoiseWave {
     if ((shiftRegister & 1) == 0) return envelope.output;
 
     return 0;
+  }
+
+  NoiseWaveState saveState() => NoiseWaveState(
+        enable: enable,
+        mode: mode,
+        timer: timer,
+        reload: reload,
+        shiftRegister: shiftRegister,
+        envelopeState: envelope.saveState(),
+        lengthCounterState: lengthCounter.saveState(),
+      );
+
+  void restoreState(NoiseWaveState state) {
+    enable = state.enable;
+    mode = state.mode;
+    timer = state.timer;
+    reload = state.reload;
+    shiftRegister = state.shiftRegister;
+
+    envelope.restoreState(state.envelopeState);
+    lengthCounter.restoreState(state.lengthCounterState);
   }
 }
 
@@ -714,4 +874,37 @@ class DMC {
   }
 
   int output() => dmcOutput;
+
+  DMCState saveState() => DMCState(
+        enable: enable,
+        irqEnabled: irqEnabled,
+        loop: loop,
+        timerLoad: timerLoad,
+        timer: timerCounter,
+        dmcOutput: dmcOutput,
+        sampleAddress: sampleAddress,
+        currentAddress: currentAddress,
+        bytesRemaining: bytesRemaining,
+        sampleBuffer: sampleBuffer,
+        sampleBufferEmpty: sampleBufferEmpty,
+        shiftRegister: sampleBufferBits,
+        bitsRemaining: bitsRemaining,
+        silenceFlag: false,
+      );
+
+  void restoreState(DMCState state) {
+    enable = state.enable;
+    irqEnabled = state.irqEnabled;
+    loop = state.loop;
+    timerLoad = state.timerLoad;
+    timerCounter = state.timer;
+    dmcOutput = state.dmcOutput;
+    sampleAddress = state.sampleAddress;
+    currentAddress = state.currentAddress;
+    bytesRemaining = state.bytesRemaining;
+    sampleBuffer = state.sampleBuffer;
+    sampleBufferEmpty = state.sampleBufferEmpty;
+    sampleBufferBits = state.shiftRegister;
+    bitsRemaining = state.bitsRemaining;
+  }
 }

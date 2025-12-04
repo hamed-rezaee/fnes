@@ -87,6 +87,8 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
             nesController.isOnScreenControllerVisible.value;
         final currentFPS = nesController.currentFPS.value;
         final filterQuality = nesController.filterQuality.value;
+        final isRewinding = nesController.isRewinding.value;
+        final rewindProgress = nesController.rewindProgress.value;
 
         if (isRunning) {
           if (!_emulationTicker.isActive) {
@@ -176,17 +178,33 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                       child: _buildRenderer(
                         filterQuality: filterQuality,
                         showOnScreenController: showOnScreenController,
+                        isRewinding: isRewinding,
+                        rewindProgress: rewindProgress,
                       ),
                     ),
                     const Padding(
                       padding: EdgeInsets.all(16),
-                      child: Text(
-                        'Arrow Keys = D-pad, Z = A, X = B, Space = Start, Enter = Select',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        spacing: 4,
+                        children: [
+                          Text(
+                            'Arrow Keys = D-pad, Z = A, X = B, Space = Start, Enter = Select',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            'Hold R = Rewind',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepOrange,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -205,6 +223,8 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
   Widget _buildRenderer({
     required FilterQuality filterQuality,
     required bool showOnScreenController,
+    required bool isRewinding,
+    required double rewindProgress,
   }) =>
       GestureDetector(
         onTap: _focusNode.requestFocus,
@@ -227,6 +247,10 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                         fit: BoxFit.fill,
                         filterQuality: filterQuality,
                       ),
+                      if (isRewinding)
+                        Positioned(
+                          child: _buildRewindIndicator(rewindProgress),
+                        ),
                       if (showOnScreenController)
                         Transform.scale(
                           scale: 0.8,
@@ -248,6 +272,56 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                       ),
                     ),
                   ),
+          ),
+        ),
+      );
+
+  Widget _buildRewindIndicator(double progress) => Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.7),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.fast_rewind, color: Colors.orange, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'REWINDING',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'MonospaceFont',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: 200,
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.grey.shade400,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Colors.orange),
+                  minHeight: 4,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${(progress * 100).toStringAsFixed(0)}% buffer remaining',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  fontFamily: 'MonospaceFont',
+                ),
+              ),
+            ],
           ),
         ),
       );

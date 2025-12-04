@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:fnes/components/apu.dart';
 import 'package:fnes/components/cartridge.dart';
 import 'package:fnes/components/cpu.dart';
+import 'package:fnes/components/emulator_state.dart';
 import 'package:fnes/components/ppu.dart';
 
 class Bus {
@@ -188,4 +189,45 @@ class Bus {
   }
 
   bool hasAudioData() => _audioBuffer.isNotEmpty;
+
+  EmulatorState saveState() => EmulatorState(
+        cpuState: cpu.saveState(),
+        ppuState: ppu.saveState(),
+        apuState: apu.saveState(),
+        busState: BusState(
+          cpuRam: Uint8List.fromList(_cpuRam),
+          controller: List<int>.from(controller),
+          controllerState: List<int>.from(_controllerState),
+          systemClockCounter: _systemClockCounter,
+          dmaPage: _dmaPage,
+          dmaAddress: _dmaAddress,
+          dmaData: _dmaData,
+          dmaDummy: _dmaDummy,
+          dmaTransfer: _dmaTransfer,
+        ),
+        timestamp: DateTime.now(),
+      );
+
+  void restoreState(EmulatorState state) {
+    cpu.restoreState(state.cpuState);
+    ppu.restoreState(state.ppuState);
+    apu.restoreState(state.apuState);
+
+    final busState = state.busState;
+
+    _cpuRam.setAll(0, busState.cpuRam);
+    controller[0] = busState.controller[0];
+    controller[1] = busState.controller[1];
+    _controllerState[0] = busState.controllerState[0];
+    _controllerState[1] = busState.controllerState[1];
+    _systemClockCounter = busState.systemClockCounter;
+    _dmaPage = busState.dmaPage;
+    _dmaAddress = busState.dmaAddress;
+    _dmaData = busState.dmaData;
+    _dmaDummy = busState.dmaDummy;
+    _dmaTransfer = busState.dmaTransfer;
+
+    _audioBuffer.clear();
+    _audioBufferIndex = 0;
+  }
 }

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:fnes/components/audio_manager.dart';
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cartridge.dart';
+import 'package:fnes/components/emulator_state.dart';
 import 'package:signals/signals_flutter.dart';
 
 enum RenderMode {
@@ -49,6 +50,12 @@ class NESEmulatorController {
   final Signal<String?> errorMessage = signal<String?>(null);
 
   final Signal<int> frameUpdateTrigger = signal(0);
+
+  final Signal<bool> isRewinding = signal(false);
+  final Signal<double> rewindProgress = signal(0);
+  final RewindBuffer _rewindBuffer = RewindBuffer();
+  int _statesSavedSinceLastFrame = 0;
+  static const int _saveStateEveryNFrames = 1;
 
   late final Computed<String?> romName = computed(() {
     final fileName = romFileName.value;
@@ -136,6 +143,8 @@ class NESEmulatorController {
               ..insertCartridge(cart)
               ..reset();
 
+            clearRewindBuffer();
+
             isROMLoaded.value = true;
             romFileName.value = file.name;
             startEmulation();
@@ -176,6 +185,7 @@ class NESEmulatorController {
   void resetEmulation() {
     bus.reset();
 
+    clearRewindBuffer();
     startEmulation();
   }
 
@@ -191,6 +201,12 @@ class NESEmulatorController {
 
   void updateEmulation() {
     if (!isRunning.value) return;
+
+    if (isRewinding.value) {
+      _handleRewind();
+
+      return;
+    }
 
     bus.ppu.renderMode = renderMode.value;
 
@@ -225,6 +241,14 @@ class NESEmulatorController {
         } while (!bus.ppu.frameComplete);
 
         bus.ppu.frameComplete = false;
+
+        _statesSavedSinceLastFrame++;
+
+        if (_statesSavedSinceLastFrame >= _saveStateEveryNFrames) {
+          _rewindBuffer.pushState(bus.saveState());
+          _statesSavedSinceLastFrame = 0;
+          _updateRewindProgress();
+        }
 
         if (currentFPS.value < 58.0 && _skipFrames < _maxFrameSkip) {
           _skipFrames++;
@@ -262,6 +286,63 @@ class NESEmulatorController {
     }
   }
 
+  void _handleRewind() {
+    final state = _rewindBuffer.popState();
+
+    if (state != null) {
+      bus.restoreState(state);
+      _updateRewindProgress();
+      unawaited(updatePixelBuffer());
+    } else {
+      stopRewind();
+    }
+  }
+
+  void _updateRewindProgress() {
+    if (_rewindBuffer.maxFrames > 0) {
+      rewindProgress.value = _rewindBuffer.length / _rewindBuffer.maxFrames;
+    } else {
+      rewindProgress.value = 0.0;
+    }
+  }
+
+  void startRewind() {
+    if (!isROMLoaded.value || !_rewindBuffer.canRewind) return;
+
+    isRewinding.value = true;
+    _audioPlayer.pause();
+  }
+
+  void stopRewind() {
+    isRewinding.value = false;
+
+    bus.controller[0] = 0;
+    bus.controller[1] = 0;
+
+    if (audioEnabled.value && isRunning.value) _audioPlayer.resume();
+  }
+
+  void rewindFrames(int frames) {
+    if (!isROMLoaded.value) return;
+
+    final state = _rewindBuffer.rewindFrames(frames);
+
+    if (state != null) {
+      bus.restoreState(state);
+      _updateRewindProgress();
+      unawaited(updatePixelBuffer());
+    }
+  }
+
+  void clearRewindBuffer() {
+    _rewindBuffer.clear();
+    rewindProgress.value = 0.0;
+  }
+
+  bool get canRewind => _rewindBuffer.canRewind;
+
+  double get rewindBufferSeconds => _rewindBuffer.availableRewindSeconds;
+
   void handleKeyDown(LogicalKeyboardKey key) {
     switch (key) {
       case LogicalKeyboardKey.arrowUp:
@@ -280,6 +361,9 @@ class NESEmulatorController {
         bus.controller.first |= 0x10;
       case LogicalKeyboardKey.enter:
         bus.controller.first |= 0x20;
+      case LogicalKeyboardKey.keyR:
+        if (canRewind) startRewind();
+
       default:
         break;
     }
@@ -303,6 +387,9 @@ class NESEmulatorController {
         bus.controller.first &= ~0x10;
       case LogicalKeyboardKey.enter:
         bus.controller.first &= ~0x20;
+      case LogicalKeyboardKey.keyR:
+        if (isRewinding.value) stopRewind();
+
       default:
         break;
     }

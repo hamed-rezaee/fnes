@@ -1,4 +1,5 @@
 import 'package:fnes/components/bus.dart';
+import 'package:fnes/components/emulator_state.dart';
 
 class CPU {
   CPU() {
@@ -1266,6 +1267,38 @@ class CPU {
     }
 
     return mapLines;
+  }
+
+  CPUState saveState() => CPUState(
+        a: a,
+        x: x,
+        y: y,
+        stkp: stkp,
+        pc: pc,
+        status: status,
+        fetched: fetched,
+        temp: temp,
+        addrAbs: addrAbs,
+        addrRel: addrRel,
+        opcode: opcode,
+        cycles: cycles,
+        clockCount: clockCount,
+      );
+
+  void restoreState(CPUState state) {
+    a = state.a;
+    x = state.x;
+    y = state.y;
+    stkp = state.stkp;
+    pc = state.pc;
+    status = state.status;
+    fetched = state.fetched;
+    temp = state.temp;
+    addrAbs = state.addrAbs;
+    addrRel = state.addrRel;
+    opcode = state.opcode;
+    cycles = state.cycles;
+    clockCount = state.clockCount;
   }
 }
 
