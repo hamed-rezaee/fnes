@@ -11,8 +11,8 @@ class APU {
   ];
 
   static const double _highPassCoeff = 0.99925;
-  static const double _lowPassInput = 1.5;
-  static const double _lowPassFeedback = 0.70;
+  static const double _lowPassInput = 1;
+  static const double _lowPassFeedback = 0.50;
   static const double _pulseGain = 3;
 
   int globalTime = 0;
