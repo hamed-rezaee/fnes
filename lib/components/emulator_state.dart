@@ -346,7 +346,7 @@ class BusState {
 }
 
 class RewindBuffer {
-  RewindBuffer({this.maxFrames = 1200});
+  RewindBuffer({this.maxFrames = 600});
 
   final int maxFrames;
   final List<EmulatorState> _states = [];

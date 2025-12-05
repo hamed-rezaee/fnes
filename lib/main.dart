@@ -13,14 +13,7 @@ import 'package:fnes/widgets/debug_panel.dart';
 import 'package:fnes/widgets/on_screen_controller.dart';
 import 'package:signals/signals_flutter.dart';
 
-late final NESEmulatorController nesController;
-
-void main() {
-  nesController =
-      NESEmulatorController(bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU()));
-
-  runApp(const MainApp());
-}
+void main() => runApp(const MainApp());
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
@@ -60,35 +53,35 @@ class NESEmulatorScreen extends StatefulWidget {
 
 class _NESEmulatorScreenState extends State<NESEmulatorScreen>
     with TickerProviderStateMixin {
-  late Ticker _emulationTicker;
-  late FocusNode _focusNode;
+  final _nesController =
+      NESEmulatorController(bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU()));
+
+  late final Ticker _emulationTicker =
+      createTicker((_) => _nesController.updateEmulation());
+  late final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-
-    _emulationTicker = createTicker((_) => _updateEmulation());
-    _focusNode = FocusNode();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
     });
   }
 
-  void _updateEmulation() => nesController.updateEmulation();
-
   @override
   Widget build(BuildContext context) => Watch((_) {
-        final isRunning = nesController.isRunning.value;
-        final romLoaded = nesController.isROMLoaded.value;
-        final romName = nesController.romName.value;
-        final isDebuggerVisible = nesController.isDebuggerVisible.value;
+        final isRunning = _nesController.isRunning.value;
+        final romLoaded = _nesController.isROMLoaded.value;
+        final romName = _nesController.romName.value;
+        final isDebuggerVisible = _nesController.isDebuggerVisible.value;
         final showOnScreenController =
-            nesController.isOnScreenControllerVisible.value;
-        final currentFPS = nesController.currentFPS.value;
-        final filterQuality = nesController.filterQuality.value;
-        final isRewinding = nesController.isRewinding.value;
-        final rewindProgress = nesController.rewindProgress.value;
+            _nesController.isOnScreenControllerVisible.value;
+        final currentFPS = _nesController.currentFPS.value;
+        final filterQuality = _nesController.filterQuality.value;
+        final isRewindEnabled = _nesController.rewindEnabled.value;
+        final isRewinding = _nesController.isRewinding.value;
+        final rewindProgress = _nesController.rewindProgress.value;
 
         if (isRunning) {
           if (!_emulationTicker.isActive) {
@@ -113,7 +106,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   IconButton(
                     icon: const Icon(Icons.folder_open),
                     tooltip: 'Load ROM',
-                    onPressed: nesController.loadROMFile,
+                    onPressed: _nesController.loadROMFile,
                   ),
                   const VerticalDivider(
                     indent: 16,
@@ -128,9 +121,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     onPressed: romLoaded
                         ? () {
                             if (isRunning) {
-                              nesController.pauseEmulation();
+                              _nesController.pauseEmulation();
                             } else {
-                              nesController.startEmulation();
+                              _nesController.startEmulation();
                             }
                           }
                         : null,
@@ -139,13 +132,13 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     icon: const Icon(Icons.skip_next),
                     tooltip: 'Step',
                     onPressed: romLoaded && !isRunning
-                        ? nesController.stepEmulation
+                        ? _nesController.stepEmulation
                         : null,
                   ),
                   IconButton(
                     icon: const Icon(Icons.restart_alt_rounded),
                     tooltip: 'Reset',
-                    onPressed: romLoaded ? nesController.resetEmulation : null,
+                    onPressed: romLoaded ? _nesController.resetEmulation : null,
                   ),
                   const VerticalDivider(
                     indent: 16,
@@ -155,13 +148,13 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   IconButton(
                     icon: const Icon(Icons.save),
                     tooltip: 'Save State',
-                    onPressed: romLoaded ? nesController.saveState : null,
+                    onPressed: romLoaded ? _nesController.saveState : null,
                   ),
                   IconButton(
                     icon: const Icon(Icons.reset_tv_rounded),
                     tooltip: 'Load State',
-                    onPressed: romLoaded && nesController.hasSaveState.value
-                        ? nesController.loadState
+                    onPressed: romLoaded && _nesController.hasSaveState.value
+                        ? _nesController.loadState
                         : null,
                   ),
                   const VerticalDivider(
@@ -179,9 +172,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
             autofocus: true,
             onKeyEvent: (KeyEvent event) {
               if (event is KeyDownEvent) {
-                nesController.handleKeyDown(event.logicalKey);
+                _nesController.handleKeyDown(event.logicalKey);
               } else if (event is KeyUpEvent) {
-                nesController.handleKeyUp(event.logicalKey);
+                _nesController.handleKeyUp(event.logicalKey);
               }
             },
             child: Row(
@@ -209,12 +202,12 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                         rewindProgress: rewindProgress,
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.all(16),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         spacing: 4,
                         children: [
-                          Text(
+                          const Text(
                             'Arrow Keys = D-pad, Z = A, X = B, Space = Start, Enter = Select',
                             style: TextStyle(
                               fontSize: 11,
@@ -222,15 +215,16 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          Text(
-                            'Hold R = Rewind',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.deepOrange,
+                          if (isRewindEnabled)
+                            const Text(
+                              'Hold R = Rewind',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepOrange,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
                         ],
                       ),
                     ),
@@ -238,8 +232,8 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ),
                 if (isDebuggerVisible)
                   DebugPanel(
-                    nesEmulatorController: nesController,
-                    bus: nesController.bus,
+                    nesEmulatorController: _nesController,
+                    bus: _nesController.bus,
                   ),
               ],
             ),
@@ -256,7 +250,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
       GestureDetector(
         onTap: _focusNode.requestFocus,
         child: StreamBuilder<Image>(
-          stream: nesController.imageStream,
+          stream: _nesController.imageStream,
           builder: (context, snapshot) => Container(
             width: 512,
             height: 480,
@@ -284,7 +278,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                           child: Opacity(
                             opacity: 0.7,
                             child:
-                                OnScreenController(controller: nesController),
+                                OnScreenController(controller: _nesController),
                           ),
                         ),
                     ],
@@ -354,11 +348,12 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
       );
 
   Widget _buildSettingsMenu() => Watch((_) {
-        final showDebugger = nesController.isDebuggerVisible.value;
-        final filterQuality = nesController.filterQuality.value;
+        final showDebugger = _nesController.isDebuggerVisible.value;
+        final filterQuality = _nesController.filterQuality.value;
         final showOnScreenController =
-            nesController.isOnScreenControllerVisible.value;
-        final uncapFramerate = nesController.uncapFramerate.value;
+            _nesController.isOnScreenControllerVisible.value;
+        final uncapFramerate = _nesController.uncapFramerate.value;
+        final rewindEnabled = _nesController.rewindEnabled.value;
 
         return PopupMenuButton<String>(
           icon: const Icon(Icons.settings),
@@ -380,7 +375,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                   const Text('Video Filter', style: TextStyle(fontSize: 12)),
                 ],
               ),
-              onTap: () => nesController.changeFilterQuality(
+              onTap: () => _nesController.changeFilterQuality(
                 filterQuality == FilterQuality.high
                     ? FilterQuality.none
                     : FilterQuality.high,
@@ -388,7 +383,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
             ),
             PopupMenuItem<String>(
               value: 'toggle_uncap_framerate',
-              onTap: nesController.toggleUncapFramerate,
+              onTap: _nesController.toggleUncapFramerate,
               child: Row(
                 spacing: 12,
                 children: [
@@ -403,10 +398,10 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
             ),
-            _buildMenuGroupHeader('USER INTERFACE'),
+            _buildMenuGroupHeader('GAMEPLAY'),
             PopupMenuItem<String>(
               value: 'toggle_on_screen_controller',
-              onTap: nesController.toggleOnScreenController,
+              onTap: _nesController.toggleOnScreenController,
               child: Row(
                 spacing: 12,
                 children: [
@@ -424,10 +419,27 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
             ),
+            PopupMenuItem<String>(
+              value: 'toggle_rewind',
+              onTap: _nesController.toggleRewind,
+              child: Row(
+                spacing: 12,
+                children: [
+                  Icon(
+                    rewindEnabled
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    size: 16,
+                    color: Colors.black,
+                  ),
+                  const Text('Enable Rewind', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
             _buildMenuGroupHeader('DEBUG'),
             PopupMenuItem<String>(
               value: 'toggle_debugger',
-              onTap: nesController.toggleDebugger,
+              onTap: _nesController.toggleDebugger,
               child: Row(
                 spacing: 12,
                 children: [
@@ -474,9 +486,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
       );
 
   Future<void> _showROMInfoDialog() async {
-    final info = nesController.bus.cart?.getMapperInfoMap();
-    final isROMLoaded = nesController.isROMLoaded.value;
-    final hasCart = nesController.bus.cart != null;
+    final info = _nesController.bus.cart?.getMapperInfoMap();
+    final isROMLoaded = _nesController.isROMLoaded.value;
+    final hasCart = _nesController.bus.cart != null;
 
     return showDialog<void>(
       context: context,

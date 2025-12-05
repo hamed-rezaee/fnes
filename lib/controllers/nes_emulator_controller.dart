@@ -55,6 +55,7 @@ class NESEmulatorController {
 
   final Signal<bool> isRewinding = signal(false);
   final Signal<double> rewindProgress = signal(0);
+  final Signal<bool> rewindEnabled = signal(false);
   final RewindBuffer _rewindBuffer = RewindBuffer();
   int _statesSavedSinceLastFrame = 0;
   static const int _saveStateEveryNFrames = 1;
@@ -250,9 +251,12 @@ class NESEmulatorController {
         _statesSavedSinceLastFrame++;
 
         if (_statesSavedSinceLastFrame >= _saveStateEveryNFrames) {
-          _rewindBuffer.pushState(bus.saveState());
+          if (rewindEnabled.value) {
+            _rewindBuffer.pushState(bus.saveState());
+            _updateRewindProgress();
+          }
+
           _statesSavedSinceLastFrame = 0;
-          _updateRewindProgress();
         }
 
         if (currentFPS.value < 58.0 && _skipFrames < _maxFrameSkip) {
@@ -312,7 +316,10 @@ class NESEmulatorController {
   }
 
   void startRewind() {
-    if (!isROMLoaded.value || !_rewindBuffer.canRewind) return;
+    final canRewind =
+        isROMLoaded.value && _rewindBuffer.canRewind && rewindEnabled.value;
+
+    if (!canRewind) return;
 
     isRewinding.value = true;
     _audioPlayer.pause();
@@ -341,6 +348,7 @@ class NESEmulatorController {
 
   void clearRewindBuffer() {
     _rewindBuffer.clear();
+
     rewindProgress.value = 0.0;
   }
 
@@ -434,7 +442,7 @@ class NESEmulatorController {
       case LogicalKeyboardKey.enter:
         bus.controller.first |= 0x20;
       case LogicalKeyboardKey.keyR:
-        if (canRewind) startRewind();
+        if (canRewind && rewindEnabled.value) startRewind();
 
       default:
         break;
@@ -483,6 +491,12 @@ class NESEmulatorController {
     (audioEnabled.value && isRunning.value)
         ? _audioPlayer.resume()
         : _audioPlayer.pause();
+  }
+
+  void toggleRewind() {
+    rewindEnabled.value = !rewindEnabled.value;
+
+    if (!rewindEnabled.value) clearRewindBuffer();
   }
 
   void setRenderMode(RenderMode mode) => renderMode.value = mode;
