@@ -34,18 +34,11 @@ class AudioManager {
     }
   }
 
-  double _highPassPrev = 0;
-  double _highPassOut = 0;
-  static const double _dcBlockerCoeff = 0.995;
-
   void addSamples(List<double> samples) {
     if (!_isInitialized || !_isPlaying) return;
 
     for (final sample in samples) {
-      _highPassOut = sample - _highPassPrev + _dcBlockerCoeff * _highPassOut;
-      _highPassPrev = sample;
-
-      final audioSample = _highPassOut.clamp(-1.0, 1.0);
+      final audioSample = sample.clamp(-1.0, 1.0);
       _audioQueue.add(audioSample);
     }
 
@@ -69,9 +62,8 @@ class AudioManager {
     if (!_isInitialized) return;
 
     _isPlaying = false;
+
     _audioQueue.clear();
-    _highPassPrev = 0;
-    _highPassOut = 0;
   }
 
   void resume() {
@@ -86,8 +78,6 @@ class AudioManager {
 
   void clear() {
     _audioQueue.clear();
-    _highPassPrev = 0;
-    _highPassOut = 0;
     pause();
   }
 
