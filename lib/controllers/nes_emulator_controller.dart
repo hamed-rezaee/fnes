@@ -221,7 +221,7 @@ class NESEmulatorController {
     if (!isRunning.value) return;
 
     if (isRewinding.value) {
-      _handleRewind();
+      unawaited(_handleRewind());
 
       return;
     }
@@ -244,7 +244,7 @@ class NESEmulatorController {
       if (isAudioReady) {
         final audioBuffer = bus.getAudioBuffer();
 
-        _audioPlayer.addSamples(audioBuffer);
+        unawaited(_audioPlayer.addSamples(audioBuffer));
       }
 
       return;
@@ -264,8 +264,7 @@ class NESEmulatorController {
 
         if (_statesSavedSinceLastFrame >= _saveStateEveryNFrames) {
           if (rewindEnabled.value) {
-            _rewindBuffer.pushState(bus.saveState());
-            _updateRewindProgress();
+            unawaited(_saveRewindState());
           }
 
           _statesSavedSinceLastFrame = 0;
@@ -284,7 +283,7 @@ class NESEmulatorController {
 
         if (audioEnabled.value && bus.hasAudioData()) {
           final audioBuffer = bus.getAudioBuffer();
-          _audioPlayer.addSamples(audioBuffer);
+          unawaited(_audioPlayer.addSamples(audioBuffer));
         }
 
         _frameCount++;
@@ -307,16 +306,18 @@ class NESEmulatorController {
     }
   }
 
-  void _handleRewind() {
-    final state = _rewindBuffer.popState();
+  Future<void> _handleRewind() async {
+    await Future.microtask(() {
+      final state = _rewindBuffer.popState();
 
-    if (state != null) {
-      bus.restoreState(state);
-      _updateRewindProgress();
-      unawaited(updatePixelBuffer());
-    } else {
-      stopRewind();
-    }
+      if (state != null) {
+        bus.restoreState(state);
+        _updateRewindProgress();
+        unawaited(updatePixelBuffer());
+      } else {
+        stopRewind();
+      }
+    });
   }
 
   void _updateRewindProgress() {
@@ -325,6 +326,15 @@ class NESEmulatorController {
     } else {
       rewindProgress.value = 0.0;
     }
+  }
+
+  Future<void> _saveRewindState() async {
+    // Use scheduleMicrotask to yield control back to event loop
+    await Future.microtask(() {
+      final state = bus.saveState();
+      _rewindBuffer.pushState(state);
+      _updateRewindProgress();
+    });
   }
 
   void startRewind() {
@@ -346,16 +356,18 @@ class NESEmulatorController {
     if (audioEnabled.value && isRunning.value) _audioPlayer.resume();
   }
 
-  void rewindFrames(int frames) {
+  Future<void> rewindFrames(int frames) async {
     if (!isROMLoaded.value) return;
 
-    final state = _rewindBuffer.rewindFrames(frames);
+    await Future.microtask(() {
+      final state = _rewindBuffer.rewindFrames(frames);
 
-    if (state != null) {
-      bus.restoreState(state);
-      _updateRewindProgress();
-      unawaited(updatePixelBuffer());
-    }
+      if (state != null) {
+        bus.restoreState(state);
+        _updateRewindProgress();
+        unawaited(updatePixelBuffer());
+      }
+    });
   }
 
   void clearRewindBuffer() {

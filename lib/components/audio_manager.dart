@@ -34,28 +34,30 @@ class AudioManager {
     }
   }
 
-  void addSamples(List<double> samples) {
+  Future<void> addSamples(List<double> samples) async {
     if (!_isInitialized || !_isPlaying) return;
 
-    for (final sample in samples) {
-      final audioSample = sample.clamp(-1.0, 1.0);
-      _audioQueue.add(audioSample);
-    }
-
-    while (_audioQueue.length >= _chunkSize) {
-      final chunk = Float32List(_chunkSize);
-      for (var i = 0; i < _chunkSize; i++) {
-        chunk[i] = _audioQueue.removeAt(0);
+    await Future.microtask(() {
+      for (final sample in samples) {
+        final audioSample = sample.clamp(-1.0, 1.0);
+        _audioQueue.add(audioSample);
       }
 
-      try {
-        _audioStream.push(chunk);
-      } on Exception catch (_) {}
-    }
+      while (_audioQueue.length >= _chunkSize) {
+        final chunk = Float32List(_chunkSize);
+        for (var i = 0; i < _chunkSize; i++) {
+          chunk[i] = _audioQueue.removeAt(0);
+        }
 
-    while (_audioQueue.length > _maxBufferSize) {
-      _audioQueue.removeRange(0, _audioQueue.length - _maxBufferSize);
-    }
+        try {
+          _audioStream.push(chunk);
+        } on Exception catch (_) {}
+      }
+
+      while (_audioQueue.length > _maxBufferSize) {
+        _audioQueue.removeRange(0, _audioQueue.length - _maxBufferSize);
+      }
+    });
   }
 
   void pause() {
