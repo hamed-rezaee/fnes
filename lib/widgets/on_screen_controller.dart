@@ -174,7 +174,7 @@ class _OnScreenControllerState extends State<OnScreenController> {
       children: [
         _buildUtilityButton('start', 'START'),
         _buildUtilityButton('select', 'SELECT'),
-        _buildRewindButton(),
+        if (widget.controller.rewindEnabled.value) _buildRewindButton(),
       ],
     );
   }

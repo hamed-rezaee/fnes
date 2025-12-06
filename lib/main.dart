@@ -104,7 +104,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.folder_open),
+                    icon: const Icon(Icons.folder),
                     tooltip: 'Load ROM',
                     onPressed: _nesController.loadROMFile,
                   ),
@@ -136,7 +136,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                         : null,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.restart_alt_rounded),
+                    icon: const Icon(Icons.restart_alt),
                     tooltip: 'Reset',
                     onPressed: romLoaded ? _nesController.resetEmulation : null,
                   ),
@@ -151,7 +151,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                     onPressed: romLoaded ? _nesController.saveState : null,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.reset_tv_rounded),
+                    icon: const Icon(Icons.restore),
                     tooltip: 'Load State',
                     onPressed: romLoaded && _nesController.hasSaveState.value
                         ? _nesController.loadState

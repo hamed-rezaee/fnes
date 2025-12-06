@@ -346,7 +346,7 @@ class BusState {
 }
 
 class RewindBuffer {
-  RewindBuffer({this.maxFrames = 600});
+  RewindBuffer({this.maxFrames = 300});
 
   final int maxFrames;
   final List<EmulatorState> _states = [];
@@ -364,15 +364,11 @@ class RewindBuffer {
   double get availableRewindSeconds => _states.length / 60.0;
 
   void pushState(EmulatorState state) {
-    if (_currentIndex >= 0 && _currentIndex < _states.length - 1) {
-      _states.removeRange(_currentIndex + 1, _states.length);
-    }
-
     _states.add(state);
 
-    while (_states.length > maxFrames) {
-      _states.removeAt(0);
-    }
+    final excess = _states.length - maxFrames;
+
+    if (excess > 0) _states.removeRange(0, excess);
 
     _currentIndex = _states.length - 1;
   }
