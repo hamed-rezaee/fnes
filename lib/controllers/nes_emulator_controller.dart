@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
@@ -95,37 +96,48 @@ class NESEmulatorController {
   }
 
   Future<void> updatePixelBuffer() async {
-    var bufferIndex = 0;
-    final pixelBuffer = Uint8List(256 * 240 * 4);
+    const width = 256;
+    const height = 240;
 
-    for (var y = 0; y < 240; y++) {
+    final buffer32 = Uint32List(width * height);
+    final romLoaded = isROMLoaded.value && bus.cart != null;
+    final pal = _colorPalette;
+
+    for (var y = 0; y < height; y++) {
       final row = bus.ppu.screenPixels[y];
-      for (var x = 0; x < 256; x++) {
-        int colorIndex;
+      final offset = y * width;
 
-        if (isROMLoaded.value && bus.cart != null) {
-          colorIndex = row[x] % bus.ppu.palScreen.length;
-        } else {
-          colorIndex = 0;
-        }
+      if (!romLoaded) {
+        buffer32.fillRange(offset, offset + width, pal[0]);
 
-        final color = bus.ppu.palScreen[colorIndex];
-        pixelBuffer[bufferIndex++] = (color.r * 255).round();
-        pixelBuffer[bufferIndex++] = (color.g * 255).round();
-        pixelBuffer[bufferIndex++] = (color.b * 255).round();
-        pixelBuffer[bufferIndex++] = 255;
+        continue;
       }
+
+      final row32 = row.map((i) => pal[i]).toList();
+
+      buffer32.setRange(offset, offset + width, row32);
     }
 
+    final pixelBuffer = buffer32.buffer.asUint8List();
     final image = await _createScreenImage(pixelBuffer);
-    screenImage.value = image;
 
-    frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 1000000;
+    screenImage.value = image;
+    frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 60000;
 
     if (!_imageStreamController.isClosed) {
       _imageStreamController.add(image);
     }
   }
+
+  late final Uint32List _colorPalette = Uint32List.fromList(
+    bus.ppu.palScreen.map((color) {
+      final r = (color.r * 255).toInt();
+      final g = (color.g * 255).toInt();
+      final b = (color.b * 255).toInt();
+
+      return (255 << 24) | (b << 16) | (g << 8) | r;
+    }).toList(),
+  );
 
   Future<void> loadROMFile() async {
     try {
