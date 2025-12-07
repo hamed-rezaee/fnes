@@ -93,7 +93,7 @@ class _AudioDebugViewState extends State<AudioDebugView> {
             if (controller.noiseEnabled.value) AudioChannel.noise,
             if (controller.dmcEnabled.value) AudioChannel.dmc,
           },
-          onSelectedPatternTableChanged: (Set<AudioChannel> selected) {
+          onSelectedPatternTableChanged: (selected) {
             controller.pulse1Enabled.value =
                 selected.contains(AudioChannel.pulse1);
             controller.pulse2Enabled.value =

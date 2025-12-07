@@ -54,36 +54,34 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
           Column(
             spacing: 8,
             children: [
-              _buildDropdown<RenderMode>(
-                label: 'Render Mode  ',
-                value: renderMode,
-                items: RenderMode.values
-                    .map(
-                      (mode) => DropdownMenuItem(
-                        value: mode,
-                        child: Row(
-                          children: [
-                            Text(
-                              mode.label,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.black,
-                                fontWeight: renderMode == mode
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                fontFamily: 'MonospaceFont',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    widget.nesEmulatorController.setRenderMode(value);
-                  }
-                },
+              Row(
+                spacing: 21,
+                children: [
+                  const Text(
+                    'Render Mode',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'MonospaceFont',
+                    ),
+                  ),
+                  Expanded(
+                    child: CustomSegmentedButton<RenderMode>(
+                      showSelectedIcon: false,
+                      multiSelectionEnabled: false,
+                      isEmptySelectionAllowed: true,
+                      items: RenderMode.values,
+                      selectedItems: {renderMode},
+                      toLabel: (mode) => mode.label,
+                      onSelectedPatternTableChanged: (selected) {
+                        if (selected.isNotEmpty) {
+                          widget.nesEmulatorController
+                              .setRenderMode(selected.first);
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
               Row(
                 spacing: 8,
@@ -104,8 +102,7 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
                       items: PatternTable.values,
                       selectedItems: {selectedPatternTable},
                       toLabel: (table) => table.label,
-                      onSelectedPatternTableChanged:
-                          (Set<PatternTable> selected) {
+                      onSelectedPatternTableChanged: (selected) {
                         if (selected.isNotEmpty) {
                           controller.changePatternTable(selected.first);
                         }
@@ -129,7 +126,7 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
                       items: List.generate(8, (index) => index),
                       selectedItems: {selectedPalette},
                       toLabel: (palette) => '$palette',
-                      onSelectedPatternTableChanged: (Set<int> selected) {
+                      onSelectedPatternTableChanged: (selected) {
                         if (selected.isNotEmpty) {
                           controller.changePalette(selected.first);
                         }
@@ -252,39 +249,5 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
         height: _imageSize.toDouble() * 2,
         fit: BoxFit.contain,
         filterQuality: FilterQuality.none,
-      );
-
-  Widget _buildDropdown<T>({
-    required String label,
-    required T value,
-    required List<DropdownMenuItem<T>> items,
-    required ValueChanged<T?> onChanged,
-  }) =>
-      Row(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<T>(
-                  value: value,
-                  items: items,
-                  onChanged: onChanged,
-                  isDense: true,
-                  focusColor: Colors.white,
-                  style: const TextStyle(fontSize: 10, color: Colors.black),
-                ),
-              ),
-            ),
-          ),
-        ],
       );
 }

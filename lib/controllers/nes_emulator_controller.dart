@@ -18,7 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals_flutter.dart';
 
 enum RenderMode {
-  both('Background & Sprites'),
+  both('All'),
   background('Background'),
   sprites('Sprites');
 
@@ -55,9 +55,9 @@ class NESEmulatorController {
   final Signal<String?> errorMessage = signal<String?>(null);
   final Signal<int> frameUpdateTrigger = signal(0);
 
+  final Signal<bool> rewindEnabled = signal(true);
   final Signal<bool> isRewinding = signal(false);
   final Signal<double> rewindProgress = signal(0);
-  final Signal<bool> rewindEnabled = signal(false);
   final Signal<bool> hasSaveState = signal(false);
 
   late final Computed<String?> romName = computed(() {
