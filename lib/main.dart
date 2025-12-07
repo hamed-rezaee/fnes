@@ -203,30 +203,11 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        spacing: 4,
-                        children: [
-                          const Text(
-                            'Arrow Keys = D-pad, Z = A, X = B, Space = Start, Enter = Select',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          if (isRewindEnabled)
-                            const Text(
-                              'Hold R = Rewind',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.deepOrange,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                        ],
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 8,
                       ),
+                      child: _buildKeyBindingsHint(isRewindEnabled),
                     ),
                   ],
                 ),
@@ -483,6 +464,39 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
             ),
           ),
         ),
+      );
+
+  Widget _buildKeyBindingsHint(bool isRewindEnabled) => Column(
+        spacing: 4,
+        children: [
+          const Text(
+            'Arrow Keys = D-pad | Z = A | X = B | Space = Start | Enter = Select',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const Text(
+            'A = Turbo A | S = Turbo B',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (isRewindEnabled)
+            const Text(
+              'Hold R = Rewind',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepOrange,
+              ),
+              textAlign: TextAlign.center,
+            ),
+        ],
       );
 
   Future<void> _showROMInfoDialog() async {

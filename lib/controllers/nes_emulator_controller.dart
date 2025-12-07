@@ -70,6 +70,8 @@ class NESEmulatorController {
 
   final RewindBuffer _rewindBuffer = RewindBuffer();
   int _statesSavedSinceLastFrame = 0;
+  int _turboFrameCounter = 0;
+  int _turboPressedButtons = 0;
   final AudioManager _audioPlayer = AudioManager();
   late final AudioStateManager _audioStateManager;
   final FrameRateController _frameRateController = FrameRateController();
@@ -253,6 +255,8 @@ class NESEmulatorController {
         _statesSavedSinceLastFrame = 0;
       }
 
+      _updateTurboButtons();
+
       _frameRateController
           .updateFPSCounter(_frameRateController.currentFPS.value);
 
@@ -429,7 +433,12 @@ class NESEmulatorController {
 
     final bit = InputMapper.getKeyBit(key);
     if (bit != null) {
-      bus.controller.first = InputMapper.pressButton(bus.controller.first, bit);
+      if (bit == InputMapper.turboA || bit == InputMapper.turboB) {
+        _turboPressedButtons |= bit;
+      } else {
+        bus.controller.first =
+            InputMapper.pressButton(bus.controller.first, bit);
+      }
     }
   }
 
@@ -441,8 +450,46 @@ class NESEmulatorController {
 
     final bit = InputMapper.getKeyBit(key);
     if (bit != null) {
+      if (bit == InputMapper.turboA || bit == InputMapper.turboB) {
+        _turboPressedButtons &= ~bit;
+      } else {
+        bus.controller.first =
+            InputMapper.releaseButton(bus.controller.first, bit);
+      }
+    }
+  }
+
+  void _updateTurboButtons() {
+    _turboFrameCounter = (_turboFrameCounter + 1) % 6;
+
+    if ((_turboPressedButtons & InputMapper.turboA) != 0) {
+      if (_turboFrameCounter < 3) {
+        bus.controller.first =
+            InputMapper.pressButton(bus.controller.first, InputMapper.buttonA);
+      } else {
+        bus.controller.first = InputMapper.releaseButton(
+          bus.controller.first,
+          InputMapper.buttonA,
+        );
+      }
+    } else if ((bus.controller.first & InputMapper.buttonA) != 0) {
       bus.controller.first =
-          InputMapper.releaseButton(bus.controller.first, bit);
+          InputMapper.pressButton(bus.controller.first, InputMapper.buttonA);
+    }
+
+    if ((_turboPressedButtons & InputMapper.turboB) != 0) {
+      if (_turboFrameCounter < 3) {
+        bus.controller.first =
+            InputMapper.pressButton(bus.controller.first, InputMapper.buttonB);
+      } else {
+        bus.controller.first = InputMapper.releaseButton(
+          bus.controller.first,
+          InputMapper.buttonB,
+        );
+      }
+    } else if ((bus.controller.first & InputMapper.buttonB) != 0) {
+      bus.controller.first =
+          InputMapper.pressButton(bus.controller.first, InputMapper.buttonB);
     }
   }
 

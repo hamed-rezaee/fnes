@@ -10,6 +10,9 @@ class InputMapper {
   static const int buttonB = 0x40;
   static const int buttonA = 0x80;
 
+  static const int turboA = 0x100;
+  static const int turboB = 0x200;
+
   static int? getKeyBit(LogicalKeyboardKey key) => switch (key) {
         LogicalKeyboardKey.arrowUp => buttonUp,
         LogicalKeyboardKey.arrowDown => buttonDown,
@@ -19,6 +22,8 @@ class InputMapper {
         LogicalKeyboardKey.keyX => buttonB,
         LogicalKeyboardKey.space => buttonStart,
         LogicalKeyboardKey.enter => buttonSelect,
+        LogicalKeyboardKey.keyA => turboA,
+        LogicalKeyboardKey.keyS => turboB,
         _ => null,
       };
 
@@ -32,6 +37,8 @@ class InputMapper {
         'b' => buttonB,
         'start' => buttonStart,
         'select' => buttonSelect,
+        'turbea' => turboA,
+        'turbob' => turboB,
         _ => null,
       };
 
