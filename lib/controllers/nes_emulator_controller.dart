@@ -313,6 +313,8 @@ class NESEmulatorController {
         final state = _rewindBuffer.popState();
 
         if (state != null) {
+          bus.controller[0] = 0;
+          bus.controller[1] = 0;
           bus.restoreState(state);
           _updateRewindProgress();
           unawaited(updatePixelBuffer());
@@ -348,9 +350,6 @@ class NESEmulatorController {
   void stopRewind() {
     isRewinding.value = false;
 
-    bus.controller[0] = 0;
-    bus.controller[1] = 0;
-
     if (audioEnabled.value && isRunning.value) _audioPlayer.resume();
   }
 
@@ -361,6 +360,8 @@ class NESEmulatorController {
       final state = _rewindBuffer.rewindFrames(frames);
 
       if (state != null) {
+        bus.controller[0] = 0;
+        bus.controller[1] = 0;
         bus.restoreState(state);
         _updateRewindProgress();
         unawaited(updatePixelBuffer());
