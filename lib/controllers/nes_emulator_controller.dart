@@ -11,6 +11,9 @@ import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cartridge.dart';
 import 'package:fnes/components/color_palette.dart';
 import 'package:fnes/components/emulator_state.dart';
+import 'package:fnes/controllers/audio_state_manager.dart';
+import 'package:fnes/controllers/frame_rate_controller.dart';
+import 'package:fnes/controllers/input_mapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals_flutter.dart';
 
@@ -27,6 +30,7 @@ enum RenderMode {
 class NESEmulatorController {
   NESEmulatorController({required this.bus}) {
     bus.setSampleFrequency(44100);
+    _audioStateManager = AudioStateManager(_audioPlayer);
     unawaited(_initializeAudio());
   }
 
@@ -34,8 +38,7 @@ class NESEmulatorController {
   final StreamController<Image> _imageStreamController =
       StreamController<Image>.broadcast();
 
-  static const int _maxFrameSkip = 0;
-  static const double _targetFrameTimeMs = 1000.0 / 60.0;
+  static const int _saveStateEveryNFrames = 1;
 
   final Signal<bool> isRunning = signal(false);
   final Signal<bool> isROMLoaded = signal(false);
@@ -45,23 +48,16 @@ class NESEmulatorController {
       signal<FilterQuality>(FilterQuality.none);
   final Signal<bool> isDebuggerVisible = signal(true);
   final Signal<bool> isOnScreenControllerVisible = signal(false);
-  final Signal<double> currentFPS = signal(0);
-  final Signal<bool> audioEnabled = signal(true);
   final Signal<bool> uncapFramerate = signal(false);
   final Signal<RenderMode> renderMode = signal(RenderMode.both);
 
   final Signal<bool> isLoadingROM = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
-
   final Signal<int> frameUpdateTrigger = signal(0);
 
   final Signal<bool> isRewinding = signal(false);
   final Signal<double> rewindProgress = signal(0);
   final Signal<bool> rewindEnabled = signal(false);
-  final RewindBuffer _rewindBuffer = RewindBuffer();
-  int _statesSavedSinceLastFrame = 0;
-  static const int _saveStateEveryNFrames = 1;
-
   final Signal<bool> hasSaveState = signal(false);
 
   late final Computed<String?> romName = computed(() {
@@ -69,14 +65,15 @@ class NESEmulatorController {
     return fileName?.split('.').first;
   });
 
-  int _frameCount = 0;
-  int _skipFrames = 0;
-  DateTime _lastFPSUpdate = DateTime.now();
-  late DateTime _lastFrameTime;
+  late final Computed<double> currentFPS =
+      computed(() => _frameRateController.currentFPS.value);
 
-  final Stopwatch _frameStopwatch = Stopwatch();
-
+  final RewindBuffer _rewindBuffer = RewindBuffer();
+  int _statesSavedSinceLastFrame = 0;
   final AudioManager _audioPlayer = AudioManager();
+  late final AudioStateManager _audioStateManager;
+  final FrameRateController _frameRateController = FrameRateController();
+  final Stopwatch _frameStopwatch = Stopwatch();
 
   Stream<Image> get imageStream => _imageStreamController.stream;
 
@@ -186,21 +183,15 @@ class NESEmulatorController {
     if (isRunning.value || !isROMLoaded.value) return;
 
     isRunning.value = true;
-    _frameCount = 0;
-    _skipFrames = 0;
-    _lastFPSUpdate = DateTime.now();
+    _frameRateController.initialize();
     _frameStopwatch.start();
-    _lastFrameTime = DateTime.now();
-
-    if (audioEnabled.value) {
-      _audioPlayer.resume();
-    }
+    _audioStateManager.resumeIfEnabled();
   }
 
   void pauseEmulation() {
     isRunning.value = false;
     _frameStopwatch.stop();
-    _audioPlayer.pause();
+    _audioStateManager.pause();
   }
 
   void resetEmulation() {
@@ -225,88 +216,70 @@ class NESEmulatorController {
 
     if (isRewinding.value) {
       unawaited(_handleRewind());
-
       return;
     }
 
     bus.ppu.renderMode = renderMode.value;
 
-    final now = DateTime.now();
-    final elapsedMicroseconds = now.difference(_lastFrameTime).inMicroseconds;
-    final elapsedMs = elapsedMicroseconds / 1000.0;
-
-    final shouldUpdateFrame =
-        uncapFramerate.value || elapsedMs >= _targetFrameTimeMs;
-
-    if (!shouldUpdateFrame) {
-      final isAudioReady = isROMLoaded.value &&
-          bus.cart != null &&
-          audioEnabled.value &&
-          bus.hasAudioData();
-
-      if (isAudioReady) {
-        final audioBuffer = bus.getAudioBuffer();
-
-        unawaited(_audioPlayer.addSamples(audioBuffer));
-      }
-
+    if (!_frameRateController.shouldUpdateFrame(
+      uncapFramerate: uncapFramerate.value,
+    )) {
+      _updateAudioIfReady();
       return;
     }
 
-    _lastFrameTime = now;
+    _frameRateController.markFrameTime();
 
     try {
-      if (isROMLoaded.value && bus.cart != null) {
-        do {
-          bus.clock();
-        } while (!bus.ppu.frameComplete);
+      _updateEmulationFrame();
+    } on Exception catch (e) {
+      _handleEmulationError(e);
+    }
+  }
 
-        bus.ppu.frameComplete = false;
+  void _updateEmulationFrame() {
+    if (isROMLoaded.value && bus.cart != null) {
+      do {
+        bus.clock();
+      } while (!bus.ppu.frameComplete);
 
-        _statesSavedSinceLastFrame++;
+      bus.ppu.frameComplete = false;
 
-        if (_statesSavedSinceLastFrame >= _saveStateEveryNFrames) {
-          if (rewindEnabled.value) {
-            unawaited(_saveRewindState());
-          }
-
-          _statesSavedSinceLastFrame = 0;
+      _statesSavedSinceLastFrame++;
+      if (_statesSavedSinceLastFrame >= _saveStateEveryNFrames) {
+        if (rewindEnabled.value) {
+          unawaited(_saveRewindState());
         }
+        _statesSavedSinceLastFrame = 0;
+      }
 
-        if (currentFPS.value < 58.0 && _skipFrames < _maxFrameSkip) {
-          _skipFrames++;
-        } else if (currentFPS.value > 62.0 && _skipFrames > 0) {
-          _skipFrames--;
-        }
+      _frameRateController
+          .updateFPSCounter(_frameRateController.currentFPS.value);
 
-        final shouldRender = _frameCount % (_skipFrames + 1) == 0;
-        if (shouldRender) {
-          unawaited(updatePixelBuffer());
-        }
-
-        if (audioEnabled.value && bus.hasAudioData()) {
-          final audioBuffer = bus.getAudioBuffer();
-          unawaited(_audioPlayer.addSamples(audioBuffer));
-        }
-
-        _frameCount++;
-        final now = DateTime.now();
-
-        if (now.difference(_lastFPSUpdate).inMilliseconds >= 1000) {
-          final fps = _frameCount /
-              (now.difference(_lastFPSUpdate).inMilliseconds / 1000.0);
-          currentFPS.value = fps;
-          _frameCount = 0;
-          _lastFPSUpdate = now;
-        }
-      } else {
+      if (_frameRateController.shouldRenderFrame()) {
         unawaited(updatePixelBuffer());
       }
-    } on Exception catch (e) {
-      developer.log('$e');
-      pauseEmulation();
-      errorMessage.value = '$e';
+
+      _updateAudioIfReady();
+    } else {
+      unawaited(updatePixelBuffer());
     }
+  }
+
+  void _updateAudioIfReady() {
+    if (isROMLoaded.value &&
+        bus.cart != null &&
+        _audioStateManager.isEnabled.value &&
+        bus.hasAudioData()) {
+      final audioBuffer = bus.getAudioBuffer();
+      unawaited(_audioStateManager.addSamples(audioBuffer));
+    }
+  }
+
+  void _handleEmulationError(Exception e) {
+    developer.log('Emulation error: $e');
+    pauseEmulation();
+    errorMessage.value = '$e';
   }
 
   Future<void> _handleRewind() async => Future.microtask(() {
@@ -350,7 +323,9 @@ class NESEmulatorController {
   void stopRewind() {
     isRewinding.value = false;
 
-    if (audioEnabled.value && isRunning.value) _audioPlayer.resume();
+    if (_audioStateManager.isEnabled.value && isRunning.value) {
+      _audioStateManager.resumeIfEnabled();
+    }
   }
 
   Future<void> rewindFrames(int frames) async {
@@ -447,54 +422,27 @@ class NESEmulatorController {
   }
 
   void handleKeyDown(LogicalKeyboardKey key) {
-    switch (key) {
-      case LogicalKeyboardKey.arrowUp:
-        bus.controller.first |= 0x08;
-      case LogicalKeyboardKey.arrowDown:
-        bus.controller.first |= 0x04;
-      case LogicalKeyboardKey.arrowLeft:
-        bus.controller.first |= 0x02;
-      case LogicalKeyboardKey.arrowRight:
-        bus.controller.first |= 0x01;
-      case LogicalKeyboardKey.keyZ:
-        bus.controller.first |= 0x80;
-      case LogicalKeyboardKey.keyX:
-        bus.controller.first |= 0x40;
-      case LogicalKeyboardKey.space:
-        bus.controller.first |= 0x10;
-      case LogicalKeyboardKey.enter:
-        bus.controller.first |= 0x20;
-      case LogicalKeyboardKey.keyR:
-        if (canRewind && rewindEnabled.value) startRewind();
+    if (key == LogicalKeyboardKey.keyR) {
+      if (canRewind && rewindEnabled.value) startRewind();
+      return;
+    }
 
-      default:
-        break;
+    final bit = InputMapper.getKeyBit(key);
+    if (bit != null) {
+      bus.controller.first = InputMapper.pressButton(bus.controller.first, bit);
     }
   }
 
   void handleKeyUp(LogicalKeyboardKey key) {
-    switch (key) {
-      case LogicalKeyboardKey.arrowUp:
-        bus.controller.first &= ~0x08;
-      case LogicalKeyboardKey.arrowDown:
-        bus.controller.first &= ~0x04;
-      case LogicalKeyboardKey.arrowLeft:
-        bus.controller.first &= ~0x02;
-      case LogicalKeyboardKey.arrowRight:
-        bus.controller.first &= ~0x01;
-      case LogicalKeyboardKey.keyZ:
-        bus.controller.first &= ~0x80;
-      case LogicalKeyboardKey.keyX:
-        bus.controller.first &= ~0x40;
-      case LogicalKeyboardKey.space:
-        bus.controller.first &= ~0x10;
-      case LogicalKeyboardKey.enter:
-        bus.controller.first &= ~0x20;
-      case LogicalKeyboardKey.keyR:
-        if (isRewinding.value) stopRewind();
+    if (key == LogicalKeyboardKey.keyR) {
+      if (isRewinding.value) stopRewind();
+      return;
+    }
 
-      default:
-        break;
+    final bit = InputMapper.getKeyBit(key);
+    if (bit != null) {
+      bus.controller.first =
+          InputMapper.releaseButton(bus.controller.first, bit);
     }
   }
 
@@ -508,13 +456,7 @@ class NESEmulatorController {
   void toggleOnScreenController() =>
       isOnScreenControllerVisible.value = !isOnScreenControllerVisible.value;
 
-  void toggleAudio() {
-    audioEnabled.value = !audioEnabled.value;
-
-    (audioEnabled.value && isRunning.value)
-        ? _audioPlayer.resume()
-        : _audioPlayer.pause();
-  }
+  void toggleAudio() => _audioStateManager.toggle();
 
   void toggleRewind() {
     rewindEnabled.value = !rewindEnabled.value;
@@ -525,54 +467,25 @@ class NESEmulatorController {
   void setRenderMode(RenderMode mode) => renderMode.value = mode;
 
   void pressButton(String buttonName) {
-    switch (buttonName) {
-      case 'up':
-        bus.controller.first |= 0x08;
-      case 'down':
-        bus.controller.first |= 0x04;
-      case 'left':
-        bus.controller.first |= 0x02;
-      case 'right':
-        bus.controller.first |= 0x01;
-      case 'a':
-        bus.controller.first |= 0x80;
-      case 'b':
-        bus.controller.first |= 0x40;
-      case 'start':
-        bus.controller.first |= 0x10;
-      case 'select':
-        bus.controller.first |= 0x20;
-      default:
-        break;
+    final bit = InputMapper.getButtonBit(buttonName);
+
+    if (bit != null) {
+      bus.controller.first = InputMapper.pressButton(bus.controller.first, bit);
     }
   }
 
   void releaseButton(String buttonName) {
-    switch (buttonName) {
-      case 'up':
-        bus.controller.first &= ~0x08;
-      case 'down':
-        bus.controller.first &= ~0x04;
-      case 'left':
-        bus.controller.first &= ~0x02;
-      case 'right':
-        bus.controller.first &= ~0x01;
-      case 'a':
-        bus.controller.first &= ~0x80;
-      case 'b':
-        bus.controller.first &= ~0x40;
-      case 'start':
-        bus.controller.first &= ~0x10;
-      case 'select':
-        bus.controller.first &= ~0x20;
-      default:
-        break;
+    final bit = InputMapper.getButtonBit(buttonName);
+
+    if (bit != null) {
+      bus.controller.first =
+          InputMapper.releaseButton(bus.controller.first, bit);
     }
   }
 
   Future<void> dispose() async {
     screenImage.value?.dispose();
     await _imageStreamController.close();
-    await _audioPlayer.dispose();
+    await _audioStateManager.dispose();
   }
 }
