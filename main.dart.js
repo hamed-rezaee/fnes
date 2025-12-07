@@ -68801,12 +68801,9 @@ E4(){var s=this
 if(!(s.d.gn()&&s.cy.b.length!==0&&s.cx.gn()))return
 s.ch.al(!0)
 s.k1.nB()},
-qT(){var s,r=this
-r.ch.al(!1)
-s=r.a.e
-s[0]=0
-s[1]=0
-if(r.z.gn()&&r.c.gn())r.k1.ju()},
+qT(){var s=this
+s.ch.al(!1)
+if(s.z.gn()&&s.c.gn())s.k1.ju()},
 xM(){var s=this.gvr().gn()
 return"save_state_"+(s==null?"unknown":s)},
 r4(){var s=0,r=A.S(t.H),q=this,p,o
@@ -69131,10 +69128,14 @@ A.a_3.prototype={
 $1(a){return(B.c.dU(a.giZ()*255)<<16|B.c.dU(a.giG()*255)<<8|B.c.dU(a.gjp()*255)|4278190080)>>>0},
 $S:430}
 A.a_4.prototype={
-$0(){var s=this.a,r=s.cy.abW()
-if(r!=null){s.a.dh(r)
-s.K3()
-s.lW()}else s.qT()},
+$0(){var s,r,q=this.a,p=q.cy.abW()
+if(p!=null){s=q.a
+r=s.e
+r[0]=0
+r[1]=0
+s.dh(p)
+q.K3()
+q.lW()}else q.qT()},
 $S:13}
 A.a_5.prototype={
 $0(){var s,r=this.a,q=r.cy.b
