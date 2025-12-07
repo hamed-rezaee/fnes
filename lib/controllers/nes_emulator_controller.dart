@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:fnes/components/audio_manager.dart';
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cartridge.dart';
+import 'package:fnes/components/color_palette.dart';
 import 'package:fnes/components/emulator_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals_flutter.dart';
@@ -95,50 +96,50 @@ class NESEmulatorController {
     return completer.future;
   }
 
-  Future<void> updatePixelBuffer() async {
-    await Future.microtask(() async {
-      const width = 256;
-      const height = 240;
+  Future<void> updatePixelBuffer() async => Future.microtask(() async {
+        const width = 256;
+        const height = 240;
 
-      final buffer32 = Uint32List(width * height);
-      final romLoaded = isROMLoaded.value && bus.cart != null;
-      final pal = _colorPalette;
+        final buffer32 = Uint32List(width * height);
+        final romLoaded = isROMLoaded.value && bus.cart != null;
+        final colorPalette = _colorPalette;
 
-      for (var y = 0; y < height; y++) {
-        final row = bus.ppu.screenPixels[y];
-        final offset = y * width;
+        for (var y = 0; y < height; y++) {
+          final row = bus.ppu.screenPixels[y];
+          final offset = y * width;
 
-        if (!romLoaded) {
-          buffer32.fillRange(offset, offset + width, pal[0]);
+          if (!romLoaded) {
+            buffer32.fillRange(offset, offset + width, colorPalette[0]);
 
-          continue;
+            continue;
+          }
+
+          final row32 = row.map((i) => colorPalette[i]).toList();
+
+          buffer32.setRange(offset, offset + width, row32);
         }
 
-        final row32 = row.map((i) => pal[i]).toList();
+        final pixelBuffer = buffer32.buffer.asUint8List();
+        final image = await _createScreenImage(pixelBuffer);
 
-        buffer32.setRange(offset, offset + width, row32);
-      }
+        screenImage.value = image;
+        frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 60000;
 
-      final pixelBuffer = buffer32.buffer.asUint8List();
-      final image = await _createScreenImage(pixelBuffer);
-
-      screenImage.value = image;
-      frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 60000;
-
-      if (!_imageStreamController.isClosed) {
-        _imageStreamController.add(image);
-      }
-    });
-  }
+        if (!_imageStreamController.isClosed) {
+          _imageStreamController.add(image);
+        }
+      });
 
   late final Uint32List _colorPalette = Uint32List.fromList(
-    bus.ppu.palScreen.map((color) {
-      final r = (color.r * 255).toInt();
-      final g = (color.g * 255).toInt();
-      final b = (color.b * 255).toInt();
-
-      return (255 << 24) | (b << 16) | (g << 8) | r;
-    }).toList(),
+    colorPalette
+        .map(
+          (color) =>
+              (255 << 24) |
+              ((color.b * 255).toInt() << 16) |
+              ((color.g * 255).toInt() << 8) |
+              (color.r * 255).toInt(),
+        )
+        .toList(),
   );
 
   Future<void> loadROMFile() async {
@@ -308,19 +309,17 @@ class NESEmulatorController {
     }
   }
 
-  Future<void> _handleRewind() async {
-    await Future.microtask(() {
-      final state = _rewindBuffer.popState();
+  Future<void> _handleRewind() async => Future.microtask(() {
+        final state = _rewindBuffer.popState();
 
-      if (state != null) {
-        bus.restoreState(state);
-        _updateRewindProgress();
-        unawaited(updatePixelBuffer());
-      } else {
-        stopRewind();
-      }
-    });
-  }
+        if (state != null) {
+          bus.restoreState(state);
+          _updateRewindProgress();
+          unawaited(updatePixelBuffer());
+        } else {
+          stopRewind();
+        }
+      });
 
   void _updateRewindProgress() {
     if (_rewindBuffer.maxFrames > 0) {
@@ -330,14 +329,11 @@ class NESEmulatorController {
     }
   }
 
-  Future<void> _saveRewindState() async {
-    // Use scheduleMicrotask to yield control back to event loop
-    await Future.microtask(() {
-      final state = bus.saveState();
-      _rewindBuffer.pushState(state);
-      _updateRewindProgress();
-    });
-  }
+  Future<void> _saveRewindState() async => Future.microtask(() {
+        final state = bus.saveState();
+        _rewindBuffer.pushState(state);
+        _updateRewindProgress();
+      });
 
   void startRewind() {
     final canRewind =

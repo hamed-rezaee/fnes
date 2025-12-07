@@ -19,73 +19,6 @@ class PPU {
     }
 
     pOAM2 = ObjectAttributeEntry();
-
-    palScreen = [
-      const ui.Color.fromARGB(255, 84, 84, 84),
-      const ui.Color.fromARGB(255, 0, 30, 116),
-      const ui.Color.fromARGB(255, 8, 16, 144),
-      const ui.Color.fromARGB(255, 48, 0, 136),
-      const ui.Color.fromARGB(255, 68, 0, 100),
-      const ui.Color.fromARGB(255, 92, 0, 48),
-      const ui.Color.fromARGB(255, 84, 4, 0),
-      const ui.Color.fromARGB(255, 60, 24, 0),
-      const ui.Color.fromARGB(255, 32, 42, 0),
-      const ui.Color.fromARGB(255, 8, 58, 0),
-      const ui.Color.fromARGB(255, 0, 64, 0),
-      const ui.Color.fromARGB(255, 0, 60, 0),
-      const ui.Color.fromARGB(255, 0, 50, 60),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 152, 150, 152),
-      const ui.Color.fromARGB(255, 8, 76, 196),
-      const ui.Color.fromARGB(255, 48, 50, 236),
-      const ui.Color.fromARGB(255, 92, 30, 228),
-      const ui.Color.fromARGB(255, 136, 20, 176),
-      const ui.Color.fromARGB(255, 160, 20, 100),
-      const ui.Color.fromARGB(255, 152, 34, 32),
-      const ui.Color.fromARGB(255, 120, 60, 0),
-      const ui.Color.fromARGB(255, 84, 90, 0),
-      const ui.Color.fromARGB(255, 40, 114, 0),
-      const ui.Color.fromARGB(255, 8, 124, 0),
-      const ui.Color.fromARGB(255, 0, 118, 40),
-      const ui.Color.fromARGB(255, 0, 102, 120),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 236, 238, 236),
-      const ui.Color.fromARGB(255, 76, 154, 236),
-      const ui.Color.fromARGB(255, 120, 124, 236),
-      const ui.Color.fromARGB(255, 176, 98, 236),
-      const ui.Color.fromARGB(255, 228, 84, 236),
-      const ui.Color.fromARGB(255, 236, 88, 180),
-      const ui.Color.fromARGB(255, 236, 106, 100),
-      const ui.Color.fromARGB(255, 212, 136, 32),
-      const ui.Color.fromARGB(255, 160, 170, 0),
-      const ui.Color.fromARGB(255, 116, 196, 0),
-      const ui.Color.fromARGB(255, 76, 208, 32),
-      const ui.Color.fromARGB(255, 56, 204, 108),
-      const ui.Color.fromARGB(255, 56, 180, 204),
-      const ui.Color.fromARGB(255, 60, 60, 60),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 236, 238, 236),
-      const ui.Color.fromARGB(255, 168, 204, 236),
-      const ui.Color.fromARGB(255, 188, 188, 236),
-      const ui.Color.fromARGB(255, 212, 178, 236),
-      const ui.Color.fromARGB(255, 236, 174, 236),
-      const ui.Color.fromARGB(255, 236, 174, 212),
-      const ui.Color.fromARGB(255, 236, 180, 176),
-      const ui.Color.fromARGB(255, 228, 196, 144),
-      const ui.Color.fromARGB(255, 204, 210, 120),
-      const ui.Color.fromARGB(255, 180, 222, 120),
-      const ui.Color.fromARGB(255, 168, 226, 144),
-      const ui.Color.fromARGB(255, 152, 226, 180),
-      const ui.Color.fromARGB(255, 160, 214, 228),
-      const ui.Color.fromARGB(255, 160, 162, 160),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-      const ui.Color.fromARGB(255, 0, 0, 0),
-    ];
   }
 
   Cartridge? cart;
@@ -127,8 +60,6 @@ class PPU {
 
   ui.Image? sprScreen;
   List<List<int>> screenPixels = List.generate(240, (_) => List.filled(256, 0));
-
-  List<ui.Color> palScreen = [];
 
   final Uint8List pOAM = Uint8List(256);
   late ObjectAttributeEntry pOAM2;

@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart' hide Image;
 import 'package:fnes/components/bus.dart';
+import 'package:fnes/components/color_palette.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/controllers/palette_debug_view_controller.dart';
 import 'package:fnes/widgets/custom_segmented_button.dart';
@@ -188,10 +189,7 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
       final paletteAddress = 0x3F00 + (selectedPalette << 2) + pixelValue;
       final colorIndex = widget.bus.ppu.ppuRead(paletteAddress) & 0x3F;
 
-      return widget.bus.ppu.palScreen[colorIndex.clamp(
-        0,
-        widget.bus.ppu.palScreen.length - 1,
-      )];
+      return colorPalette[colorIndex.clamp(0, colorPalette.length - 1)];
     } on Exception catch (e) {
       developer.log('Error getting pixel color: $e');
 
