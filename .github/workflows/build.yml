@@ -1,9 +1,38 @@
 name: Build and Deploy
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
+    inputs:
+      build_web:
+        description: "Build Web"
+        required: false
+        default: true
+        type: boolean
+      build_android:
+        description: "Build Android"
+        required: false
+        default: true
+        type: boolean
+      build_ios:
+        description: "Build iOS"
+        required: false
+        default: true
+        type: boolean
+      build_windows:
+        description: "Build Windows"
+        required: false
+        default: true
+        type: boolean
+      build_macos:
+        description: "Build macOS"
+        required: false
+        default: true
+        type: boolean
+      build_linux:
+        description: "Build Linux"
+        required: false
+        default: true
+        type: boolean
 
 concurrency:
   group: build-${{ github.ref }}
@@ -11,6 +40,7 @@ concurrency:
 
 jobs:
   build_web:
+    if: inputs.build_web
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -43,6 +73,7 @@ jobs:
           publish_dir: ./build/web
 
   build_android:
+    if: inputs.build_android
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -66,18 +97,15 @@ jobs:
       - name: Build Android APK
         run: flutter build apk --release
 
-      - name: Build Android App Bundle
-        run: flutter build appbundle --release
-
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-release
           path: |
             build/app/outputs/apk/release/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
 
   build_ios:
+    if: inputs.build_ios
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -102,6 +130,7 @@ jobs:
           path: build/ios/iphoneos/
 
   build_windows:
+    if: inputs.build_windows
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -126,6 +155,7 @@ jobs:
           path: build/windows/x64/runner/Release/
 
   build_macos:
+    if: inputs.build_macos
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -150,6 +180,7 @@ jobs:
           path: build/macos/Build/Products/Release/
 
   build_linux:
+    if: inputs.build_linux
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -179,6 +210,7 @@ jobs:
           path: build/linux/x64/release/bundle/
 
   create_release:
+    if: always()
     needs:
       [
         build_web,
@@ -204,7 +236,7 @@ jobs:
         run: |
           mkdir -p release-files
           # Copy Android artifacts
-          find all-artifacts/android-release -type f \( -name "*.apk" -o -name "*.aab" \) -exec cp {} release-files/ \;
+          find all-artifacts/android-release -type f -name "*.apk" -exec cp {} release-files/ \;
           # Copy Web artifacts (zip for portability)
           if [ -d "all-artifacts/web-release" ]; then
             cd all-artifacts/web-release && zip -r ../../release-files/web-release.zip . && cd ../../;
