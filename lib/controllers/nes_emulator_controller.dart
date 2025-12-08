@@ -95,39 +95,39 @@ class NESEmulatorController {
     return completer.future;
   }
 
-  Future<void> updatePixelBuffer() async => Future.microtask(() async {
-        const width = 256;
-        const height = 240;
+  Future<void> updatePixelBuffer() async {
+    const width = 256;
+    const height = 240;
 
-        final buffer32 = Uint32List(width * height);
-        final romLoaded = isROMLoaded.value && bus.cart != null;
-        final colorPalette = _colorPalette;
+    final buffer32 = Uint32List(width * height);
+    final romLoaded = isROMLoaded.value && bus.cart != null;
+    final colorPalette = _colorPalette;
 
-        for (var y = 0; y < height; y++) {
-          final row = bus.ppu.screenPixels[y];
-          final offset = y * width;
+    for (var y = 0; y < height; y++) {
+      final row = bus.ppu.screenPixels[y];
+      final offset = y * width;
 
-          if (!romLoaded) {
-            buffer32.fillRange(offset, offset + width, colorPalette[0]);
+      if (!romLoaded) {
+        buffer32.fillRange(offset, offset + width, colorPalette[0]);
 
-            continue;
-          }
+        continue;
+      }
 
-          final row32 = row.map((i) => colorPalette[i]).toList();
+      final row32 = row.map((i) => colorPalette[i]).toList();
 
-          buffer32.setRange(offset, offset + width, row32);
-        }
+      buffer32.setRange(offset, offset + width, row32);
+    }
 
-        final pixelBuffer = buffer32.buffer.asUint8List();
-        final image = await _createScreenImage(pixelBuffer);
+    final pixelBuffer = buffer32.buffer.asUint8List();
+    final image = await _createScreenImage(pixelBuffer);
 
-        screenImage.value = image;
-        frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 60000;
+    screenImage.value = image;
+    frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 60000;
 
-        if (!_imageStreamController.isClosed) {
-          _imageStreamController.add(image);
-        }
-      });
+    if (!_imageStreamController.isClosed) {
+      _imageStreamController.add(image);
+    }
+  }
 
   late final Uint32List _colorPalette = Uint32List.fromList(
     colorPalette

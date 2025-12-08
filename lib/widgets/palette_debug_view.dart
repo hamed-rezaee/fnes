@@ -205,32 +205,30 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
     final baseTableAddress = patternTableIndex << 12;
     final pixelBuffer = Uint8List(128 * 128 * 4);
 
-    await Future.microtask(() {
-      for (var tileY = 0; tileY < _tilesPerRow; tileY++) {
-        for (var pixelY = 0; pixelY < _tileSize; pixelY++) {
-          for (var tileX = 0; tileX < _tilesPerRow; tileX++) {
-            final tileBaseAddress =
-                baseTableAddress + ((tileY << 8) + (tileX << 4));
+    for (var tileY = 0; tileY < _tilesPerRow; tileY++) {
+      for (var pixelY = 0; pixelY < _tileSize; pixelY++) {
+        for (var tileX = 0; tileX < _tilesPerRow; tileX++) {
+          final tileBaseAddress =
+              baseTableAddress + ((tileY << 8) + (tileX << 4));
 
-            final lsb = _readCharData(tileBaseAddress + pixelY);
-            final msb = _readCharData(tileBaseAddress + pixelY + 8);
+          final lsb = _readCharData(tileBaseAddress + pixelY);
+          final msb = _readCharData(tileBaseAddress + pixelY + 8);
 
-            for (var pixelX = 0; pixelX < _tileSize; pixelX++) {
-              final mask = 0x80 >> pixelX;
-              final pixelValue =
-                  ((msb & mask) != 0 ? 2 : 0) | ((lsb & mask) != 0 ? 1 : 0);
+          for (var pixelX = 0; pixelX < _tileSize; pixelX++) {
+            final mask = 0x80 >> pixelX;
+            final pixelValue =
+                ((msb & mask) != 0 ? 2 : 0) | ((lsb & mask) != 0 ? 1 : 0);
 
-              final color = _getPixelColor(pixelValue, selectedPalette);
+            final color = _getPixelColor(pixelValue, selectedPalette);
 
-              pixelBuffer[bufferIndex++] = (color.r * 255).round();
-              pixelBuffer[bufferIndex++] = (color.g * 255).round();
-              pixelBuffer[bufferIndex++] = (color.b * 255).round();
-              pixelBuffer[bufferIndex++] = 255;
-            }
+            pixelBuffer[bufferIndex++] = (color.r * 255).round();
+            pixelBuffer[bufferIndex++] = (color.g * 255).round();
+            pixelBuffer[bufferIndex++] = (color.b * 255).round();
+            pixelBuffer[bufferIndex++] = 255;
           }
         }
       }
-    });
+    }
 
     decodeImageFromPixels(
       pixelBuffer,
