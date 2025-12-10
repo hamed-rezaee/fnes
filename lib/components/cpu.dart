@@ -942,7 +942,7 @@ class CPU {
     _setFlag(zeroFlag, isFlagSet: (tempSum & 0xFF) == 0);
     _setFlag(
       overflowFlag,
-      isFlagSet: (~(a ^ fetched) & (a ^ tempSum)) & 0x80 != 0,
+      isFlagSet: ((~(a ^ fetched) & (a ^ tempSum)) & 0x80) != 0,
     );
     _setFlag(negativeFlag, isFlagSet: (tempSum & 0x80) != 0);
     a = tempSum & 0xFF;
@@ -957,7 +957,7 @@ class CPU {
     _setFlag(zeroFlag, isFlagSet: (tempSum & 0xFF) == 0);
     _setFlag(
       overflowFlag,
-      isFlagSet: ((tempSum ^ a) & (tempSum ^ value) & 0x80) != 0,
+      isFlagSet: (((tempSum ^ a) & (tempSum ^ value)) & 0x80) != 0,
     );
     _setFlag(negativeFlag, isFlagSet: (tempSum & 0x80) != 0);
     a = tempSum & 0xFF;
@@ -1073,7 +1073,7 @@ class CPU {
     _setFlag(zeroFlag, isFlagSet: (tempSum & 0xFF) == 0);
     _setFlag(
       overflowFlag,
-      isFlagSet: (~(a ^ temp) & (a ^ tempSum) & 0x80) != 0,
+      isFlagSet: ((~(a ^ temp) & (a ^ tempSum)) & 0x80) != 0,
     );
     _setFlag(negativeFlag, isFlagSet: (tempSum & 0x80) != 0);
     a = tempSum & 0xFF;
@@ -1102,7 +1102,7 @@ class CPU {
     _setFlag(zeroFlag, isFlagSet: (tempSum & 0xFF) == 0);
     _setFlag(
       overflowFlag,
-      isFlagSet: ((tempSum ^ a) & (tempSum ^ value) & 0x80) != 0,
+      isFlagSet: (((tempSum ^ a) & (tempSum ^ value)) & 0x80) != 0,
     );
     _setFlag(negativeFlag, isFlagSet: (tempSum & 0x80) != 0);
     a = tempSum & 0xFF;

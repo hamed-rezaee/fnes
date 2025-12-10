@@ -366,7 +366,14 @@ class PPU {
       }
     }
 
-    final colorIndex = ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F;
+    var paletteAddress = 0x3F00;
+    if (pixel == 0x00) {
+      paletteAddress = 0x3F00;
+    } else {
+      paletteAddress = 0x3F00 + (palette << 2) + pixel;
+    }
+
+    final colorIndex = ppuRead(paletteAddress) & 0x3F;
 
     if (scanline >= 0 && scanline < 240 && cycle >= 1 && cycle < 257) {
       screenPixels[scanline][cycle - 1] = colorIndex;

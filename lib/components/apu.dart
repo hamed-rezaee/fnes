@@ -525,7 +525,7 @@ class PulseWave {
       return 0;
     }
 
-    final duty = (dutycycle * 0x1F).clamp(0, 0x03).floor();
+    final duty = (dutycycle * 8).clamp(0, 3).toInt();
 
     return APU._dutySequences[duty][phase] * envelope.output;
   }
