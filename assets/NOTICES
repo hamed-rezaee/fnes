@@ -1355,6 +1355,7 @@ limitations under the License.
 --------------------------------------------------------------------------------
 cross_file
 flutter_plugin_android_lifecycle
+shared_preferences
 shared_preferences_android
 shared_preferences_foundation
 url_launcher_android
@@ -24208,7 +24209,6 @@ path_provider_linux
 path_provider_platform_interface
 path_provider_windows
 plugin_platform_interface
-shared_preferences
 shared_preferences_linux
 shared_preferences_platform_interface
 shared_preferences_web
