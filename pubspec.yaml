@@ -1,5 +1,6 @@
 name: fnes
-description: "A full-featured NES emulator with CPU, PPU, and APU support, built-in debugger, and cross-platform compatibility using Flutter."
+description: "A full-featured NES emulator with CPU, PPU, and APU support,
+  built-in debugger, and cross-platform compatibility using Flutter."
 
 publish_to: "none"
 version: 0.8.5
@@ -13,9 +14,9 @@ dependencies:
   flutter:
     sdk: flutter
   mp_audio_stream: ^0.2.2
-  shared_preferences: ^2.3.4
-  signals: ^6.2.0
-  url_launcher: ^6.3.0
+  shared_preferences: ^2.5.4
+  signals: ^6.3.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
