@@ -12,6 +12,7 @@ import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/widgets/debug_panel.dart';
 import 'package:fnes/widgets/on_screen_controller.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() => runApp(const MainApp());
 
@@ -447,6 +448,17 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 ],
               ),
             ),
+            PopupMenuItem<String>(
+              value: 'about',
+              onTap: () => _showAboutDialog(context),
+              child: const Row(
+                spacing: 12,
+                children: [
+                  Icon(Icons.info, size: 16, color: Colors.black),
+                  Text('About', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
           ],
         );
       });
@@ -563,6 +575,34 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
       },
     );
   }
+
+  void _showAboutDialog(BuildContext context) => showAboutDialog(
+        context: context,
+        applicationName: 'FNES: Flutter NES Emulator',
+        applicationVersion: '0.8.5',
+        applicationIcon: const Icon(Icons.gamepad_outlined, size: 48),
+        children: [
+          const Text(
+            'A full-featured NES emulator with CPU, PPU, and APU support, built-in debugger,\nand cross-platform compatibility using Flutter.',
+            style: TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => launchUrl(
+              Uri.parse('https://github.com/hamed-rezaee/fnes'),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: const Text(
+              'https://github.com/hamed-rezaee/fnes',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ],
+      );
 
   @override
   void dispose() {
