@@ -130,15 +130,15 @@ class NESEmulatorController {
   }
 
   late final Uint32List _colorPalette = Uint32List.fromList(
-    colorPalette
-        .map(
-          (color) =>
-              (255 << 24) |
-              ((color.b * 255).toInt() << 16) |
-              ((color.g * 255).toInt() << 8) |
-              (color.r * 255).toInt(),
-        )
-        .toList(),
+    colorPalette.map(
+      (colors) {
+        final hex = colors;
+        final r = (hex >> 16) & 0xFF;
+        final g = (hex >> 8) & 0xFF;
+        final b = hex & 0xFF;
+        return (255 << 24) | (b << 16) | (g << 8) | r;
+      },
+    ).toList(),
   );
 
   Future<void> loadROMFile() async {

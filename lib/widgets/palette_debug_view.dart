@@ -186,7 +186,13 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
       final paletteAddress = 0x3F00 + (selectedPalette << 2) + pixelValue;
       final colorIndex = widget.bus.ppu.ppuRead(paletteAddress) & 0x3F;
 
-      return colorPalette[colorIndex.clamp(0, colorPalette.length - 1)];
+      final colors = colorPalette[colorIndex.clamp(0, colorPalette.length - 1)];
+      final hex = colors;
+      final r = (hex >> 16) & 0xFF;
+      final g = (hex >> 8) & 0xFF;
+      final b = hex & 0xFF;
+
+      return Color.fromARGB(255, r, g, b);
     } on Exception catch (e) {
       developer.log('Error getting pixel color: $e');
 

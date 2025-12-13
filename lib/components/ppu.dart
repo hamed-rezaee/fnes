@@ -533,27 +533,21 @@ class PPU {
       if (cart?.mirror() == MapperMirror.vertical) {
         if (memoryAddress >= 0x0000 && memoryAddress <= 0x03FF) {
           data = tableData[memoryAddress & 0x03FF];
-        }
-        if (memoryAddress >= 0x0400 && memoryAddress <= 0x07FF) {
+        } else if (memoryAddress >= 0x0400 && memoryAddress <= 0x07FF) {
           data = tableData[0x0400 + (memoryAddress & 0x03FF)];
-        }
-        if (memoryAddress >= 0x0800 && memoryAddress <= 0x0BFF) {
+        } else if (memoryAddress >= 0x0800 && memoryAddress <= 0x0BFF) {
           data = tableData[memoryAddress & 0x03FF];
-        }
-        if (memoryAddress >= 0x0C00 && memoryAddress <= 0x0FFF) {
+        } else if (memoryAddress >= 0x0C00 && memoryAddress <= 0x0FFF) {
           data = tableData[0x0400 + (memoryAddress & 0x03FF)];
         }
       } else if (cart?.mirror() == MapperMirror.horizontal) {
         if (memoryAddress >= 0x0000 && memoryAddress <= 0x03FF) {
           data = tableData[memoryAddress & 0x03FF];
-        }
-        if (memoryAddress >= 0x0400 && memoryAddress <= 0x07FF) {
+        } else if (memoryAddress >= 0x0400 && memoryAddress <= 0x07FF) {
           data = tableData[memoryAddress & 0x03FF];
-        }
-        if (memoryAddress >= 0x0800 && memoryAddress <= 0x0BFF) {
+        } else if (memoryAddress >= 0x0800 && memoryAddress <= 0x0BFF) {
           data = tableData[0x0400 + (memoryAddress & 0x03FF)];
-        }
-        if (memoryAddress >= 0x0C00 && memoryAddress <= 0x0FFF) {
+        } else if (memoryAddress >= 0x0C00 && memoryAddress <= 0x0FFF) {
           data = tableData[0x0400 + (memoryAddress & 0x03FF)];
         }
       } else if (cart?.mirror() == MapperMirror.oneScreenLow) {
@@ -563,10 +557,17 @@ class PPU {
       }
     } else if (memoryAddress >= 0x3F00 && memoryAddress <= 0x3FFF) {
       memoryAddress &= 0x001F;
-      if (memoryAddress == 0x0010) memoryAddress = 0x0000;
-      if (memoryAddress == 0x0014) memoryAddress = 0x0004;
-      if (memoryAddress == 0x0018) memoryAddress = 0x0008;
-      if (memoryAddress == 0x001C) memoryAddress = 0x000C;
+
+      if (memoryAddress == 0x0010) {
+        memoryAddress = 0x0000;
+      } else if (memoryAddress == 0x0014) {
+        memoryAddress = 0x0004;
+      } else if (memoryAddress == 0x0018) {
+        memoryAddress = 0x0008;
+      } else if (memoryAddress == 0x001C) {
+        memoryAddress = 0x000C;
+      }
+
       data = paletteTable[memoryAddress] & (mask.grayscale ? 0x30 : 0x3F);
     }
 
@@ -586,27 +587,21 @@ class PPU {
       if (cart?.mirror() == MapperMirror.vertical) {
         if (memoryAddress >= 0x0000 && memoryAddress <= 0x03FF) {
           tableData[memoryAddress & 0x03FF] = data;
-        }
-        if (memoryAddress >= 0x0400 && memoryAddress <= 0x07FF) {
+        } else if (memoryAddress >= 0x0400 && memoryAddress <= 0x07FF) {
           tableData[0x0400 + (memoryAddress & 0x03FF)] = data;
-        }
-        if (memoryAddress >= 0x0800 && memoryAddress <= 0x0BFF) {
+        } else if (memoryAddress >= 0x0800 && memoryAddress <= 0x0BFF) {
           tableData[memoryAddress & 0x03FF] = data;
-        }
-        if (memoryAddress >= 0x0C00 && memoryAddress <= 0x0FFF) {
+        } else if (memoryAddress >= 0x0C00 && memoryAddress <= 0x0FFF) {
           tableData[0x0400 + (memoryAddress & 0x03FF)] = data;
         }
       } else if (cart?.mirror() == MapperMirror.horizontal) {
         if (memoryAddress >= 0x0000 && memoryAddress <= 0x03FF) {
           tableData[memoryAddress & 0x03FF] = data;
-        }
-        if (memoryAddress >= 0x0400 && memoryAddress <= 0x07FF) {
+        } else if (memoryAddress >= 0x0400 && memoryAddress <= 0x07FF) {
           tableData[memoryAddress & 0x03FF] = data;
-        }
-        if (memoryAddress >= 0x0800 && memoryAddress <= 0x0BFF) {
+        } else if (memoryAddress >= 0x0800 && memoryAddress <= 0x0BFF) {
           tableData[0x0400 + (memoryAddress & 0x03FF)] = data;
-        }
-        if (memoryAddress >= 0x0C00 && memoryAddress <= 0x0FFF) {
+        } else if (memoryAddress >= 0x0C00 && memoryAddress <= 0x0FFF) {
           tableData[0x0400 + (memoryAddress & 0x03FF)] = data;
         }
       } else if (cart?.mirror() == MapperMirror.oneScreenLow) {
@@ -616,27 +611,28 @@ class PPU {
       }
     } else if (memoryAddress >= 0x3F00 && memoryAddress <= 0x3FFF) {
       memoryAddress &= 0x001F;
-      if (memoryAddress == 0x0010) memoryAddress = 0x0000;
-      if (memoryAddress == 0x0014) memoryAddress = 0x0004;
-      if (memoryAddress == 0x0018) memoryAddress = 0x0008;
-      if (memoryAddress == 0x001C) memoryAddress = 0x000C;
+
+      if (memoryAddress == 0x0010) {
+        memoryAddress = 0x0000;
+      } else if (memoryAddress == 0x0014) {
+        memoryAddress = 0x0004;
+      } else if (memoryAddress == 0x0018) {
+        memoryAddress = 0x0008;
+      } else if (memoryAddress == 0x001C) {
+        memoryAddress = 0x000C;
+      }
 
       paletteTable[memoryAddress] = data;
     }
   }
 
   void clock() {
-    if (scanline >= -1 && scanline < 240) {
-      _handleVisibleScanline();
-    }
-
-    if (scanline >= 241 && scanline < 261) {
-      _handleVerticalBlank();
-    }
-
-    _composeScanline();
+    if (scanline >= -1 && scanline < 240) _handleVisibleScanline();
+    if (scanline >= 241 && scanline < 261) _handleVerticalBlank();
+    if (scanline >= 0 && scanline < 240) _composeScanline();
 
     cycle++;
+
     if (cycle >= 341) {
       cycle = 0;
       scanline++;
@@ -649,7 +645,7 @@ class PPU {
   }
 
   void _handleVisibleScanline() {
-    if (scanline == 0 &&
+    if (scanline == -1 &&
         cycle == 0 &&
         (mask.renderBackground || mask.renderSprites) &&
         (frameCounter & 1) == 1) {
@@ -672,9 +668,7 @@ class PPU {
       _fetchBackgroundTile();
     }
 
-    if (cycle == 256) {
-      _incrementScrollY();
-    }
+    if (cycle == 256) _incrementScrollY();
 
     if (cycle == 257) {
       _loadBackgroundShifters();
@@ -691,17 +685,11 @@ class PPU {
       backgroundNextTileId = ppuRead(0x2000 | (vramAddress.reg & 0x0FFF));
     }
 
-    if (scanline == -1 && cycle >= 280 && cycle < 305) {
-      _transferAddressY();
-    }
+    if (scanline == -1 && cycle >= 280 && cycle < 305) _transferAddressY();
 
-    if (cycle == 257 && scanline >= 0) {
-      _evaluateSprites();
-    }
+    if (cycle == 257 && scanline >= 0) _evaluateSprites();
 
-    if (cycle == 340) {
-      _loadSpritePatterns();
-    }
+    if (cycle == 340) _loadSpritePatterns();
   }
 
   void _handleVerticalBlank() {
