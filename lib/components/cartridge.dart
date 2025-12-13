@@ -4,6 +4,29 @@ import 'dart:typed_data';
 import 'package:fnes/mappers/mapper.dart';
 import 'package:fnes/mappers/mapper_factory.dart';
 
+class NESHeader {
+  NESHeader.fromBytes(Uint8List bytes) {
+    if (bytes.length < 16) throw Exception('Invalid iNES header: too short');
+
+    programRomChunks = bytes[4];
+    charRomChunks = bytes[5];
+    mapper1 = bytes[6];
+    mapper2 = bytes[7];
+    programRamSize = bytes[8];
+
+    fileType = 1;
+
+    if ((mapper2 & 0x0C) == 0x08) fileType = 2;
+  }
+
+  late int programRomChunks;
+  late int charRomChunks;
+  late int mapper1;
+  late int mapper2;
+  late int programRamSize;
+  late int fileType;
+}
+
 class Cartridge {
   Cartridge(String fileName) {
     _loadFromFile(fileName);
@@ -17,13 +40,14 @@ class Cartridge {
   MapperMirror _hwMirror = MapperMirror.horizontal;
 
   int _mapperId = 0;
+  int _submapper = 0;
   int programBanks = 0;
   int charBanks = 0;
 
   late Uint8List _programMemory;
   late Uint8List _charMemory;
-
   late Mapper _mapper;
+  late NESHeader? _header;
 
   void _loadFromFile(String fileName) {
     final file = File(fileName);
@@ -42,27 +66,29 @@ class Cartridge {
       return;
     }
 
-    final programRomChunks = bytes[4];
-    final charRomChunks = bytes[5];
-    final mapper1 = bytes[6];
-    final mapper2 = bytes[7];
-    final programRamSize = bytes[8];
-
-    var offset = 16;
-
-    if ((mapper1 & 0x04) != 0) {
-      offset += 512;
+    try {
+      _header = NESHeader.fromBytes(bytes);
+    } on Exception {
+      _imageValid = false;
+      return;
     }
 
-    _mapperId = ((mapper2 >> 4) << 4) | (mapper1 >> 4);
-    _hwMirror =
-        (mapper1 & 0x01) != 0 ? MapperMirror.vertical : MapperMirror.horizontal;
+    final header = _header!;
+    var offset = 16;
 
-    var fileType = 1;
-    if ((mapper2 & 0x0C) == 0x08) fileType = 2;
+    if ((header.mapper1 & 0x04) != 0) offset += 512;
+
+    _mapperId = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
+    _submapper = (header.mapper2 >> 4) & 0x0F;
+
+    _hwMirror = (header.mapper1 & 0x01) != 0
+        ? MapperMirror.vertical
+        : MapperMirror.horizontal;
+
+    final fileType = header.fileType;
 
     if (fileType == 1) {
-      programBanks = programRomChunks;
+      programBanks = header.programRomChunks;
       _programMemory = Uint8List(programBanks * 16384);
       if (offset + _programMemory.length <= bytes.length) {
         _programMemory.setAll(
@@ -72,7 +98,7 @@ class Cartridge {
       }
       offset += _programMemory.length;
 
-      charBanks = charRomChunks;
+      charBanks = header.charRomChunks;
       if (charBanks == 0) {
         _charMemory = Uint8List(8192);
       } else {
@@ -86,7 +112,8 @@ class Cartridge {
       }
       offset += _charMemory.length;
     } else if (fileType == 2) {
-      programBanks = ((programRamSize & 0x07) << 8) | programRomChunks;
+      programBanks =
+          ((header.programRamSize & 0x07) << 8) | header.programRomChunks;
       _programMemory = Uint8List(programBanks * 16384);
       if (offset + _programMemory.length <= bytes.length) {
         _programMemory.setAll(
@@ -96,7 +123,7 @@ class Cartridge {
       }
       offset += _programMemory.length;
 
-      charBanks = ((programRamSize & 0x38) << 8) | charRomChunks;
+      charBanks = ((header.programRamSize & 0x38) << 8) | header.charRomChunks;
       _charMemory = Uint8List(charBanks * 8192);
       if (offset + _charMemory.length <= bytes.length) {
         _charMemory.setAll(
@@ -107,7 +134,10 @@ class Cartridge {
       offset += _charMemory.length;
     }
 
-    _mapper = MapperFactory.createMapper(_mapperId, programBanks, charBanks);
+    _mapper = MapperFactory.createMapper(_mapperId, programBanks, charBanks)
+      ..submapper = _submapper
+      ..setPrgRomData(_programMemory)
+      ..setChrRomData(_charMemory);
 
     _imageValid = true;
   }

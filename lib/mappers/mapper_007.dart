@@ -6,7 +6,6 @@ class Mapper007 extends Mapper {
   }
 
   int _programBankSelect = 0;
-
   bool _singleScreenHigh = false;
 
   @override
@@ -16,6 +15,9 @@ class Mapper007 extends Mapper {
   void reset() {
     _programBankSelect = 0;
     _singleScreenHigh = false;
+
+    setPrgBank32k(0);
+    setMirroring(0);
   }
 
   @override
@@ -30,9 +32,12 @@ class Mapper007 extends Mapper {
   @override
   int? cpuMapWrite(int address, int data) {
     if (address >= 0x8000 && address <= 0xFFFF) {
-      _programBankSelect = data & 0x07;
+      _programBankSelect = data & 0x0F;
+      setPrgBank32k(_programBankSelect);
 
       _singleScreenHigh = (data & 0x10) != 0;
+      final mirrorMode = _singleScreenHigh ? 1 : 0;
+      setMirroring(mirrorMode);
     }
 
     return null;
@@ -49,7 +54,9 @@ class Mapper007 extends Mapper {
 
   @override
   int? ppuMapWrite(int address) {
-    if (address >= 0x0000 && address <= 0x1FFF) return address;
+    if (address >= 0x0000 && address <= 0x1FFF) {
+      return address;
+    }
 
     return null;
   }

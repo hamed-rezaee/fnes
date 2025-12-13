@@ -11,13 +11,19 @@ class Mapper003 extends Mapper {
   String get name => 'CNROM';
 
   @override
-  void reset() => _selectedCharBank = 0;
+  void reset() {
+    _selectedCharBank = 0;
+
+    setPrgBank16k(0, 0);
+    setPrgBank16k(1, programBankCount - 1);
+
+    setChrBank8k(0);
+  }
 
   @override
   int? cpuMapRead(int address, [void Function(int data)? setData]) {
     if (address >= 0x8000 && address <= 0xFFFF) {
       final mask = programBankCount > 1 ? 0x7FFF : 0x3FFF;
-
       return address & mask;
     }
 
@@ -28,6 +34,7 @@ class Mapper003 extends Mapper {
   int? cpuMapWrite(int address, int data) {
     if (address >= 0x8000 && address <= 0xFFFF) {
       _selectedCharBank = data & 0x03;
+      setChrBank8k(_selectedCharBank);
     }
 
     return null;
@@ -36,7 +43,7 @@ class Mapper003 extends Mapper {
   @override
   int? ppuMapRead(int address) {
     if (address >= 0x0000 && address <= 0x1FFF) {
-      return _selectedCharBank * 0x2000 + (address & 0x1FFF);
+      return (_selectedCharBank * 0x2000) + (address & 0x1FFF);
     }
 
     return null;
@@ -44,6 +51,9 @@ class Mapper003 extends Mapper {
 
   @override
   int? ppuMapWrite(int address) => null;
+
+  @override
+  MapperMirror mirror() => MapperMirror.hardware;
 
   @override
   Map<String, dynamic> saveState() => {

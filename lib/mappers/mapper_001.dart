@@ -4,9 +4,14 @@ import 'package:fnes/mappers/mapper.dart';
 class Mapper001 extends Mapper {
   Mapper001(super.programBankCount, super.totalCharBanks) {
     programRAM = Uint8List(32 * 1024);
-
+    regs = [0, 0, 0, 0];
     reset();
   }
+
+  late Uint8List programRAM;
+  late List<int> regs;
+  int ignoreWrites = 0;
+  int cycleCount = 1;
 
   int _selectedCharBankLow = 0x00;
   int _selectedCharBankHigh = 0x00;
@@ -24,16 +29,19 @@ class Mapper001 extends Mapper {
 
   MapperMirror _mirrorMode = MapperMirror.horizontal;
 
-  late Uint8List programRAM;
-
   @override
   String get name => 'MMC1';
 
   @override
   void reset() {
-    _controlRegister = 0x1C;
+    regs[0] = 0x0C;
+    regs[1] = 0;
+    regs[2] = 0;
+    regs[3] = 0;
+
     _loadRegister = 0x00;
     _loadRegisterCount = 0x00;
+    _controlRegister = 0x1C;
     _programRamEnable = true;
 
     _selectedCharBankLow = 0;
@@ -44,6 +52,62 @@ class Mapper001 extends Mapper {
     _selectedProgramBankLow = 0;
     _selectedProgramBankHigh = programBankCount - 1;
     _mirrorMode = MapperMirror.horizontal;
+
+    ignoreWrites = 0;
+    cycleCount = 1;
+
+    _syncBanking();
+  }
+
+  @override
+  void clock(int cycles) {
+    ignoreWrites = 0;
+  }
+
+  void _syncBanking() {
+    _syncPrg();
+    _syncChr();
+    _syncMirror();
+  }
+
+  void _syncPrg() {
+    if ((regs[0] & 0x08) != 0) {
+      if ((regs[0] & 0x04) != 0) {
+        setPrgBank16k(Mapper.prg8000, regs[3] & 0x0F);
+        setPrgBank16k(Mapper.prgC000, programBankCount - 1);
+      } else {
+        setPrgBank16k(Mapper.prg8000, 0);
+        setPrgBank16k(Mapper.prgC000, regs[3] & 0x0F);
+      }
+    } else {
+      setPrgBank32k((regs[3] & 0x0F) >> 1);
+    }
+  }
+
+  void _syncChr() {
+    if ((regs[0] & 0x10) != 0) {
+      setChrBank4k(Mapper.chr0000, regs[1] & 0x1F);
+      setChrBank4k(Mapper.chr1000, regs[2] & 0x1F);
+    } else {
+      setChrBank8k((regs[1] & 0x1F) >> 1);
+    }
+  }
+
+  void _syncMirror() {
+    switch (regs[0] & 0x03) {
+      case 0x00:
+        _mirrorMode = MapperMirror.oneScreenLow;
+        setMirroring(0);
+      case 0x01:
+        _mirrorMode = MapperMirror.oneScreenHigh;
+        setMirroring(1);
+      case 0x02:
+        _mirrorMode = MapperMirror.vertical;
+        setMirroring(1);
+      case 0x03:
+        _mirrorMode = MapperMirror.horizontal;
+        setMirroring(0);
+    }
   }
 
   @override
@@ -78,65 +142,25 @@ class Mapper001 extends Mapper {
     if (address >= 0x6000 && address <= 0x7FFF) {
       if (_programRamEnable) {
         programRAM[address & 0x1FFF] = data;
-
         return 0xFFFFFFFF;
       }
-
       return null;
     }
 
-    if (address >= 0x8000) {
+    if (address >= 0x8000 && ignoreWrites == 0) {
+      ignoreWrites = 1;
       if ((data & 0x80) != 0) {
-        _loadRegister = 0x00;
+        _loadRegister = 0;
         _loadRegisterCount = 0;
-        _controlRegister |= 0x0C;
+        regs[0] |= 0x0C;
       } else {
-        _loadRegister >>= 1;
-        _loadRegister |= (data & 0x01) << 4;
-        _loadRegisterCount++;
-
+        _loadRegister |= (data & 0x01) << _loadRegisterCount++;
         if (_loadRegisterCount == 5) {
           final targetRegister = (address >> 13) & 0x03;
-
-          if (targetRegister == 0) {
-            _controlRegister = _loadRegister & 0x1F;
-            switch (_controlRegister & 0x03) {
-              case 0:
-                _mirrorMode = MapperMirror.oneScreenLow;
-              case 1:
-                _mirrorMode = MapperMirror.oneScreenHigh;
-              case 2:
-                _mirrorMode = MapperMirror.vertical;
-              case 3:
-                _mirrorMode = MapperMirror.horizontal;
-            }
-          } else if (targetRegister == 1) {
-            if ((_controlRegister & 0x10) != 0) {
-              _selectedCharBankLow = _loadRegister & 0x1F;
-            } else {
-              _selectedCharBank = _loadRegister & 0x1E;
-            }
-          } else if (targetRegister == 2) {
-            if ((_controlRegister & 0x10) != 0) {
-              _selectedCharBankHigh = _loadRegister & 0x1F;
-            }
-          } else if (targetRegister == 3) {
-            _programRamEnable = (_loadRegister & 0x10) == 0;
-
-            final programMode = (_controlRegister >> 2) & 0x03;
-            if (programMode == 0 || programMode == 1) {
-              _selectedProgramBank = (_loadRegister & 0x0E) >> 1;
-            } else if (programMode == 2) {
-              _selectedProgramBankLow = 0;
-              _selectedProgramBankHigh = _loadRegister & 0x0F;
-            } else if (programMode == 3) {
-              _selectedProgramBankLow = _loadRegister & 0x0F;
-              _selectedProgramBankHigh = programBankCount - 1;
-            }
-          }
-
-          _loadRegister = 0x00;
+          regs[targetRegister] = _loadRegister;
           _loadRegisterCount = 0;
+          _loadRegister = 0;
+          _syncBanking();
         }
       }
     }

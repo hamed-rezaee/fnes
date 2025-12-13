@@ -7,7 +7,12 @@ class Mapper000 extends Mapper {
   String get name => 'NROM';
 
   @override
-  void reset() {}
+  void reset() {
+    setPrgBank16k(0, 0);
+    setPrgBank16k(1, programBankCount - 1);
+
+    if (totalCharBanks > 0) setChrBank8k(0);
+  }
 
   @override
   int? cpuMapRead(int address, [void Function(int data)? setData]) {
@@ -41,7 +46,7 @@ class Mapper000 extends Mapper {
   @override
   int? ppuMapWrite(int address) {
     if (address >= 0x0000 && address <= 0x1FFF) {
-      if (totalCharBanks == 0) return address;
+      if (totalCharBanks == 0 || chrRam) return address;
     }
 
     return null;

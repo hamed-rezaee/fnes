@@ -6,7 +6,6 @@ class Mapper002 extends Mapper {
   }
 
   int _selectedProgramBankLow = 0x00;
-  int _selectedProgramBankHigh = 0x00;
 
   @override
   String get name => 'UxROM';
@@ -14,8 +13,8 @@ class Mapper002 extends Mapper {
   @override
   void reset() {
     _selectedProgramBankLow = 0;
-
-    _selectedProgramBankHigh = programBankCount - 1;
+    setPrgBank16k(0, 0);
+    setPrgBank16k(1, programBankCount - 1);
   }
 
   @override
@@ -25,7 +24,7 @@ class Mapper002 extends Mapper {
     }
 
     if (address >= 0xC000 && address <= 0xFFFF) {
-      return _selectedProgramBankHigh * 0x4000 + (address & 0x3FFF);
+      return (programBankCount - 1) * 0x4000 + (address & 0x3FFF);
     }
 
     return null;
@@ -35,6 +34,7 @@ class Mapper002 extends Mapper {
   int? cpuMapWrite(int address, int data) {
     if (address >= 0x8000 && address <= 0xFFFF) {
       _selectedProgramBankLow = data & 0x0F;
+      setPrgBank16k(0, _selectedProgramBankLow);
     }
 
     return null;
@@ -52,21 +52,22 @@ class Mapper002 extends Mapper {
   @override
   int? ppuMapWrite(int address) {
     if (address >= 0x0000 && address <= 0x1FFF) {
-      if (totalCharBanks == 0) return address;
+      if (totalCharBanks == 0 || chrRam) return address;
     }
 
     return null;
   }
 
   @override
+  MapperMirror mirror() => MapperMirror.hardware;
+
+  @override
   Map<String, dynamic> saveState() => {
         'selectedProgramBankLow': _selectedProgramBankLow,
-        'selectedProgramBankHigh': _selectedProgramBankHigh,
       };
 
   @override
   void restoreState(Map<String, dynamic> state) {
     _selectedProgramBankLow = state['selectedProgramBankLow'] as int;
-    _selectedProgramBankHigh = state['selectedProgramBankHigh'] as int;
   }
 }
