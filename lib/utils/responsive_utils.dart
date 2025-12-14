@@ -67,24 +67,10 @@ extension ResponsiveContext on BuildContext {
 }
 
 class ResponsiveSizing {
-  static double nesScreenWidth(BuildContext context) {
-    final screenWidth = context.screenWidth;
-    final screenSize = context.screenSize;
+  static double nesScreenWidth(BuildContext context) =>
+      (context.screenWidth - 32).clamp(128, 512);
 
-    switch (screenSize) {
-      case ScreenSize.mobile:
-        return (screenWidth - 32).clamp(256.0, 512.0);
-      case ScreenSize.tablet:
-        return 512;
-      case ScreenSize.desktop:
-        return 512;
-      case ScreenSize.largeDesktop:
-        return 640;
-    }
-  }
-
-  static double nesScreenHeight(double width) =>
-      (width * 240 / 256).roundToDouble();
+  static double nesScreenHeight(double width) => width * 0.9375;
 
   static double debugPanelWidth(BuildContext context) => context.responsive(
         mobile: context.screenWidth * 0.9,

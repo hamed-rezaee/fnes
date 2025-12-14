@@ -324,23 +324,22 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
         child: StreamBuilder<Image>(
           stream: _nesController.imageStream,
           builder: (context, snapshot) {
-            final nesWidth = ResponsiveSizing.nesScreenWidth(context);
-            final nesHeight = ResponsiveSizing.nesScreenHeight(nesWidth);
+            final screenWidth = ResponsiveSizing.nesScreenWidth(context);
+            final screenHeight = ResponsiveSizing.nesScreenHeight(screenWidth);
 
             return Container(
-              width: nesWidth,
-              height: nesHeight,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[600]!),
-              ),
+              width: screenWidth,
+              height: screenHeight,
+              decoration:
+                  BoxDecoration(border: Border.all(color: Colors.grey[600]!)),
               child: (snapshot.hasData)
                   ? Stack(
                       alignment: Alignment.bottomCenter,
                       children: [
                         RawImage(
                           image: snapshot.data,
-                          width: nesWidth,
-                          height: nesHeight,
+                          width: screenWidth,
+                          height: screenHeight,
                           fit: BoxFit.fill,
                           filterQuality: filterQuality,
                         ),
