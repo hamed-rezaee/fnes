@@ -108,8 +108,8 @@ class PPUState {
   final int backgroundShifterPatternHigh;
   final int backgroundShifterAttribLow;
   final int backgroundShifterAttribHigh;
-  final List<int> spriteShifterPatternLow;
-  final List<int> spriteShifterPatternHigh;
+  final Uint8List spriteShifterPatternLow;
+  final Uint8List spriteShifterPatternHigh;
   final int spriteCount;
   final bool spriteZeroHitPossible;
   final bool spriteZeroBeingRendered;
@@ -117,7 +117,7 @@ class PPUState {
   final int cycle;
   final int frameCounter;
   final Uint8List pOAM;
-  final List<List<int>> screenPixels;
+  final Uint8List screenPixels;
   final bool nmi;
   final bool frameComplete;
   final List<SpriteScanlineEntry> spriteScanlineData;
@@ -335,8 +335,8 @@ class BusState {
   });
 
   final Uint8List cpuRam;
-  final List<int> controller;
-  final List<int> controllerState;
+  final Uint8List controller;
+  final Uint8List controllerState;
   final int systemClockCounter;
   final int dmaPage;
   final int dmaAddress;
@@ -498,7 +498,7 @@ extension PPUStateSerialization on PPUState {
         'cycle': cycle,
         'frameCounter': frameCounter,
         'pOAM': base64Encode(pOAM),
-        'screenPixels': screenPixels.map((row) => row).toList(),
+        'screenPixels': base64Encode(screenPixels),
         'nmi': nmi,
         'frameComplete': frameComplete,
         'spriteScanlineData':
@@ -530,10 +530,12 @@ extension PPUStateSerialization on PPUState {
             json['backgroundShifterPatternHigh'] as int,
         backgroundShifterAttribLow: json['backgroundShifterAttribLow'] as int,
         backgroundShifterAttribHigh: json['backgroundShifterAttribHigh'] as int,
-        spriteShifterPatternLow:
-            (json['spriteShifterPatternLow'] as List).cast<int>(),
-        spriteShifterPatternHigh:
-            (json['spriteShifterPatternHigh'] as List).cast<int>(),
+        spriteShifterPatternLow: Uint8List.fromList(
+          (json['spriteShifterPatternLow'] as List).cast<int>(),
+        ),
+        spriteShifterPatternHigh: Uint8List.fromList(
+          (json['spriteShifterPatternHigh'] as List).cast<int>(),
+        ),
         spriteCount: json['spriteCount'] as int,
         spriteZeroHitPossible: json['spriteZeroHitPossible'] as bool,
         spriteZeroBeingRendered: json['spriteZeroBeingRendered'] as bool,
@@ -541,9 +543,8 @@ extension PPUStateSerialization on PPUState {
         cycle: json['cycle'] as int,
         frameCounter: json['frameCounter'] as int,
         pOAM: Uint8List.fromList(base64Decode(json['pOAM'] as String)),
-        screenPixels: (json['screenPixels'] as List)
-            .map((row) => (row as List).cast<int>())
-            .toList(),
+        screenPixels:
+            Uint8List.fromList(base64Decode(json['screenPixels'] as String)),
         nmi: json['nmi'] as bool,
         frameComplete: json['frameComplete'] as bool,
         spriteScanlineData: (json['spriteScanlineData'] as List)
@@ -817,8 +818,10 @@ extension BusStateSerialization on BusState {
 
   static BusState fromJson(Map<String, dynamic> json) => BusState(
         cpuRam: Uint8List.fromList(base64Decode(json['cpuRam'] as String)),
-        controller: (json['controller'] as List).cast<int>(),
-        controllerState: (json['controllerState'] as List).cast<int>(),
+        controller:
+            Uint8List.fromList((json['controller'] as List).cast<int>()),
+        controllerState:
+            Uint8List.fromList((json['controllerState'] as List).cast<int>()),
         systemClockCounter: json['systemClockCounter'] as int,
         dmaPage: json['dmaPage'] as int,
         dmaAddress: json['dmaAddress'] as int,

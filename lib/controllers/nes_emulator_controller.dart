@@ -102,20 +102,14 @@ class NESEmulatorController {
     final buffer32 = Uint32List(width * height);
     final romLoaded = isROMLoaded.value && bus.cart != null;
     final colorPalette = _colorPalette;
+    final pixels = bus.ppu.screenPixels;
 
-    for (var y = 0; y < height; y++) {
-      final row = bus.ppu.screenPixels[y];
-      final offset = y * width;
-
-      if (!romLoaded) {
-        buffer32.fillRange(offset, offset + width, colorPalette[0]);
-
-        continue;
+    if (!romLoaded) {
+      buffer32.fillRange(0, width * height, colorPalette[0]);
+    } else {
+      for (var i = 0; i < width * height; i++) {
+        buffer32[i] = colorPalette[pixels[i]];
       }
-
-      final row32 = row.map((i) => colorPalette[i]).toList();
-
-      buffer32.setRange(offset, offset + width, row32);
     }
 
     final pixelBuffer = buffer32.buffer.asUint8List();

@@ -17,20 +17,21 @@ class Bus {
 
   Cartridge? cart;
 
-  final List<int> controller = [0, 0];
+  final Uint8List controller = Uint8List(2);
   final Uint8List _cpuRam = Uint8List(2048);
 
   double _audioSample = 0;
   double _audioTime = 0;
   double _audioTimePerNESClock = 0;
   double _audioTimePerSystemSample = 0;
-  final List<double> _audioBuffer = [];
+  final Float64List _audioBuffer = Float64List(_audioBufferSize);
   static const int _audioBufferSize = 1024;
   int _audioBufferIndex = 0;
+  int _audioBufferCount = 0;
 
   int _systemClockCounter = 0;
 
-  final List<int> _controllerState = [0, 0];
+  final Uint8List _controllerState = Uint8List(2);
 
   int _dmaPage = 0x00;
   int _dmaAddress = 0x00;
@@ -105,6 +106,8 @@ class Bus {
     _dmaData = 0x00;
     _dmaDummy = true;
     _dmaTransfer = false;
+    _audioBufferIndex = 0;
+    _audioBufferCount = 0;
   }
 
   bool clock() {
@@ -114,15 +117,14 @@ class Bus {
     if (_systemClockCounter % 3 == 0) {
       if (_dmaTransfer) {
         if (_dmaDummy) {
-          if (_systemClockCounter.isOdd) {
-            _dmaDummy = false;
-          }
+          if (_systemClockCounter.isOdd) _dmaDummy = false;
         } else {
           if (_systemClockCounter.isEven) {
             _dmaData = cpuRead((_dmaPage << 8) | _dmaAddress);
           } else {
             ppu.pOAM[_dmaAddress] = _dmaData;
             _dmaAddress = (_dmaAddress + 1) & 0xFF;
+
             if (_dmaAddress == 0x00) {
               _dmaTransfer = false;
               _dmaDummy = true;
@@ -141,12 +143,9 @@ class Bus {
       _audioTime -= _audioTimePerSystemSample;
       _audioSample = apu.getOutputSample();
 
-      if (_audioBuffer.length < _audioBufferSize) {
-        _audioBuffer.add(_audioSample);
-      } else {
-        _audioBuffer[_audioBufferIndex] = _audioSample;
-        _audioBufferIndex = (_audioBufferIndex + 1) % _audioBufferSize;
-      }
+      _audioBuffer[_audioBufferIndex] = _audioSample;
+      _audioBufferIndex = (_audioBufferIndex + 1) % _audioBufferSize;
+      if (_audioBufferCount < _audioBufferSize) _audioBufferCount++;
 
       audioSampleReady = true;
     }
@@ -172,23 +171,27 @@ class Bus {
   }
 
   List<double> getAudioBuffer() {
-    final buffer = <double>[];
+    if (_audioBufferCount == 0) return const [];
 
-    if (_audioBuffer.length < _audioBufferSize) {
-      buffer.addAll(_audioBuffer);
+    final buffer = Float64List(_audioBufferCount);
+
+    if (_audioBufferCount < _audioBufferSize) {
+      buffer.setRange(0, _audioBufferCount, _audioBuffer);
     } else {
+      final firstChunkSize = _audioBufferSize - _audioBufferIndex;
+
       buffer
-        ..addAll(_audioBuffer.sublist(_audioBufferIndex))
-        ..addAll(_audioBuffer.sublist(0, _audioBufferIndex));
+        ..setRange(0, firstChunkSize, _audioBuffer, _audioBufferIndex)
+        ..setRange(firstChunkSize, _audioBufferSize, _audioBuffer, 0);
     }
 
-    _audioBuffer.clear();
     _audioBufferIndex = 0;
+    _audioBufferCount = 0;
 
     return buffer;
   }
 
-  bool hasAudioData() => _audioBuffer.isNotEmpty;
+  bool hasAudioData() => _audioBufferCount > 0;
 
   EmulatorState saveState() => EmulatorState(
         cpuState: cpu.saveState(),
@@ -196,8 +199,8 @@ class Bus {
         apuState: apu.saveState(),
         busState: BusState(
           cpuRam: Uint8List.fromList(_cpuRam),
-          controller: List<int>.from(controller),
-          controllerState: List<int>.from(_controllerState),
+          controller: Uint8List.fromList(controller),
+          controllerState: Uint8List.fromList(_controllerState),
           systemClockCounter: _systemClockCounter,
           dmaPage: _dmaPage,
           dmaAddress: _dmaAddress,
@@ -218,11 +221,9 @@ class Bus {
 
     final busState = state.busState;
 
-    _cpuRam.setAll(0, busState.cpuRam);
-    controller[0] = busState.controller[0];
-    controller[1] = busState.controller[1];
-    _controllerState[0] = busState.controllerState[0];
-    _controllerState[1] = busState.controllerState[1];
+    _cpuRam.setRange(0, busState.cpuRam.length, busState.cpuRam);
+    controller.setRange(0, 2, busState.controller);
+    _controllerState.setRange(0, 2, busState.controllerState);
     _systemClockCounter = busState.systemClockCounter;
     _dmaPage = busState.dmaPage;
     _dmaAddress = busState.dmaAddress;
@@ -230,7 +231,7 @@ class Bus {
     _dmaDummy = busState.dmaDummy;
     _dmaTransfer = busState.dmaTransfer;
 
-    _audioBuffer.clear();
     _audioBufferIndex = 0;
+    _audioBufferCount = 0;
   }
 }

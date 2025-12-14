@@ -49,8 +49,8 @@ class PPU {
 
   List<ObjectAttributeEntry> spriteScanline = [];
   int spriteCount = 0;
-  List<int> spriteShifterPatternLow = List.filled(8, 0);
-  List<int> spriteShifterPatternHigh = List.filled(8, 0);
+  final Uint8List spriteShifterPatternLow = Uint8List(8);
+  final Uint8List spriteShifterPatternHigh = Uint8List(8);
   bool spriteZeroHitPossible = false;
   bool spriteZeroBeingRendered = false;
 
@@ -59,7 +59,7 @@ class PPU {
   int frameCounter = 0;
 
   ui.Image? sprScreen;
-  List<List<int>> screenPixels = List.generate(240, (_) => List.filled(256, 0));
+  final Uint8List screenPixels = Uint8List(240 * 256);
 
   final Uint8List pOAM = Uint8List(256);
   late ObjectAttributeEntry pOAM2;
@@ -132,12 +132,15 @@ class PPU {
     }
 
     if (mask.renderSprites && cycle >= 1 && cycle < 258) {
-      for (var i = 0; i < spriteCount; i++) {
-        if (spriteScanline[i].x > 0) {
-          spriteScanline[i].x--;
+      final count = spriteCount;
+      for (var i = 0; i < count; i++) {
+        final sprite = spriteScanline[i];
+        if (sprite.x > 0) {
+          sprite.x--;
         } else {
-          spriteShifterPatternLow[i] <<= 1;
-          spriteShifterPatternHigh[i] <<= 1;
+          spriteShifterPatternLow[i] = (spriteShifterPatternLow[i] << 1) & 0xFF;
+          spriteShifterPatternHigh[i] =
+              (spriteShifterPatternHigh[i] << 1) & 0xFF;
         }
       }
     }
@@ -184,15 +187,12 @@ class PPU {
   }
 
   void _evaluateSprites() {
-    for (var i = 0; i < spriteScanline.length; i++) {
-      spriteScanline[i] = ObjectAttributeEntry();
-    }
-    spriteCount = 0;
-
     for (var i = 0; i < 8; i++) {
+      spriteScanline[i] = ObjectAttributeEntry();
       spriteShifterPatternLow[i] = 0;
       spriteShifterPatternHigh[i] = 0;
     }
+    spriteCount = 0;
 
     var nOAMEntry = 0;
     spriteZeroHitPossible = false;
@@ -223,7 +223,8 @@ class PPU {
   }
 
   void _loadSpritePatterns() {
-    for (var i = 0; i < spriteCount; i++) {
+    final count = spriteCount;
+    for (var i = 0; i < count; i++) {
       int spritePatternBitsLow;
       int spritePatternBitsHigh;
       int spritePatternAddrLow;
@@ -312,16 +313,17 @@ class PPU {
     if (mask.renderSprites) {
       if (mask.renderSpritesLeft || (cycle >= 9)) {
         spriteZeroBeingRendered = false;
+        final count = spriteCount;
 
-        for (var i = 0; i < spriteCount; i++) {
-          if (spriteScanline[i].x == 0) {
-            final fgPixelLow = (spriteShifterPatternLow[i] & 0x80) > 0 ? 1 : 0;
-            final fgPixelHigh =
-                (spriteShifterPatternHigh[i] & 0x80) > 0 ? 1 : 0;
+        for (var i = 0; i < count; i++) {
+          final sprite = spriteScanline[i];
+          if (sprite.x == 0) {
+            final fgPixelLow = (spriteShifterPatternLow[i] & 0x80) >> 7;
+            final fgPixelHigh = (spriteShifterPatternHigh[i] & 0x80) >> 7;
             fgPixel = (fgPixelHigh << 1) | fgPixelLow;
 
-            fgPalette = (spriteScanline[i].attribute & 0x03) + 0x04;
-            fgPriority = (spriteScanline[i].attribute & 0x20) == 0 ? 1 : 0;
+            fgPalette = (sprite.attribute & 0x03) + 0x04;
+            fgPriority = (sprite.attribute & 0x20) == 0 ? 1 : 0;
 
             if (fgPixel != 0) {
               if (i == 0) {
@@ -376,7 +378,7 @@ class PPU {
     final colorIndex = ppuRead(paletteAddress) & 0x3F;
 
     if (scanline >= 0 && scanline < 240 && cycle >= 1 && cycle < 257) {
-      screenPixels[scanline][cycle - 1] = colorIndex;
+      screenPixels[(scanline << 8) + cycle - 1] = colorIndex;
     }
   }
 
@@ -724,8 +726,8 @@ class PPU {
         backgroundShifterPatternHigh: backgroundShifterPatternHigh,
         backgroundShifterAttribLow: backgroundShifterAttribLow,
         backgroundShifterAttribHigh: backgroundShifterAttribHigh,
-        spriteShifterPatternLow: List<int>.from(spriteShifterPatternLow),
-        spriteShifterPatternHigh: List<int>.from(spriteShifterPatternHigh),
+        spriteShifterPatternLow: Uint8List.fromList(spriteShifterPatternLow),
+        spriteShifterPatternHigh: Uint8List.fromList(spriteShifterPatternHigh),
         spriteCount: spriteCount,
         spriteZeroHitPossible: spriteZeroHitPossible,
         spriteZeroBeingRendered: spriteZeroBeingRendered,
@@ -733,7 +735,7 @@ class PPU {
         cycle: cycle,
         frameCounter: frameCounter,
         pOAM: Uint8List.fromList(pOAM),
-        screenPixels: screenPixels.map(List<int>.from).toList(),
+        screenPixels: Uint8List.fromList(screenPixels),
         nmi: nmi,
         frameComplete: frameComplete,
         spriteScanlineData: spriteScanline
@@ -769,8 +771,8 @@ class PPU {
     backgroundShifterPatternHigh = state.backgroundShifterPatternHigh;
     backgroundShifterAttribLow = state.backgroundShifterAttribLow;
     backgroundShifterAttribHigh = state.backgroundShifterAttribHigh;
-    spriteShifterPatternLow = List<int>.from(state.spriteShifterPatternLow);
-    spriteShifterPatternHigh = List<int>.from(state.spriteShifterPatternHigh);
+    spriteShifterPatternLow.setRange(0, 8, state.spriteShifterPatternLow);
+    spriteShifterPatternHigh.setRange(0, 8, state.spriteShifterPatternHigh);
     spriteCount = state.spriteCount;
     spriteZeroHitPossible = state.spriteZeroHitPossible;
     spriteZeroBeingRendered = state.spriteZeroBeingRendered;
@@ -778,9 +780,7 @@ class PPU {
     cycle = state.cycle;
     frameCounter = state.frameCounter;
     pOAM.setAll(0, state.pOAM);
-    for (var i = 0; i < 240; i++) {
-      screenPixels[i] = List<int>.from(state.screenPixels[i]);
-    }
+    screenPixels.setRange(0, state.screenPixels.length, state.screenPixels);
     nmi = state.nmi;
     frameComplete = state.frameComplete;
 
