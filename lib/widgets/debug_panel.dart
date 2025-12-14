@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
+import 'package:fnes/utils/responsive_utils.dart';
 import 'package:fnes/widgets/audio_debug_view.dart';
 import 'package:fnes/widgets/cpu_debug_view.dart';
 import 'package:fnes/widgets/memory_debug_view.dart';
@@ -37,10 +38,10 @@ class _DebugPanelState extends State<DebugPanel> {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: 385,
+        width: ResponsiveSizing.debugPanelWidth(context),
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(context.isMobile ? 16.0 : 24.0),
             child: Column(
               spacing: 6,
               crossAxisAlignment: CrossAxisAlignment.start,

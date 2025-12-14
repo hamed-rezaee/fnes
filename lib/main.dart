@@ -9,6 +9,7 @@ import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cpu.dart';
 import 'package:fnes/components/ppu.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
+import 'package:fnes/utils/responsive_utils.dart';
 import 'package:fnes/widgets/debug_panel.dart';
 import 'package:fnes/widgets/on_screen_controller.dart';
 import 'package:signals/signals_flutter.dart';
@@ -98,74 +99,110 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
           appBar: AppBar(
             elevation: 0,
             title: Text(
-              'Flutter NES Emulator${romName != null ? ' - $romName' : ''}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              context.isMobile
+                  ? 'FNES${romName != null ? ' - $romName' : ''}'
+                  : 'Flutter NES Emulator${romName != null ? ' - $romName' : ''}',
+              style: TextStyle(
+                fontSize: ResponsiveSizing.appBarTitleSize(context),
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
             actions: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.folder),
-                    tooltip: 'Load ROM',
-                    onPressed: _nesController.loadROMFile,
-                  ),
-                  const VerticalDivider(
-                    indent: 16,
-                    endIndent: 16,
-                    color: Colors.grey,
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      isRunning ? Icons.pause : Icons.play_arrow,
+              if (context.isDesktopOrLarger)
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.folder),
+                      tooltip: 'Load ROM',
+                      onPressed: _nesController.loadROMFile,
                     ),
-                    tooltip: isRunning ? 'Pause' : 'Resume',
-                    onPressed: romLoaded
-                        ? () {
-                            if (isRunning) {
-                              _nesController.pauseEmulation();
-                            } else {
-                              _nesController.startEmulation();
+                    const VerticalDivider(
+                      indent: 16,
+                      endIndent: 16,
+                      color: Colors.grey,
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        isRunning ? Icons.pause : Icons.play_arrow,
+                      ),
+                      tooltip: isRunning ? 'Pause' : 'Resume',
+                      onPressed: romLoaded
+                          ? () {
+                              if (isRunning) {
+                                _nesController.pauseEmulation();
+                              } else {
+                                _nesController.startEmulation();
+                              }
                             }
-                          }
-                        : null,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.skip_next),
-                    tooltip: 'Step',
-                    onPressed: romLoaded && !isRunning
-                        ? _nesController.stepEmulation
-                        : null,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.restart_alt),
-                    tooltip: 'Reset',
-                    onPressed: romLoaded ? _nesController.resetEmulation : null,
-                  ),
-                  const VerticalDivider(
-                    indent: 16,
-                    endIndent: 16,
-                    color: Colors.grey,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.save),
-                    tooltip: 'Save State',
-                    onPressed: romLoaded ? _nesController.saveState : null,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.restore),
-                    tooltip: 'Load State',
-                    onPressed: romLoaded && _nesController.hasSaveState.value
-                        ? _nesController.loadState
-                        : null,
-                  ),
-                  const VerticalDivider(
-                    indent: 16,
-                    endIndent: 16,
-                    color: Colors.grey,
-                  ),
-                  _buildSettingsMenu(),
-                ],
-              ),
+                          : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.skip_next),
+                      tooltip: 'Step',
+                      onPressed: romLoaded && !isRunning
+                          ? _nesController.stepEmulation
+                          : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.restart_alt),
+                      tooltip: 'Reset',
+                      onPressed:
+                          romLoaded ? _nesController.resetEmulation : null,
+                    ),
+                    const VerticalDivider(
+                      indent: 16,
+                      endIndent: 16,
+                      color: Colors.grey,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.save),
+                      tooltip: 'Save State',
+                      onPressed: romLoaded ? _nesController.saveState : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.restore),
+                      tooltip: 'Load State',
+                      onPressed: romLoaded && _nesController.hasSaveState.value
+                          ? _nesController.loadState
+                          : null,
+                    ),
+                    const VerticalDivider(
+                      indent: 16,
+                      endIndent: 16,
+                      color: Colors.grey,
+                    ),
+                    _buildSettingsMenu(),
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.folder),
+                      tooltip: 'Load ROM',
+                      onPressed: _nesController.loadROMFile,
+                      iconSize: ResponsiveSizing.appBarIconSize(context),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        isRunning ? Icons.pause : Icons.play_arrow,
+                      ),
+                      tooltip: isRunning ? 'Pause' : 'Resume',
+                      onPressed: romLoaded
+                          ? () {
+                              if (isRunning) {
+                                _nesController.pauseEmulation();
+                              } else {
+                                _nesController.startEmulation();
+                              }
+                            }
+                          : null,
+                      iconSize: ResponsiveSizing.appBarIconSize(context),
+                    ),
+                    _buildSettingsMenu(),
+                  ],
+                ),
             ],
           ),
           body: KeyboardListener(
@@ -178,52 +215,105 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                 _nesController.handleKeyUp(event.logicalKey);
               }
             },
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'FPS: ${currentFPS.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = context.isMobileOrTablet;
+                final showDebuggerInline = isDebuggerVisible && !isMobile;
+
+                return SingleChildScrollView(
+                  child: isMobile
+                      ? Column(
+                          children: [
+                            _buildEmulatorSection(
+                              context,
+                              currentFPS,
+                              filterQuality,
+                              showOnScreenController,
+                              isRewinding,
+                              rewindProgress,
+                              isRewindEnabled,
+                            ),
+                            if (isDebuggerVisible)
+                              DebugPanel(
+                                nesEmulatorController: _nesController,
+                                bus: _nesController.bus,
+                              ),
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _buildEmulatorSection(
+                                context,
+                                currentFPS,
+                                filterQuality,
+                                showOnScreenController,
+                                isRewinding,
+                                rewindProgress,
+                                isRewindEnabled,
+                              ),
+                            ),
+                            if (showDebuggerInline)
+                              DebugPanel(
+                                nesEmulatorController: _nesController,
+                                bus: _nesController.bus,
+                              ),
+                          ],
                         ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildRenderer(
-                        filterQuality: filterQuality,
-                        showOnScreenController: showOnScreenController,
-                        isRewinding: isRewinding,
-                        rewindProgress: rewindProgress,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 8,
-                      ),
-                      child: _buildKeyBindingsHint(isRewindEnabled),
-                    ),
-                  ],
-                ),
-                if (isDebuggerVisible)
-                  DebugPanel(
-                    nesEmulatorController: _nesController,
-                    bus: _nesController.bus,
-                  ),
-              ],
+                );
+              },
             ),
           ),
         );
       });
 
+  Widget _buildEmulatorSection(
+    BuildContext context,
+    double currentFPS,
+    FilterQuality filterQuality,
+    bool showOnScreenController,
+    bool isRewinding,
+    double rewindProgress,
+    bool isRewindEnabled,
+  ) =>
+      Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(context.isMobile ? 8.0 : 16.0),
+            child: Text(
+              'FPS: ${currentFPS.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: ResponsiveSizing.fpsTextSize(context),
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: context.isMobile ? 8.0 : 16.0,
+            ),
+            child: _buildRenderer(
+              context: context,
+              filterQuality: filterQuality,
+              showOnScreenController: showOnScreenController,
+              isRewinding: isRewinding,
+              rewindProgress: rewindProgress,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: context.isMobile ? 8.0 : 12.0,
+              horizontal: 8,
+            ),
+            child: _buildKeyBindingsHint(context, isRewindEnabled),
+          ),
+        ],
+      );
+
   Widget _buildRenderer({
+    required BuildContext context,
     required FilterQuality filterQuality,
     required bool showOnScreenController,
     required bool isRewinding,
@@ -233,49 +323,57 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
         onTap: _focusNode.requestFocus,
         child: StreamBuilder<Image>(
           stream: _nesController.imageStream,
-          builder: (context, snapshot) => Container(
-            width: 512,
-            height: 480,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[600]!),
-            ),
-            child: (snapshot.hasData)
-                ? Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      RawImage(
-                        image: snapshot.data,
-                        width: 512,
-                        height: 480,
-                        fit: BoxFit.fill,
-                        filterQuality: filterQuality,
-                      ),
-                      if (isRewinding)
-                        Positioned(
-                          child: _buildRewindIndicator(rewindProgress),
+          builder: (context, snapshot) {
+            final nesWidth = ResponsiveSizing.nesScreenWidth(context);
+            final nesHeight = ResponsiveSizing.nesScreenHeight(nesWidth);
+
+            return Container(
+              width: nesWidth,
+              height: nesHeight,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[600]!),
+              ),
+              child: (snapshot.hasData)
+                  ? Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        RawImage(
+                          image: snapshot.data,
+                          width: nesWidth,
+                          height: nesHeight,
+                          fit: BoxFit.fill,
+                          filterQuality: filterQuality,
                         ),
-                      if (showOnScreenController)
-                        Transform.scale(
-                          scale: 0.8,
-                          child: Opacity(
-                            opacity: 0.7,
-                            child:
-                                OnScreenController(controller: _nesController),
+                        if (isRewinding)
+                          Positioned(
+                            child: _buildRewindIndicator(rewindProgress),
                           ),
+                        if (showOnScreenController)
+                          Transform.scale(
+                            scale: ResponsiveSizing.onScreenControllerScale(
+                              context,
+                            ),
+                            child: Opacity(
+                              opacity: 0.7,
+                              child: OnScreenController(
+                                controller: _nesController,
+                              ),
+                            ),
+                          ),
+                      ],
+                    )
+                  : Center(
+                      child: Text(
+                        'No ROM Loaded',
+                        style: TextStyle(
+                          fontSize: context.isMobile ? 20.0 : 32.0,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
                         ),
-                    ],
-                  )
-                : const Center(
-                    child: Text(
-                      'No ROM Loaded',
-                      style: TextStyle(
-                        fontSize: 32,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-          ),
+            );
+          },
         ),
       );
 
@@ -478,38 +576,45 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
         ),
       );
 
-  Widget _buildKeyBindingsHint(bool isRewindEnabled) => Column(
-        spacing: 4,
-        children: [
-          const Text(
-            'Arrow Keys = D-pad | Z = A | X = B | Space = Start | Enter = Select',
+  Widget _buildKeyBindingsHint(
+    BuildContext context,
+    bool isRewindEnabled,
+  ) {
+    final textSize = ResponsiveSizing.keyBindingsTextSize(context);
+
+    return Column(
+      spacing: 4,
+      children: [
+        Text(
+          'Arrow Keys = D-pad | Z = A | X = B | Space = Start | Enter = Select',
+          style: TextStyle(
+            fontSize: textSize,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        Text(
+          'A = Turbo A | S = Turbo B',
+          style: TextStyle(
+            fontSize: textSize,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        if (isRewindEnabled)
+          Text(
+            'Hold R = Rewind',
             style: TextStyle(
-              fontSize: 10,
+              fontSize: textSize,
               fontWeight: FontWeight.bold,
+              color: Colors.deepOrange,
             ),
             textAlign: TextAlign.center,
           ),
-          const Text(
-            'A = Turbo A | S = Turbo B',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (isRewindEnabled)
-            const Text(
-              'Hold R = Rewind',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepOrange,
-              ),
-              textAlign: TextAlign.center,
-            ),
-        ],
-      );
+      ],
+    );
+  }
 
   Future<void> _showROMInfoDialog() async {
     final info = _nesController.bus.cart?.getMapperInfoMap();
