@@ -125,20 +125,11 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
     required MemoryRegion region,
   }) {
     final spans = <TextSpan>[];
-    final int startAddress;
-    final int length;
-
-    switch (region) {
-      case MemoryRegion.stack:
-        startAddress = 0x0100;
-        length = 0x0100;
-      case MemoryRegion.zeroPage:
-        startAddress = 0x0000;
-        length = 0x0100;
-      case MemoryRegion.programRom:
-        startAddress = 0x8000;
-        length = 0x0100;
-    }
+    final (int startAddress, int length) = switch (region) {
+      MemoryRegion.stack => (0x0100, 0x0100),
+      MemoryRegion.zeroPage => (0x0000, 0x0100),
+      MemoryRegion.programRom => (0x8000, 0x0100),
+    };
 
     final header =
         '${' ' * 8}${List.generate(16, (i) => i.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}\n';

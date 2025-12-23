@@ -1104,7 +1104,7 @@ class CPU {
     a = fetched;
     _setFlag(zeroFlag, isFlagSet: a == 0x00);
     _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
-    return 0;
+    return 1;
   }
 
   int _sta() {
@@ -1234,8 +1234,8 @@ class CPU {
     _fetch();
     a = a & fetched;
     final oldCarry = _getFlag(carryFlag);
-    _setFlag(carryFlag, isFlagSet: (a & 0x01) != 0);
     a = ((a >> 1) | (oldCarry << 7)) & 0xFF;
+    _setFlag(carryFlag, isFlagSet: (a & 0x40) != 0);
     _setFlag(zeroFlag, isFlagSet: a == 0);
     _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
     _setFlag(overflowFlag, isFlagSet: ((a & 0x40) ^ ((a & 0x20) << 1)) != 0);
@@ -1285,6 +1285,7 @@ class CPU {
   }
 
   int _xaa() {
+    _fetch();
     a = (a | 0xEE) & x & fetched;
     _setFlag(zeroFlag, isFlagSet: a == 0);
     _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);

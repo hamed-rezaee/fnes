@@ -52,18 +52,12 @@ extension ResponsiveContext on BuildContext {
     T? tablet,
     T? desktop,
     T? largeDesktop,
-  }) {
-    switch (screenSize) {
-      case ScreenSize.mobile:
-        return mobile;
-      case ScreenSize.tablet:
-        return tablet ?? mobile;
-      case ScreenSize.desktop:
-        return desktop ?? tablet ?? mobile;
-      case ScreenSize.largeDesktop:
-        return largeDesktop ?? desktop ?? tablet ?? mobile;
-    }
-  }
+  }) => switch (screenSize) {
+    ScreenSize.mobile => mobile,
+    ScreenSize.tablet => tablet ?? mobile,
+    ScreenSize.desktop => desktop ?? tablet ?? mobile,
+    ScreenSize.largeDesktop => largeDesktop ?? desktop ?? tablet ?? mobile,
+  };
 }
 
 class ResponsiveSizing {

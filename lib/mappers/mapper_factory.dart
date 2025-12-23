@@ -61,26 +61,17 @@ class MapperInfo {
 }
 
 class MapperFactory {
-  static Mapper createMapper(int mapperId, int programBanks, int charBanks) {
-    switch (mapperId) {
-      case 0:
-        return Mapper000(programBanks, charBanks);
-      case 1:
-        return Mapper001(programBanks, charBanks);
-      case 2:
-        return Mapper002(programBanks, charBanks);
-      case 3:
-        return Mapper003(programBanks, charBanks);
-      case 4:
-        return Mapper004(programBanks, charBanks);
-      case 7:
-        return Mapper007(programBanks, charBanks);
-      case 66:
-        return Mapper066(programBanks, charBanks);
-      default:
-        throw Exception('Unsupported mapper ID: $mapperId');
-    }
-  }
+  static Mapper createMapper(int mapperId, int programBanks, int charBanks) =>
+      switch (mapperId) {
+        0 => Mapper000(programBanks, charBanks),
+        1 => Mapper001(programBanks, charBanks),
+        2 => Mapper002(programBanks, charBanks),
+        3 => Mapper003(programBanks, charBanks),
+        4 => Mapper004(programBanks, charBanks),
+        7 => Mapper007(programBanks, charBanks),
+        66 => Mapper066(programBanks, charBanks),
+        _ => throw Exception('Unsupported mapper ID: $mapperId'),
+      };
 
   static const List<MapperInfo> mappers = [
     MapperInfo(
