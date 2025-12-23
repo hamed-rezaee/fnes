@@ -284,9 +284,14 @@ class NESEmulatorController {
         final state = _rewindBuffer.popState();
 
         if (state != null) {
-          bus.controller[0] = 0;
-          bus.controller[1] = 0;
+          final currentController0 = bus.controller[0];
+          final currentController1 = bus.controller[1];
+
           bus.restoreState(state);
+
+          bus.controller[0] = currentController0;
+          bus.controller[1] = currentController1;
+
           _updateRewindProgress();
           unawaited(updatePixelBuffer());
         } else {
@@ -333,9 +338,14 @@ class NESEmulatorController {
       final state = _rewindBuffer.rewindFrames(frames);
 
       if (state != null) {
-        bus.controller[0] = 0;
-        bus.controller[1] = 0;
+        final currentController0 = bus.controller[0];
+        final currentController1 = bus.controller[1];
+
         bus.restoreState(state);
+
+        bus.controller[0] = currentController0;
+        bus.controller[1] = currentController1;
+
         _updateRewindProgress();
         unawaited(updatePixelBuffer());
       }
@@ -400,10 +410,13 @@ class NESEmulatorController {
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
       final state = EmulatorStateSerialization.fromJson(json);
 
+      final currentController0 = bus.controller[0];
+      final currentController1 = bus.controller[1];
+
       bus.restoreState(state);
 
-      bus.controller[0] = 0;
-      bus.controller[1] = 0;
+      bus.controller[0] = currentController0;
+      bus.controller[1] = currentController1;
 
       bus.getAudioBuffer();
 
