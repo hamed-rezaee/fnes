@@ -72599,101 +72599,103 @@ break
 case 6:case 1:return A.Q(q,r)
 case 2:return A.P(o.at(-1),r)}})
 return A.R($async$cz,r)},
-w0(){var s=0,r=A.S(t.y),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,f0,f1,f2,f3,f4,f5,f6
-var $async$w0=A.T(function(f7,f8){if(f7===1){o.push(f8)
+w0(){var s=0,r=A.S(t.y),q,p=2,o=[],n=this,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,d0,d1,d2,d3,d4,d5,d6,d7,d8,d9,e0,e1,e2,e3,e4,e5,e6,e7,e8,e9,f0,f1,f2,f3,f4,f5,f6,f7,f8
+var $async$w0=A.T(function(f9,g0){if(f9===1){o.push(g0)
 s=p}for(;;)switch(s){case 0:if(!n.d.gn()){q=!1
 s=1
 break}p=4
 s=7
 return A.Y(A.y7(),$async$w0)
-case 7:m=f8
+case 7:m=g0
 l=n.z3()
 k=A.cs(m.a.i(0,l))
 if(k==null){n.as.ap("No save state found")
 q=!1
 s=1
-break}g=t.a
-j=g.a(B.bU.NK(k,null))
-f=j
-e=g.a(f.i(0,"cpuState"))
-d=A.a5(e.i(0,"a"))
-c=A.a5(e.i(0,"x"))
-b=A.a5(e.i(0,"y"))
-a=A.a5(e.i(0,"stkp"))
-a0=A.a5(e.i(0,"pc"))
-a1=A.a5(e.i(0,"status"))
-a2=A.a5(e.i(0,"fetched"))
-a3=A.a5(e.i(0,"temp"))
-a4=A.a5(e.i(0,"addrAbs"))
-a5=A.a5(e.i(0,"addrRel"))
-a6=A.a5(e.i(0,"opcode"))
-a7=A.a5(e.i(0,"cycles"))
-e=A.a5(e.i(0,"clockCount"))
-a8=A.azg(g.a(f.i(0,"ppuState")))
-a9=g.a(f.i(0,"apuState"))
-b0=A.a5(a9.i(0,"globalTime"))
-b1=A.bl(a9.i(0,"frameCounterMode"))
-b2=A.bl(a9.i(0,"irqDisable"))
-b3=A.bl(a9.i(0,"frameIrq"))
-b4=A.a5(a9.i(0,"frameStep"))
-b5=A.apw(g.a(a9.i(0,"pulse1State")))
-b6=A.apw(g.a(a9.i(0,"pulse2State")))
-b7=g.a(a9.i(0,"triangleState"))
-b8=A.bl(b7.i(0,"enable"))
-b9=A.a5(b7.i(0,"timer"))
-c0=A.a5(b7.i(0,"reload"))
-c1=A.a5(b7.i(0,"phase"))
-c2=A.ake(g.a(b7.i(0,"lengthCounterState")))
-b7=g.a(b7.i(0,"linearCounterState"))
-c3=A.a5(b7.i(0,"counter"))
-c4=A.a5(b7.i(0,"reload"))
-c5=A.bl(b7.i(0,"controlFlag"))
-b7=A.bl(b7.i(0,"reloadFlag"))
-c6=g.a(a9.i(0,"noiseState"))
-c7=A.bl(c6.i(0,"enable"))
-c8=A.bl(c6.i(0,"mode"))
-c9=A.a5(c6.i(0,"timer"))
-d0=A.a5(c6.i(0,"reload"))
-d1=A.a5(c6.i(0,"shiftRegister"))
-d2=A.anV(g.a(c6.i(0,"envelopeState")))
-c6=A.ake(g.a(c6.i(0,"lengthCounterState")))
-a9=g.a(a9.i(0,"dmcState"))
-d3=A.bl(a9.i(0,"enable"))
-d4=A.bl(a9.i(0,"irqEnabled"))
-d5=A.bl(a9.i(0,"loop"))
-d6=A.a5(a9.i(0,"timerLoad"))
-d7=A.a5(a9.i(0,"timer"))
-d8=A.a5(a9.i(0,"dmcOutput"))
-d9=A.a5(a9.i(0,"sampleAddress"))
-e0=A.a5(a9.i(0,"currentAddress"))
-e1=A.a5(a9.i(0,"bytesRemaining"))
-e2=A.a5(a9.i(0,"sampleBuffer"))
-e3=A.bl(a9.i(0,"sampleBufferEmpty"))
-e4=A.a5(a9.i(0,"shiftRegister"))
-e5=A.a5(a9.i(0,"bitsRemaining"))
-a9=A.bl(a9.i(0,"silenceFlag"))
-g=g.a(f.i(0,"busState"))
-e6=new Uint8Array(A.c6(B.cY.cs(A.bZ(g.i(0,"cpuRam")))))
-e7=t.j
-e8=t.S
-e9=new Uint8Array(A.c6(J.hc(e7.a(g.i(0,"controller")),e8)))
-e8=new Uint8Array(A.c6(J.hc(e7.a(g.i(0,"controllerState")),e8)))
-e7=A.a5(g.i(0,"systemClockCounter"))
-f0=A.a5(g.i(0,"dmaPage"))
-f1=A.a5(g.i(0,"dmaAddress"))
-f2=A.a5(g.i(0,"dmaData"))
-f3=A.bl(g.i(0,"dmaDummy"))
-g=A.bl(g.i(0,"dmaTransfer"))
-f4=t.nA.a(f.i(0,"mapperState"))
-if(f4==null)f4=A.w(t.N,t.z)
-i=new A.uY(new A.DX(d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,e),a8,new A.Ds(b0,b1,b2,b3,b4,b5,b6,new A.Jv(b8,b9,c0,c1,c2,new A.Gh(c3,c4,c5,b7)),new A.GR(c7,c8,c9,d0,d1,d2,c6),new A.EA(d3,d4,d5,d6,d7,d8,d9,e0,e1,e2,e3,e4,e5,a9)),new A.DV(e6,e9,e8,e7,f0,f1,f2,f3,g),f4,A.awT(A.bZ(f.i(0,"timestamp"))))
-f=n.a
-f.dt(i)
-f4=f.e
-f4.$flags&2&&A.a4(f4)
-f4[0]=0
-f4[1]=0
-f.EX()
+break}e=t.a
+j=e.a(B.bU.NK(k,null))
+d=j
+c=e.a(d.i(0,"cpuState"))
+b=A.a5(c.i(0,"a"))
+a=A.a5(c.i(0,"x"))
+a0=A.a5(c.i(0,"y"))
+a1=A.a5(c.i(0,"stkp"))
+a2=A.a5(c.i(0,"pc"))
+a3=A.a5(c.i(0,"status"))
+a4=A.a5(c.i(0,"fetched"))
+a5=A.a5(c.i(0,"temp"))
+a6=A.a5(c.i(0,"addrAbs"))
+a7=A.a5(c.i(0,"addrRel"))
+a8=A.a5(c.i(0,"opcode"))
+a9=A.a5(c.i(0,"cycles"))
+c=A.a5(c.i(0,"clockCount"))
+b0=A.azg(e.a(d.i(0,"ppuState")))
+b1=e.a(d.i(0,"apuState"))
+b2=A.a5(b1.i(0,"globalTime"))
+b3=A.bl(b1.i(0,"frameCounterMode"))
+b4=A.bl(b1.i(0,"irqDisable"))
+b5=A.bl(b1.i(0,"frameIrq"))
+b6=A.a5(b1.i(0,"frameStep"))
+b7=A.apw(e.a(b1.i(0,"pulse1State")))
+b8=A.apw(e.a(b1.i(0,"pulse2State")))
+b9=e.a(b1.i(0,"triangleState"))
+c0=A.bl(b9.i(0,"enable"))
+c1=A.a5(b9.i(0,"timer"))
+c2=A.a5(b9.i(0,"reload"))
+c3=A.a5(b9.i(0,"phase"))
+c4=A.ake(e.a(b9.i(0,"lengthCounterState")))
+b9=e.a(b9.i(0,"linearCounterState"))
+c5=A.a5(b9.i(0,"counter"))
+c6=A.a5(b9.i(0,"reload"))
+c7=A.bl(b9.i(0,"controlFlag"))
+b9=A.bl(b9.i(0,"reloadFlag"))
+c8=e.a(b1.i(0,"noiseState"))
+c9=A.bl(c8.i(0,"enable"))
+d0=A.bl(c8.i(0,"mode"))
+d1=A.a5(c8.i(0,"timer"))
+d2=A.a5(c8.i(0,"reload"))
+d3=A.a5(c8.i(0,"shiftRegister"))
+d4=A.anV(e.a(c8.i(0,"envelopeState")))
+c8=A.ake(e.a(c8.i(0,"lengthCounterState")))
+b1=e.a(b1.i(0,"dmcState"))
+d5=A.bl(b1.i(0,"enable"))
+d6=A.bl(b1.i(0,"irqEnabled"))
+d7=A.bl(b1.i(0,"loop"))
+d8=A.a5(b1.i(0,"timerLoad"))
+d9=A.a5(b1.i(0,"timer"))
+e0=A.a5(b1.i(0,"dmcOutput"))
+e1=A.a5(b1.i(0,"sampleAddress"))
+e2=A.a5(b1.i(0,"currentAddress"))
+e3=A.a5(b1.i(0,"bytesRemaining"))
+e4=A.a5(b1.i(0,"sampleBuffer"))
+e5=A.bl(b1.i(0,"sampleBufferEmpty"))
+e6=A.a5(b1.i(0,"shiftRegister"))
+e7=A.a5(b1.i(0,"bitsRemaining"))
+b1=A.bl(b1.i(0,"silenceFlag"))
+e=e.a(d.i(0,"busState"))
+e8=new Uint8Array(A.c6(B.cY.cs(A.bZ(e.i(0,"cpuRam")))))
+e9=t.j
+f0=t.S
+f1=new Uint8Array(A.c6(J.hc(e9.a(e.i(0,"controller")),f0)))
+f0=new Uint8Array(A.c6(J.hc(e9.a(e.i(0,"controllerState")),f0)))
+e9=A.a5(e.i(0,"systemClockCounter"))
+f2=A.a5(e.i(0,"dmaPage"))
+f3=A.a5(e.i(0,"dmaAddress"))
+f4=A.a5(e.i(0,"dmaData"))
+f5=A.bl(e.i(0,"dmaDummy"))
+e=A.bl(e.i(0,"dmaTransfer"))
+f6=t.nA.a(d.i(0,"mapperState"))
+if(f6==null)f6=A.w(t.N,t.z)
+i=new A.uY(new A.DX(b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,c),b0,new A.Ds(b2,b3,b4,b5,b6,b7,b8,new A.Jv(c0,c1,c2,c3,c4,new A.Gh(c5,c6,c7,b9)),new A.GR(c9,d0,d1,d2,d3,d4,c8),new A.EA(d5,d6,d7,d8,d9,e0,e1,e2,e3,e4,e5,e6,e7,b1)),new A.DV(e8,f1,f0,e9,f2,f3,f4,f5,e),f6,A.awT(A.bZ(d.i(0,"timestamp"))))
+d=n.a
+f6=d.e
+h=f6[0]
+g=f6[1]
+d.dt(i)
+f6.$flags&2&&A.a4(f6)
+f6[0]=h
+f6[1]=g
+d.EX()
 B.b.L(n.db.b)
 n.ch.ap(0)
 n.l0()
@@ -72705,14 +72707,14 @@ p=2
 s=6
 break
 case 4:p=3
-f6=o.pop()
-g=A.ak(f6)
-if(t.Y.b(g)){h=g
-A.ts("Failed to load state: "+A.m(h))
-n.as.ap("Failed to load state: "+A.m(h))
+f8=o.pop()
+e=A.ak(f8)
+if(t.Y.b(e)){f=e
+A.ts("Failed to load state: "+A.m(f))
+n.as.ap("Failed to load state: "+A.m(f))
 q=!1
 s=1
-break}else throw f6
+break}else throw f8
 s=6
 break
 case 3:s=2
@@ -72759,15 +72761,17 @@ $1(a){var s=B.e.b5(a,16)
 return((a&255)<<16|(B.e.b5(a,8)&255)<<8|s&255|4278190080)>>>0},
 $S:89}
 A.a1j.prototype={
-$0(){var s,r,q=this.a,p=q.db.ac2()
-if(p!=null){s=q.a
+$0(){var s,r,q,p,o=this.a,n=o.db.ac2()
+if(n!=null){s=o.a
 r=s.e
+q=r[0]
+p=r[1]
+s.dt(n)
 r.$flags&2&&A.a4(r)
-r[0]=0
-r[1]=0
-s.dt(p)
-q.M3()
-q.l0()}else q.rN()},
+r[0]=q
+r[1]=p
+o.M3()
+o.l0()}else o.rN()},
 $S:15}
 A.a1k.prototype={
 $0(){var s,r=this.a,q=r.db.b
