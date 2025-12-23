@@ -200,7 +200,7 @@ class _OnScreenControllerState extends State<OnScreenController> {
 
   Widget _buildRewindButton(double scaleFactor) {
     final isRewinding = widget.controller.isRewinding.value;
-    final buttonWidth = 80.0 * scaleFactor;
+    final buttonWidth = 120.0 * scaleFactor;
     final fontSize = 12.0 * scaleFactor;
     final iconSize = 16.0 * scaleFactor;
 

@@ -44,6 +44,7 @@ class Bus {
     _audioTimePerNESClock = 1 / 5369318.0;
   }
 
+  @pragma('vm:prefer-inline')
   void cpuWrite(int address, int data) {
     if (cart?.cpuWrite(address, data) ?? false) return;
 
@@ -66,6 +67,7 @@ class Bus {
     }
   }
 
+  @pragma('vm:prefer-inline')
   int cpuRead(int address, {bool readOnly = false}) {
     var data = 0x00;
 

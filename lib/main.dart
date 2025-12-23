@@ -353,7 +353,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
                               context,
                             ),
                             child: Opacity(
-                              opacity: 0.7,
+                              opacity: 0.75,
                               child: OnScreenController(
                                 controller: _nesController,
                               ),

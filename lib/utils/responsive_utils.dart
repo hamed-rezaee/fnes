@@ -86,7 +86,7 @@ class ResponsiveSizing {
       context.responsive(mobile: 20, tablet: 24, desktop: 24);
 
   static double onScreenControllerScale(BuildContext context) =>
-      context.responsive(mobile: 0.6, tablet: 0.7, desktop: 0.8);
+      context.responsive(mobile: 0.80, tablet: 0.85, desktop: 0.85);
 
   static double fpsTextSize(BuildContext context) =>
       context.responsive(mobile: 10, tablet: 11, desktop: 12);

@@ -537,7 +537,7 @@ class CPU {
     _setFlag(carryFlag, isFlagSet: (val & 0x100) != 0);
     _setFlag(zeroFlag, isFlagSet: (val & 0xFF) == 0);
     _setFlag(negativeFlag, isFlagSet: (val & 0x80) != 0);
-    if (lookup[opcode].addressMode == AddressMode.imp) {
+    if (_currentInstruction.addressMode == AddressMode.imp) {
       a = val & 0xFF;
     } else {
       write(addrAbs, val & 0xFF);
@@ -552,7 +552,7 @@ class CPU {
     final val = (fetched >> 1) & 0xFF;
     _setFlag(zeroFlag, isFlagSet: val == 0);
     _setFlag(negativeFlag, isFlagSet: false);
-    if (lookup[opcode].addressMode == AddressMode.imp) {
+    if (_currentInstruction.addressMode == AddressMode.imp) {
       a = val;
     } else {
       write(addrAbs, val);
@@ -567,7 +567,7 @@ class CPU {
     _setFlag(carryFlag, isFlagSet: (fetched & 0x80) != 0);
     _setFlag(zeroFlag, isFlagSet: val == 0);
     _setFlag(negativeFlag, isFlagSet: (val & 0x80) != 0);
-    if (lookup[opcode].addressMode == AddressMode.imp) {
+    if (_currentInstruction.addressMode == AddressMode.imp) {
       a = val;
     } else {
       write(addrAbs, val);
@@ -582,7 +582,7 @@ class CPU {
     _setFlag(carryFlag, isFlagSet: (fetched & 0x01) != 0);
     _setFlag(zeroFlag, isFlagSet: val == 0);
     _setFlag(negativeFlag, isFlagSet: (val & 0x80) != 0);
-    if (lookup[opcode].addressMode == AddressMode.imp) {
+    if (_currentInstruction.addressMode == AddressMode.imp) {
       a = val;
     } else {
       write(addrAbs, val);
@@ -697,6 +697,9 @@ class CPU {
   int cycles = 0;
   int clockCount = 0;
 
+  // Cache for current instruction to avoid repeated lookups
+  late Instruction _currentInstruction;
+
   Bus? bus;
 
   int carryFlag = 0x01;
@@ -719,8 +722,10 @@ class CPU {
 
   void write(int address, int data) => bus?.cpuWrite(address, data);
 
+  @pragma('vm:prefer-inline')
   int _getFlag(int flag) => (status & flag) > 0 ? 1 : 0;
 
+  @pragma('vm:prefer-inline')
   void _setFlag(int flag, {required bool isFlagSet}) =>
       isFlagSet ? status |= flag : status &= ~flag;
 
@@ -814,44 +819,145 @@ class CPU {
   void clock() {
     if (cycles == 0) {
       opcode = read(pc);
-      _setFlag(unusedFlag, isFlagSet: true);
+      status |= unusedFlag;
       pc = (pc + 1) & 0xFFFF;
-      final inst = lookup[opcode];
-      cycles = inst.cycles;
-      final addl1 = inst.addressMode.executeOperation(this).call();
-      final addl2 = inst.instructionType.executeOperation(this).call();
+      _currentInstruction = lookup[opcode];
+      cycles = _currentInstruction.cycles;
+      final addl1 = _executeAddressMode(_currentInstruction.addressMode);
+      final addl2 = _executeInstruction(_currentInstruction.instructionType);
       cycles += addl1 & addl2;
-      _setFlag(unusedFlag, isFlagSet: true);
+      status |= unusedFlag;
     }
     cycles--;
     clockCount++;
   }
 
+  @pragma('vm:prefer-inline')
+  int _executeAddressMode(AddressMode mode) => switch (mode) {
+        AddressMode.imp => _imp(),
+        AddressMode.imm => _imm(),
+        AddressMode.zp0 => _zp0(),
+        AddressMode.zpx => _zpx(),
+        AddressMode.zpy => _zpy(),
+        AddressMode.rel => _rel(),
+        AddressMode.abs => _abs(),
+        AddressMode.abx => _abx(),
+        AddressMode.aby => _aby(),
+        AddressMode.ind => _ind(),
+        AddressMode.izx => _izx(),
+        AddressMode.izy => _izy(),
+      };
+
+  @pragma('vm:prefer-inline')
+  int _executeInstruction(InstructionType type) => switch (type) {
+        InstructionType.lda => _lda(),
+        InstructionType.ldx => _ldx(),
+        InstructionType.ldy => _ldy(),
+        InstructionType.sta => _sta(),
+        InstructionType.stx => _stx(),
+        InstructionType.sty => _sty(),
+        InstructionType.tax => _tax(),
+        InstructionType.tay => _tay(),
+        InstructionType.txa => _txa(),
+        InstructionType.tya => _tya(),
+        InstructionType.tsx => _tsx(),
+        InstructionType.txs => _txs(),
+        InstructionType.pha => _pha(),
+        InstructionType.php => _php(),
+        InstructionType.pla => _pla(),
+        InstructionType.plp => _plp(),
+        InstructionType.and => _and(),
+        InstructionType.eor => _eor(),
+        InstructionType.ora => _ora(),
+        InstructionType.bit => _bit(),
+        InstructionType.adc => _adc(),
+        InstructionType.sbc => _sbc(),
+        InstructionType.cmp => _cmp(),
+        InstructionType.cpx => _cpx(),
+        InstructionType.cpy => _cpy(),
+        InstructionType.inc => _inc(),
+        InstructionType.inx => _inx(),
+        InstructionType.iny => _iny(),
+        InstructionType.dec => _dec(),
+        InstructionType.dex => _dex(),
+        InstructionType.dey => _dey(),
+        InstructionType.asl => _asl(),
+        InstructionType.lsr => _lsr(),
+        InstructionType.rol => _rol(),
+        InstructionType.ror => _ror(),
+        InstructionType.bcc => _bcc(),
+        InstructionType.bcs => _bcs(),
+        InstructionType.beq => _beq(),
+        InstructionType.bmi => _bmi(),
+        InstructionType.bne => _bne(),
+        InstructionType.bpl => _bpl(),
+        InstructionType.bvc => _bvc(),
+        InstructionType.bvs => _bvs(),
+        InstructionType.clc => _clc(),
+        InstructionType.cld => _cld(),
+        InstructionType.cli => _cli(),
+        InstructionType.clv => _clv(),
+        InstructionType.sec => _sec(),
+        InstructionType.sed => _sed(),
+        InstructionType.sei => _sei(),
+        InstructionType.jmp => _jmp(),
+        InstructionType.jsr => _jsr(),
+        InstructionType.rts => _rts(),
+        InstructionType.rti => _rti(),
+        InstructionType.brk => _brk(),
+        InstructionType.nop => _nop(),
+        InstructionType.anc => _anc(),
+        InstructionType.slo => _slo(),
+        InstructionType.rla => _rla(),
+        InstructionType.rra => _rra(),
+        InstructionType.dcp => _dcp(),
+        InstructionType.isc => _isc(),
+        InstructionType.axs => _axs(),
+        InstructionType.ahx => _ahx(),
+        InstructionType.alr => _alr(),
+        InstructionType.arr => _arr(),
+        InstructionType.las => _las(),
+        InstructionType.lax => _lax(),
+        InstructionType.sax => _sax(),
+        InstructionType.shx => _shx(),
+        InstructionType.shy => _shy(),
+        InstructionType.sre => _sre(),
+        InstructionType.skb => _skb(),
+        InstructionType.tas => _tas(),
+        InstructionType.xaa => _xaa(),
+        InstructionType.xxx => _xxx(),
+      };
+
   bool complete() => cycles == 0;
 
+  @pragma('vm:prefer-inline')
   int _imp() {
     fetched = a;
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _imm() {
     addrAbs = pc;
     pc = (pc + 1) & 0xFFFF;
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _zp0() {
     addrAbs = read(pc) & 0x00FF;
     pc = (pc + 1) & 0xFFFF;
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _zpx() {
     addrAbs = (read(pc) + x) & 0x00FF;
     pc = (pc + 1) & 0xFFFF;
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _zpy() {
     addrAbs = (read(pc) + y) & 0x00FF;
     pc = (pc + 1) & 0xFFFF;
@@ -932,11 +1038,11 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _fetch() {
-    if (lookup[opcode].addressMode != AddressMode.imp) {
+    if (_currentInstruction.addressMode != AddressMode.imp) {
       fetched = read(addrAbs);
     }
-
     return fetched;
   }
 

@@ -67,6 +67,7 @@ class PPU {
   bool frameComplete = false;
   bool nmi = false;
 
+  @pragma('vm:prefer-inline')
   void _incrementScrollX() {
     if (mask.renderBackground || mask.renderSprites) {
       if (vramAddress.coarseX == 31) {
@@ -78,6 +79,7 @@ class PPU {
     }
   }
 
+  @pragma('vm:prefer-inline')
   void _incrementScrollY() {
     if (mask.renderBackground || mask.renderSprites) {
       if (vramAddress.fineY < 7) {
@@ -96,6 +98,7 @@ class PPU {
     }
   }
 
+  @pragma('vm:prefer-inline')
   void _transferAddressX() {
     if (mask.renderBackground || mask.renderSprites) {
       vramAddress.nametableX = temporaryAddressRegister.nametableX;
@@ -103,6 +106,7 @@ class PPU {
     }
   }
 
+  @pragma('vm:prefer-inline')
   void _transferAddressY() {
     if (mask.renderBackground || mask.renderSprites) {
       vramAddress.fineY = temporaryAddressRegister.fineY;
@@ -111,6 +115,7 @@ class PPU {
     }
   }
 
+  @pragma('vm:prefer-inline')
   void _loadBackgroundShifters() {
     backgroundShifterPatternLow =
         (backgroundShifterPatternLow & 0xFF00) | backgroundNextTileLsb;
@@ -123,6 +128,7 @@ class PPU {
         ((backgroundNextTileAttrib & 0x02) != 0 ? 0xFF : 0x00);
   }
 
+  @pragma('vm:prefer-inline')
   void _updateShifters() {
     if (mask.renderBackground) {
       backgroundShifterPatternLow <<= 1;
@@ -132,8 +138,7 @@ class PPU {
     }
 
     if (mask.renderSprites && cycle >= 1 && cycle < 258) {
-      final count = spriteCount;
-      for (var i = 0; i < count; i++) {
+      for (var i = 0; i < spriteCount; i++) {
         final sprite = spriteScanline[i];
         if (sprite.x > 0) {
           sprite.x--;
@@ -286,51 +291,39 @@ class PPU {
     return result;
   }
 
+  @pragma('vm:prefer-inline')
   void _composeScanline() {
     var backgroundPixel = 0x00;
     var backgroundPalette = 0x00;
 
-    if (mask.renderBackground) {
-      if (mask.renderBackgroundLeft || (cycle >= 9)) {
-        final bitMux = 0x8000 >> fineX;
-
-        final p0Pixel = (backgroundShifterPatternLow & bitMux) > 0 ? 1 : 0;
-        final p1Pixel = (backgroundShifterPatternHigh & bitMux) > 0 ? 1 : 0;
-        backgroundPixel = (p1Pixel << 1) | p0Pixel;
-
-        final backgroundPal0 =
-            (backgroundShifterAttribLow & bitMux) > 0 ? 1 : 0;
-        final backgroundPal1 =
-            (backgroundShifterAttribHigh & bitMux) > 0 ? 1 : 0;
-        backgroundPalette = (backgroundPal1 << 1) | backgroundPal0;
-      }
+    if (mask.renderBackground && (mask.renderBackgroundLeft || cycle >= 9)) {
+      final bitMux = 0x8000 >> fineX;
+      backgroundPixel = ((backgroundShifterPatternHigh & bitMux) > 0 ? 2 : 0) |
+          ((backgroundShifterPatternLow & bitMux) > 0 ? 1 : 0);
+      backgroundPalette = ((backgroundShifterAttribHigh & bitMux) > 0 ? 2 : 0) |
+          ((backgroundShifterAttribLow & bitMux) > 0 ? 1 : 0);
     }
 
     var fgPixel = 0x00;
     var fgPalette = 0x00;
     var fgPriority = 0x00;
 
-    if (mask.renderSprites) {
-      if (mask.renderSpritesLeft || (cycle >= 9)) {
-        spriteZeroBeingRendered = false;
-        final count = spriteCount;
+    if (mask.renderSprites && (mask.renderSpritesLeft || cycle >= 9)) {
+      spriteZeroBeingRendered = false;
 
-        for (var i = 0; i < count; i++) {
-          final sprite = spriteScanline[i];
-          if (sprite.x == 0) {
-            final fgPixelLow = (spriteShifterPatternLow[i] & 0x80) >> 7;
-            final fgPixelHigh = (spriteShifterPatternHigh[i] & 0x80) >> 7;
-            fgPixel = (fgPixelHigh << 1) | fgPixelLow;
+      for (var i = 0; i < spriteCount; i++) {
+        final sprite = spriteScanline[i];
+        if (sprite.x == 0) {
+          fgPixel = ((spriteShifterPatternHigh[i] & 0x80) >> 6) |
+              ((spriteShifterPatternLow[i] & 0x80) >> 7);
 
+          if (fgPixel != 0) {
             fgPalette = (sprite.attribute & 0x03) + 0x04;
             fgPriority = (sprite.attribute & 0x20) == 0 ? 1 : 0;
-
-            if (fgPixel != 0) {
-              if (i == 0) {
-                spriteZeroBeingRendered = true;
-              }
-              break;
+            if (i == 0) {
+              spriteZeroBeingRendered = true;
             }
+            break;
           }
         }
       }
@@ -382,6 +375,7 @@ class PPU {
     }
   }
 
+  @pragma('vm:prefer-inline')
   void _checkSpriteZeroHit(int backgroundPixel, int fgPixel) {
     if (backgroundPixel != 0 && fgPixel != 0) {
       if (mask.renderBackground && mask.renderSprites) {
