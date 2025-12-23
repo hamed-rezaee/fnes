@@ -152,7 +152,9 @@ class _OnScreenControllerState extends State<OnScreenController> {
           ],
           border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
         ),
-        child: Center(child: Icon(icon, color: Colors.white, size: iconSize)),
+        child: Center(
+          child: Icon(icon, color: Colors.white, size: iconSize),
+        ),
       ),
     );
   }
@@ -180,7 +182,9 @@ class _OnScreenControllerState extends State<OnScreenController> {
           ],
           border: Border.all(color: Colors.black.withValues(alpha: 0.3)),
         ),
-        child: Center(child: Icon(icon, color: Colors.white, size: iconSize)),
+        child: Center(
+          child: Icon(icon, color: Colors.white, size: iconSize),
+        ),
       ),
     );
   }

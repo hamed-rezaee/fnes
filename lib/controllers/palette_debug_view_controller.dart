@@ -20,8 +20,9 @@ class PaletteDebugViewController {
   final NESEmulatorController nesEmulatorController;
 
   final Signal<int> selectedPalette = signal(0);
-  final Signal<PatternTable> selectedPatternTable =
-      signal(PatternTable.patternTable0);
+  final Signal<PatternTable> selectedPatternTable = signal(
+    PatternTable.patternTable0,
+  );
 
   void changePalette(int palette) => selectedPalette.value = palette;
 

@@ -75,8 +75,9 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
                       toLabel: (mode) => mode.label,
                       onSelectedPatternTableChanged: (selected) {
                         if (selected.isNotEmpty) {
-                          widget.nesEmulatorController
-                              .setRenderMode(selected.first);
+                          widget.nesEmulatorController.setRenderMode(
+                            selected.first,
+                          );
                         }
                       },
                     ),
@@ -248,10 +249,10 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
   }
 
   Widget _buildPatternTable(Image? image) => RawImage(
-        image: image,
-        width: _imageSize.toDouble() * 2,
-        height: _imageSize.toDouble() * 2,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.none,
-      );
+    image: image,
+    width: _imageSize.toDouble() * 2,
+    height: _imageSize.toDouble() * 2,
+    fit: BoxFit.contain,
+    filterQuality: FilterQuality.none,
+  );
 }

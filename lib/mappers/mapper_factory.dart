@@ -185,16 +185,17 @@ class MapperFactory {
         ? '${mapper.minCharSizeKB}'
         : '${mapper.minCharSizeKB} to ${mapper.maxCharSizeKB}';
     map['Battery Backed'] = '${mapper.batteryBacked}';
-    map['Supported Mirroring'] =
-        mapper.supportedMirroring.map((e) => e.name).join(', ');
+    map['Supported Mirroring'] = mapper.supportedMirroring
+        .map((e) => e.name)
+        .join(', ');
 
     return map;
   }
 
   static MapperInfo? getMapperInfo(int mapperId) => mappers.firstWhere(
-        (m) => m.id == mapperId,
-        orElse: () => throw ArgumentError('Invalid mapper ID'),
-      );
+    (m) => m.id == mapperId,
+    orElse: () => throw ArgumentError('Invalid mapper ID'),
+  );
 
   static List<MapperInfo> getByCategory(MapperCategory category) =>
       mappers.where((m) => m.category == category).toList();

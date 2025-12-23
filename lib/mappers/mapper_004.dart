@@ -200,20 +200,20 @@ class Mapper004 extends Mapper {
 
   @override
   Map<String, dynamic> saveState() => {
-        'targetRegister': _targetRegister,
-        'programBankMode': _programBankMode,
-        'charA12Inversion': _charA12Inversion,
-        'mirrorMode': _mirrorMode.index,
-        'programRamEnabled': _programRamEnabled,
-        'programRamWriteProtect': _programRamWriteProtect,
-        'bankRegisters': bankRegisters.toList(),
-        'irqActive': _irqActive,
-        'irqEnabled': _irqEnabled,
-        'irqReloadPending': _irqReloadPending,
-        'irqCounter': _irqCounter,
-        'irqLatch': _irqLatch,
-        'programRam': programRam.toList(),
-      };
+    'targetRegister': _targetRegister,
+    'programBankMode': _programBankMode,
+    'charA12Inversion': _charA12Inversion,
+    'mirrorMode': _mirrorMode.index,
+    'programRamEnabled': _programRamEnabled,
+    'programRamWriteProtect': _programRamWriteProtect,
+    'bankRegisters': bankRegisters.toList(),
+    'irqActive': _irqActive,
+    'irqEnabled': _irqEnabled,
+    'irqReloadPending': _irqReloadPending,
+    'irqCounter': _irqCounter,
+    'irqLatch': _irqLatch,
+    'programRam': programRam.toList(),
+  };
 
   @override
   void restoreState(Map<String, dynamic> state) {

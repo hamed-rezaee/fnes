@@ -59,9 +59,9 @@ class Mapper066 extends Mapper {
 
   @override
   Map<String, dynamic> saveState() => {
-        'charBankSelect': _charBankSelect,
-        'programBankSelect': _programBankSelect,
-      };
+    'charBankSelect': _charBankSelect,
+    'programBankSelect': _programBankSelect,
+  };
 
   @override
   void restoreState(Map<String, dynamic> state) {

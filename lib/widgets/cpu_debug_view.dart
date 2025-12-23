@@ -33,105 +33,105 @@ class _CpuDebugViewState extends State<CpuDebugView> {
 
   @override
   Widget build(BuildContext context) => Watch((_) {
-        final flags = controller.flags.value;
-        final pc = controller.pc.value;
-        final xRegister = controller.xRegister.value;
-        final yRegister = controller.yRegister.value;
-        final stackPointer = controller.stackPointer.value;
-        final acRegister = controller.acRegister.value;
-        final disassembly = controller.disassembly.value;
+    final flags = controller.flags.value;
+    final pc = controller.pc.value;
+    final xRegister = controller.xRegister.value;
+    final yRegister = controller.yRegister.value;
+    final stackPointer = controller.stackPointer.value;
+    final acRegister = controller.acRegister.value;
+    final disassembly = controller.disassembly.value;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 2,
-          children: [
-            RichText(
-              text: TextSpan(
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
-                ),
-                children: [
-                  const TextSpan(
-                    text: 'PC ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(text: pc),
-                ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 2,
+      children: [
+        RichText(
+          text: TextSpan(
+            style: const TextStyle(
+              fontSize: 9,
+              color: Colors.black,
+              fontFamily: 'MonospaceFont',
+            ),
+            children: [
+              const TextSpan(
+                text: 'PC ',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
+              TextSpan(text: pc),
+            ],
+          ),
+        ),
+        RichText(
+          text: TextSpan(
+            style: const TextStyle(
+              fontSize: 9,
+              color: Colors.black,
+              fontFamily: 'MonospaceFont',
             ),
-            RichText(
-              text: TextSpan(
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
-                ),
-                children: [
-                  const TextSpan(
-                    text: 'SP ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(text: stackPointer),
-                ],
+            children: [
+              const TextSpan(
+                text: 'SP ',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
+              TextSpan(text: stackPointer),
+            ],
+          ),
+        ),
+        RichText(
+          text: TextSpan(
+            style: const TextStyle(
+              fontSize: 9,
+              color: Colors.black,
+              fontFamily: 'MonospaceFont',
             ),
-            RichText(
-              text: TextSpan(
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
-                ),
-                children: [
-                  const TextSpan(
-                    text: 'AC ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(text: acRegister),
-                  const TextSpan(
-                    text: ' | X ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(text: xRegister),
-                  const TextSpan(
-                    text: ' | Y ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(text: yRegister),
-                ],
+            children: [
+              const TextSpan(
+                text: 'AC ',
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 4),
-            RichText(
-              text: TextSpan(
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.black,
-                  fontFamily: 'MonospaceFont',
-                ),
-                children: [
-                  const TextSpan(
-                    text: 'Flags ',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(text: flags),
-                ],
+              TextSpan(text: acRegister),
+              const TextSpan(
+                text: ' | X ',
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
               ),
+              TextSpan(text: xRegister),
+              const TextSpan(
+                text: ' | Y ',
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: yRegister),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        RichText(
+          text: TextSpan(
+            style: const TextStyle(
+              fontSize: 9,
+              color: Colors.black,
+              fontFamily: 'MonospaceFont',
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Disassembler',
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 2),
-            SingleChildScrollView(
-              child: RichText(text: _getDisassemblyRichText(disassembly)),
-            ),
-          ],
-        );
-      });
+            children: [
+              const TextSpan(
+                text: 'Flags ',
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: flags),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Disassembler',
+          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 2),
+        SingleChildScrollView(
+          child: RichText(text: _getDisassemblyRichText(disassembly)),
+        ),
+      ],
+    );
+  });
 
   TextSpan _getDisassemblyRichText(String disassembly) {
     final lines = disassembly.split('\n');

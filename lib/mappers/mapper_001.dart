@@ -203,19 +203,19 @@ class Mapper001 extends Mapper {
 
   @override
   Map<String, dynamic> saveState() => {
-        'selectedCharBankLow': _selectedCharBankLow,
-        'selectedCharBankHigh': _selectedCharBankHigh,
-        'selectedCharBank': _selectedCharBank,
-        'selectedProgramBankLow': _selectedProgramBankLow,
-        'selectedProgramBankHigh': _selectedProgramBankHigh,
-        'selectedProgramBank': _selectedProgramBank,
-        'loadRegister': _loadRegister,
-        'loadRegisterCount': _loadRegisterCount,
-        'controlRegister': _controlRegister,
-        'programRamEnable': _programRamEnable,
-        'mirrorMode': _mirrorMode.index,
-        'programRAM': programRAM.toList(),
-      };
+    'selectedCharBankLow': _selectedCharBankLow,
+    'selectedCharBankHigh': _selectedCharBankHigh,
+    'selectedCharBank': _selectedCharBank,
+    'selectedProgramBankLow': _selectedProgramBankLow,
+    'selectedProgramBankHigh': _selectedProgramBankHigh,
+    'selectedProgramBank': _selectedProgramBank,
+    'loadRegister': _loadRegister,
+    'loadRegisterCount': _loadRegisterCount,
+    'controlRegister': _controlRegister,
+    'programRamEnable': _programRamEnable,
+    'mirrorMode': _mirrorMode.index,
+    'programRAM': programRAM.toList(),
+  };
 
   @override
   void restoreState(Map<String, dynamic> state) {

@@ -44,8 +44,9 @@ class NESEmulatorController {
   final Signal<bool> isROMLoaded = signal(false);
   final Signal<String?> romFileName = signal<String?>(null);
   final Signal<Image?> screenImage = signal<Image?>(null);
-  final Signal<FilterQuality> filterQuality =
-      signal<FilterQuality>(FilterQuality.none);
+  final Signal<FilterQuality> filterQuality = signal<FilterQuality>(
+    FilterQuality.none,
+  );
   final Signal<bool> isDebuggerVisible = signal(true);
   final Signal<bool> isOnScreenControllerVisible = signal(false);
   final Signal<bool> uncapFramerate = signal(false);
@@ -65,8 +66,9 @@ class NESEmulatorController {
     return fileName?.split('.').first;
   });
 
-  late final Computed<double> currentFPS =
-      computed(() => _frameRateController.currentFPS.value);
+  late final Computed<double> currentFPS = computed(
+    () => _frameRateController.currentFPS.value,
+  );
 
   final RewindBuffer _rewindBuffer = RewindBuffer();
   int _statesSavedSinceLastFrame = 0;
@@ -251,8 +253,9 @@ class NESEmulatorController {
 
       _updateTurboButtons();
 
-      _frameRateController
-          .updateFPSCounter(_frameRateController.currentFPS.value);
+      _frameRateController.updateFPSCounter(
+        _frameRateController.currentFPS.value,
+      );
 
       if (_frameRateController.shouldRenderFrame()) {
         unawaited(updatePixelBuffer());
@@ -281,23 +284,23 @@ class NESEmulatorController {
   }
 
   Future<void> _handleRewind() async => Future.microtask(() {
-        final state = _rewindBuffer.popState();
+    final state = _rewindBuffer.popState();
 
-        if (state != null) {
-          final currentController0 = bus.controller[0];
-          final currentController1 = bus.controller[1];
+    if (state != null) {
+      final currentController0 = bus.controller[0];
+      final currentController1 = bus.controller[1];
 
-          bus.restoreState(state);
+      bus.restoreState(state);
 
-          bus.controller[0] = currentController0;
-          bus.controller[1] = currentController1;
+      bus.controller[0] = currentController0;
+      bus.controller[1] = currentController1;
 
-          _updateRewindProgress();
-          unawaited(updatePixelBuffer());
-        } else {
-          stopRewind();
-        }
-      });
+      _updateRewindProgress();
+      unawaited(updatePixelBuffer());
+    } else {
+      stopRewind();
+    }
+  });
 
   void _updateRewindProgress() {
     if (_rewindBuffer.maxFrames > 0) {
@@ -308,10 +311,10 @@ class NESEmulatorController {
   }
 
   Future<void> _saveRewindState() async => Future.microtask(() {
-        final state = bus.saveState();
-        _rewindBuffer.pushState(state);
-        _updateRewindProgress();
-      });
+    final state = bus.saveState();
+    _rewindBuffer.pushState(state);
+    _updateRewindProgress();
+  });
 
   void startRewind() {
     final canRewind =
@@ -408,7 +411,7 @@ class NESEmulatorController {
       }
 
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
-      final state = EmulatorStateSerialization.fromJson(json);
+      final state = EmulatorState.fromJson(json);
 
       final currentController0 = bus.controller[0];
       final currentController1 = bus.controller[1];
@@ -443,8 +446,10 @@ class NESEmulatorController {
       if (bit == InputMapper.turboA || bit == InputMapper.turboB) {
         _turboPressedButtons |= bit;
       } else {
-        bus.controller.first =
-            InputMapper.pressButton(bus.controller.first, bit);
+        bus.controller.first = InputMapper.pressButton(
+          bus.controller.first,
+          bit,
+        );
       }
     }
   }
@@ -460,8 +465,10 @@ class NESEmulatorController {
       if (bit == InputMapper.turboA || bit == InputMapper.turboB) {
         _turboPressedButtons &= ~bit;
       } else {
-        bus.controller.first =
-            InputMapper.releaseButton(bus.controller.first, bit);
+        bus.controller.first = InputMapper.releaseButton(
+          bus.controller.first,
+          bit,
+        );
       }
     }
   }
@@ -471,8 +478,10 @@ class NESEmulatorController {
 
     if ((_turboPressedButtons & InputMapper.turboA) != 0) {
       if (_turboFrameCounter < 3) {
-        bus.controller.first =
-            InputMapper.pressButton(bus.controller.first, InputMapper.buttonA);
+        bus.controller.first = InputMapper.pressButton(
+          bus.controller.first,
+          InputMapper.buttonA,
+        );
       } else {
         bus.controller.first = InputMapper.releaseButton(
           bus.controller.first,
@@ -480,14 +489,18 @@ class NESEmulatorController {
         );
       }
     } else if ((bus.controller.first & InputMapper.buttonA) != 0) {
-      bus.controller.first =
-          InputMapper.pressButton(bus.controller.first, InputMapper.buttonA);
+      bus.controller.first = InputMapper.pressButton(
+        bus.controller.first,
+        InputMapper.buttonA,
+      );
     }
 
     if ((_turboPressedButtons & InputMapper.turboB) != 0) {
       if (_turboFrameCounter < 3) {
-        bus.controller.first =
-            InputMapper.pressButton(bus.controller.first, InputMapper.buttonB);
+        bus.controller.first = InputMapper.pressButton(
+          bus.controller.first,
+          InputMapper.buttonB,
+        );
       } else {
         bus.controller.first = InputMapper.releaseButton(
           bus.controller.first,
@@ -495,8 +508,10 @@ class NESEmulatorController {
         );
       }
     } else if ((bus.controller.first & InputMapper.buttonB) != 0) {
-      bus.controller.first =
-          InputMapper.pressButton(bus.controller.first, InputMapper.buttonB);
+      bus.controller.first = InputMapper.pressButton(
+        bus.controller.first,
+        InputMapper.buttonB,
+      );
     }
   }
 
@@ -532,8 +547,10 @@ class NESEmulatorController {
     final bit = InputMapper.getButtonBit(buttonName);
 
     if (bit != null) {
-      bus.controller.first =
-          InputMapper.releaseButton(bus.controller.first, bit);
+      bus.controller.first = InputMapper.releaseButton(
+        bus.controller.first,
+        bit,
+      );
     }
   }
 

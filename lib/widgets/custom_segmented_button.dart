@@ -22,36 +22,36 @@ class CustomSegmentedButton<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SegmentedButton<T>(
-        showSelectedIcon: showSelectedIcon,
-        multiSelectionEnabled: multiSelectionEnabled,
-        emptySelectionAllowed: isEmptySelectionAllowed,
-        style: ButtonStyle(
-          shape: WidgetStateProperty.all(
-            const RoundedRectangleBorder(),
-          ),
-          textStyle: WidgetStateProperty.resolveWith(
-            (states) => TextStyle(
-              fontSize: 8,
-              fontWeight: states.contains(WidgetState.selected)
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-              fontFamily: 'MonospaceFont',
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          backgroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return Colors.grey.shade300;
-            }
-
-            return null;
-          }),
+    showSelectedIcon: showSelectedIcon,
+    multiSelectionEnabled: multiSelectionEnabled,
+    emptySelectionAllowed: isEmptySelectionAllowed,
+    style: ButtonStyle(
+      shape: WidgetStateProperty.all(
+        const RoundedRectangleBorder(),
+      ),
+      textStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          fontSize: 8,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.bold
+              : FontWeight.normal,
+          fontFamily: 'MonospaceFont',
+          overflow: TextOverflow.ellipsis,
         ),
-        segments: [
-          for (final item in items)
-            ButtonSegment(value: item, label: Text(toLabel(item))),
-        ],
-        selected: selectedItems,
-        onSelectionChanged: onSelectedPatternTableChanged,
-      );
+      ),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return Colors.grey.shade300;
+        }
+
+        return null;
+      }),
+    ),
+    segments: [
+      for (final item in items)
+        ButtonSegment(value: item, label: Text(toLabel(item))),
+    ],
+    selected: selectedItems,
+    onSelectionChanged: onSelectedPatternTableChanged,
+  );
 }

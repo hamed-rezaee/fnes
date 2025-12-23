@@ -38,35 +38,41 @@ class AudioDebugViewController {
   final List<double> _dmcBuffer = List.generate(_maxSamples, (_) => 0);
   final List<double> _mixedBuffer = List.generate(_maxSamples, (_) => 0);
 
-  final Signal<List<double>> waveformSamples =
-      signal<List<double>>(List.generate(_maxSamples, (_) => 0));
+  final Signal<List<double>> waveformSamples = signal<List<double>>(
+    List.generate(_maxSamples, (_) => 0),
+  );
   final Signal<double> currentAmplitude = signal(0);
   final Signal<double> peakAmplitude = signal(0);
   final Signal<double> rmsLevel = signal(0);
   final Signal<int> bufferSize = signal(0);
 
-  final Signal<List<double>> pulse1Samples =
-      signal<List<double>>(List.generate(_maxSamples, (_) => 0));
+  final Signal<List<double>> pulse1Samples = signal<List<double>>(
+    List.generate(_maxSamples, (_) => 0),
+  );
   final Signal<double> pulse1Peak = signal(0);
   final Signal<double> pulse1RMS = signal(0);
 
-  final Signal<List<double>> pulse2Samples =
-      signal<List<double>>(List.generate(_maxSamples, (_) => 0));
+  final Signal<List<double>> pulse2Samples = signal<List<double>>(
+    List.generate(_maxSamples, (_) => 0),
+  );
   final Signal<double> pulse2Peak = signal(0);
   final Signal<double> pulse2RMS = signal(0);
 
-  final Signal<List<double>> triangleSamples =
-      signal<List<double>>(List.generate(_maxSamples, (_) => 0));
+  final Signal<List<double>> triangleSamples = signal<List<double>>(
+    List.generate(_maxSamples, (_) => 0),
+  );
   final Signal<double> trianglePeak = signal(0);
   final Signal<double> triangleRMS = signal(0);
 
-  final Signal<List<double>> noiseSamples =
-      signal<List<double>>(List.generate(_maxSamples, (_) => 0));
+  final Signal<List<double>> noiseSamples = signal<List<double>>(
+    List.generate(_maxSamples, (_) => 0),
+  );
   final Signal<double> noisePeak = signal(0);
   final Signal<double> noiseRMS = signal(0);
 
-  final Signal<List<double>> dmcSamples =
-      signal<List<double>>(List.generate(_maxSamples, (_) => 0));
+  final Signal<List<double>> dmcSamples = signal<List<double>>(
+    List.generate(_maxSamples, (_) => 0),
+  );
   final Signal<double> dmcPeak = signal(0);
   final Signal<double> dmcRMS = signal(0);
 
@@ -138,8 +144,10 @@ class AudioDebugViewController {
   double _calculateRMS(List<double> buffer) {
     if (buffer.isEmpty) return 0;
 
-    final sumSquares =
-        buffer.fold<double>(0, (sum, sample) => sum + (sample * sample));
+    final sumSquares = buffer.fold<double>(
+      0,
+      (sum, sample) => sum + (sample * sample),
+    );
 
     return (sumSquares / buffer.length).clamp(0.0, 1.0);
   }

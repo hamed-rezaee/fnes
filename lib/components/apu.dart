@@ -320,24 +320,30 @@ class APU {
   }
 
   void _clockSweepers() {
-    pulse1.sweeper
-        .clock(pulse1.reload, (v) => pulse1.reload = v, isPulse1: true);
-    pulse2.sweeper
-        .clock(pulse2.reload, (v) => pulse2.reload = v, isPulse1: false);
+    pulse1.sweeper.clock(
+      pulse1.reload,
+      (v) => pulse1.reload = v,
+      isPulse1: true,
+    );
+    pulse2.sweeper.clock(
+      pulse2.reload,
+      (v) => pulse2.reload = v,
+      isPulse1: false,
+    );
   }
 
   APUState saveState() => APUState(
-        globalTime: globalTime,
-        frameCounterMode: frameCounterMode,
-        irqDisable: irqDisable,
-        frameIrq: frameIrq,
-        frameStep: _frameStep,
-        pulse1State: pulse1.saveState(),
-        pulse2State: pulse2.saveState(),
-        triangleState: triangle.saveState(),
-        noiseState: noise.saveState(),
-        dmcState: dmc.saveState(),
-      );
+    globalTime: globalTime,
+    frameCounterMode: frameCounterMode,
+    irqDisable: irqDisable,
+    frameIrq: frameIrq,
+    frameStep: _frameStep,
+    pulse1State: pulse1.saveState(),
+    pulse2State: pulse2.saveState(),
+    triangleState: triangle.saveState(),
+    noiseState: noise.saveState(),
+    dmcState: dmc.saveState(),
+  );
 
   void restoreState(APUState state) {
     globalTime = state.globalTime;
@@ -412,14 +418,14 @@ class Envelope {
   }
 
   EnvelopeState saveState() => EnvelopeState(
-        start: start,
-        disable: disable,
-        dividerCount: dividerCount,
-        volume: volume,
-        output: output,
-        decayCount: decayCount,
-        loop: loop,
-      );
+    start: start,
+    disable: disable,
+    dividerCount: dividerCount,
+    volume: volume,
+    output: output,
+    decayCount: decayCount,
+    loop: loop,
+  );
 
   void restoreState(EnvelopeState state) {
     start = state.start;
@@ -484,9 +490,9 @@ class LengthCounter {
   }
 
   LengthCounterState saveState() => LengthCounterState(
-        counter: counter,
-        halt: halt,
-      );
+    counter: counter,
+    halt: halt,
+  );
 
   void restoreState(LengthCounterState state) {
     counter = state.counter;
@@ -553,15 +559,15 @@ class PulseWave {
   }
 
   PulseWaveState saveState() => PulseWaveState(
-        enable: enable,
-        dutycycle: dutycycle,
-        timer: timer,
-        reload: reload,
-        phase: phase,
-        envelopeState: envelope.saveState(),
-        lengthCounterState: lengthCounter.saveState(),
-        sweeperState: sweeper.saveState(),
-      );
+    enable: enable,
+    dutycycle: dutycycle,
+    timer: timer,
+    reload: reload,
+    phase: phase,
+    envelopeState: envelope.saveState(),
+    lengthCounterState: lengthCounter.saveState(),
+    sweeperState: sweeper.saveState(),
+  );
 
   void restoreState(PulseWaveState state) {
     enable = state.enable;
@@ -624,14 +630,14 @@ class Sweeper {
   }
 
   SweeperState saveState() => SweeperState(
-        enabled: enabled,
-        down: down,
-        reload: reload,
-        shift: shift,
-        timer: timer,
-        period: period,
-        mute: mute,
-      );
+    enabled: enabled,
+    down: down,
+    reload: reload,
+    shift: shift,
+    timer: timer,
+    period: period,
+    mute: mute,
+  );
 
   void restoreState(SweeperState state) {
     enabled = state.enabled;
@@ -665,11 +671,11 @@ class LinearCounter {
   }
 
   LinearCounterState saveState() => LinearCounterState(
-        counter: counter,
-        reload: reload,
-        controlFlag: controlFlag,
-        reloadFlag: reloadFlag,
-      );
+    counter: counter,
+    reload: reload,
+    controlFlag: controlFlag,
+    reloadFlag: reloadFlag,
+  );
 
   void restoreState(LinearCounterState state) {
     counter = state.counter;
@@ -755,13 +761,13 @@ class TriangleWave {
   }
 
   TriangleWaveState saveState() => TriangleWaveState(
-        enable: enable,
-        timer: timer,
-        reload: reload,
-        phase: phase,
-        lengthCounterState: lengthCounter.saveState(),
-        linearCounterState: linearCounter.saveState(),
-      );
+    enable: enable,
+    timer: timer,
+    reload: reload,
+    phase: phase,
+    lengthCounterState: lengthCounter.saveState(),
+    linearCounterState: linearCounter.saveState(),
+  );
 
   void restoreState(TriangleWaveState state) {
     enable = state.enable;
@@ -788,8 +794,9 @@ class NoiseWave {
     if (timer == 0) {
       timer = reload;
       final bit0 = shiftRegister & 0x0001;
-      final bit =
-          mode ? (shiftRegister >> 6) & 0x01 : (shiftRegister >> 1) & 0x01;
+      final bit = mode
+          ? (shiftRegister >> 6) & 0x01
+          : (shiftRegister >> 1) & 0x01;
       final feedback = bit0 ^ bit;
       shiftRegister = (shiftRegister >> 1) | (feedback << 14);
     } else {
@@ -819,14 +826,14 @@ class NoiseWave {
   }
 
   NoiseWaveState saveState() => NoiseWaveState(
-        enable: enable,
-        mode: mode,
-        timer: timer,
-        reload: reload,
-        shiftRegister: shiftRegister,
-        envelopeState: envelope.saveState(),
-        lengthCounterState: lengthCounter.saveState(),
-      );
+    enable: enable,
+    mode: mode,
+    timer: timer,
+    reload: reload,
+    shiftRegister: shiftRegister,
+    envelopeState: envelope.saveState(),
+    lengthCounterState: lengthCounter.saveState(),
+  );
 
   void restoreState(NoiseWaveState state) {
     enable = state.enable;
@@ -941,21 +948,21 @@ class DMC {
   int output() => dmcOutput;
 
   DMCState saveState() => DMCState(
-        enable: enable,
-        irqEnabled: irqEnabled,
-        loop: loop,
-        timerLoad: timerLoad,
-        timer: timerCounter,
-        dmcOutput: dmcOutput,
-        sampleAddress: sampleAddress,
-        currentAddress: currentAddress,
-        bytesRemaining: duration,
-        sampleBuffer: sampleBuffer,
-        sampleBufferEmpty: sampleBufferEmpty,
-        shiftRegister: outputShift,
-        bitsRemaining: bitsRemaining,
-        silenceFlag: silence,
-      );
+    enable: enable,
+    irqEnabled: irqEnabled,
+    loop: loop,
+    timerLoad: timerLoad,
+    timer: timerCounter,
+    dmcOutput: dmcOutput,
+    sampleAddress: sampleAddress,
+    currentAddress: currentAddress,
+    bytesRemaining: duration,
+    sampleBuffer: sampleBuffer,
+    sampleBufferEmpty: sampleBufferEmpty,
+    shiftRegister: outputShift,
+    bitsRemaining: bitsRemaining,
+    silenceFlag: silence,
+  );
 
   void restoreState(DMCState state) {
     enable = state.enable;

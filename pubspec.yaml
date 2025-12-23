@@ -6,21 +6,24 @@ publish_to: "none"
 version: 0.8.5
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.8.0 <4.0.0"
   flutter: 3.38.1
 
 dependencies:
   file_picker: ^10.3.7
   flutter:
     sdk: flutter
+  json_annotation: ^4.9.0
   mp_audio_stream: ^0.2.2
   shared_preferences: ^2.5.4
   signals: ^6.3.0
   url_launcher: ^6.3.2
 
 dev_dependencies:
+  build_runner: ^2.10.4
   flutter_test:
     sdk: flutter
+  json_serializable: ^6.11.3
   very_good_analysis: ^10.0.0
 
 flutter:

@@ -232,9 +232,9 @@ class Cartridge {
       MapperFactory.getMapperInfoMap(_mapperId);
 
   Map<String, dynamic> saveMapperState() => {
-        ..._mapper.saveState(),
-        'charMemory': _charMemory.toList(),
-      };
+    ..._mapper.saveState(),
+    'charMemory': _charMemory.toList(),
+  };
 
   void restoreMapperState(Map<String, dynamic> state) {
     _mapper.restoreState(state);

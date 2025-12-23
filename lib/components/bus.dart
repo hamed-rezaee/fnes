@@ -196,23 +196,23 @@ class Bus {
   bool hasAudioData() => _audioBufferCount > 0;
 
   EmulatorState saveState() => EmulatorState(
-        cpuState: cpu.saveState(),
-        ppuState: ppu.saveState(),
-        apuState: apu.saveState(),
-        busState: BusState(
-          cpuRam: Uint8List.fromList(_cpuRam),
-          controller: Uint8List.fromList(controller),
-          controllerState: Uint8List.fromList(_controllerState),
-          systemClockCounter: _systemClockCounter,
-          dmaPage: _dmaPage,
-          dmaAddress: _dmaAddress,
-          dmaData: _dmaData,
-          dmaDummy: _dmaDummy,
-          dmaTransfer: _dmaTransfer,
-        ),
-        mapperState: cart?.saveMapperState() ?? {},
-        timestamp: DateTime.now(),
-      );
+    cpuState: cpu.saveState(),
+    ppuState: ppu.saveState(),
+    apuState: apu.saveState(),
+    busState: BusState(
+      cpuRam: Uint8List.fromList(_cpuRam),
+      controller: Uint8List.fromList(controller),
+      controllerState: Uint8List.fromList(_controllerState),
+      systemClockCounter: _systemClockCounter,
+      dmaPage: _dmaPage,
+      dmaAddress: _dmaAddress,
+      dmaData: _dmaData,
+      dmaDummy: _dmaDummy,
+      dmaTransfer: _dmaTransfer,
+    ),
+    mapperState: cart?.saveMapperState() ?? {},
+    timestamp: DateTime.now(),
+  );
 
   void restoreState(EmulatorState state) {
     cpu.restoreState(state.cpuState);

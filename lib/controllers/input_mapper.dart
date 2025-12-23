@@ -14,18 +14,18 @@ class InputMapper {
   static const int turboB = 0x200;
 
   static int? getKeyBit(LogicalKeyboardKey key) => switch (key) {
-        LogicalKeyboardKey.arrowUp => buttonUp,
-        LogicalKeyboardKey.arrowDown => buttonDown,
-        LogicalKeyboardKey.arrowLeft => buttonLeft,
-        LogicalKeyboardKey.arrowRight => buttonRight,
-        LogicalKeyboardKey.keyZ => buttonA,
-        LogicalKeyboardKey.keyX => buttonB,
-        LogicalKeyboardKey.space => buttonStart,
-        LogicalKeyboardKey.enter => buttonSelect,
-        LogicalKeyboardKey.keyA => turboA,
-        LogicalKeyboardKey.keyS => turboB,
-        _ => null,
-      };
+    LogicalKeyboardKey.arrowUp => buttonUp,
+    LogicalKeyboardKey.arrowDown => buttonDown,
+    LogicalKeyboardKey.arrowLeft => buttonLeft,
+    LogicalKeyboardKey.arrowRight => buttonRight,
+    LogicalKeyboardKey.keyZ => buttonA,
+    LogicalKeyboardKey.keyX => buttonB,
+    LogicalKeyboardKey.space => buttonStart,
+    LogicalKeyboardKey.enter => buttonSelect,
+    LogicalKeyboardKey.keyA => turboA,
+    LogicalKeyboardKey.keyS => turboB,
+    _ => null,
+  };
 
   static int? getButtonBit(String buttonName) =>
       switch (buttonName.toLowerCase()) {

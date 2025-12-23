@@ -68,9 +68,9 @@ class Mapper007 extends Mapper {
 
   @override
   Map<String, dynamic> saveState() => {
-        'programBankSelect': _programBankSelect,
-        'singleScreenHigh': _singleScreenHigh,
-      };
+    'programBankSelect': _programBankSelect,
+    'singleScreenHigh': _singleScreenHigh,
+  };
 
   @override
   void restoreState(Map<String, dynamic> state) {

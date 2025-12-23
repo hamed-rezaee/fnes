@@ -38,51 +38,51 @@ class _DebugPanelState extends State<DebugPanel> {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: ResponsiveSizing.debugPanelWidth(context),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(context.isMobile ? 16.0 : 24.0),
-            child: Column(
-              spacing: 6,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildCollapsibleSection(
-                  key: 'registers',
-                  title: 'Registers',
-                  child: CpuDebugView(
-                    bus: widget.bus,
-                    nesEmulatorController: widget.nesEmulatorController,
-                  ),
-                ),
-                _buildCollapsibleSection(
-                  key: 'memory',
-                  title: 'Memory',
-                  child: MemoryDebugView(
-                    cpu: widget.bus.cpu,
-                    nesEmulatorController: widget.nesEmulatorController,
-                  ),
-                ),
-                _buildCollapsibleSection(
-                  key: 'palette',
-                  title: 'Graphics',
-                  child: PaletteDebugView(
-                    bus: widget.bus,
-                    nesEmulatorController: widget.nesEmulatorController,
-                  ),
-                ),
-                _buildCollapsibleSection(
-                  key: 'audio',
-                  title: 'Audio',
-                  child: AudioDebugView(
-                    apu: widget.bus.apu,
-                    nesEmulatorController: widget.nesEmulatorController,
-                  ),
-                ),
-              ],
+    width: ResponsiveSizing.debugPanelWidth(context),
+    child: SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(context.isMobile ? 16.0 : 24.0),
+        child: Column(
+          spacing: 6,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildCollapsibleSection(
+              key: 'registers',
+              title: 'Registers',
+              child: CpuDebugView(
+                bus: widget.bus,
+                nesEmulatorController: widget.nesEmulatorController,
+              ),
             ),
-          ),
+            _buildCollapsibleSection(
+              key: 'memory',
+              title: 'Memory',
+              child: MemoryDebugView(
+                cpu: widget.bus.cpu,
+                nesEmulatorController: widget.nesEmulatorController,
+              ),
+            ),
+            _buildCollapsibleSection(
+              key: 'palette',
+              title: 'Graphics',
+              child: PaletteDebugView(
+                bus: widget.bus,
+                nesEmulatorController: widget.nesEmulatorController,
+              ),
+            ),
+            _buildCollapsibleSection(
+              key: 'audio',
+              title: 'Audio',
+              child: AudioDebugView(
+                apu: widget.bus.apu,
+                nesEmulatorController: widget.nesEmulatorController,
+              ),
+            ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 
   Widget _buildCollapsibleSection({
     required String key,

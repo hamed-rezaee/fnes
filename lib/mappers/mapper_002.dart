@@ -63,8 +63,8 @@ class Mapper002 extends Mapper {
 
   @override
   Map<String, dynamic> saveState() => {
-        'selectedProgramBankLow': _selectedProgramBankLow,
-      };
+    'selectedProgramBankLow': _selectedProgramBankLow,
+  };
 
   @override
   void restoreState(Map<String, dynamic> state) {

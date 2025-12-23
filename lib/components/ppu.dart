@@ -122,9 +122,11 @@ class PPU {
     backgroundShifterPatternHigh =
         (backgroundShifterPatternHigh & 0xFF00) | backgroundNextTileMsb;
 
-    backgroundShifterAttribLow = (backgroundShifterAttribLow & 0xFF00) |
+    backgroundShifterAttribLow =
+        (backgroundShifterAttribLow & 0xFF00) |
         ((backgroundNextTileAttrib & 0x01) != 0 ? 0xFF : 0x00);
-    backgroundShifterAttribHigh = (backgroundShifterAttribHigh & 0xFF00) |
+    backgroundShifterAttribHigh =
+        (backgroundShifterAttribHigh & 0xFF00) |
         ((backgroundNextTileAttrib & 0x02) != 0 ? 0xFF : 0x00);
   }
 
@@ -237,32 +239,38 @@ class PPU {
 
       if (!control.spriteSize) {
         if ((spriteScanline[i].attribute & 0x80) == 0) {
-          spritePatternAddrLow = (control.patternSprite << 12) |
+          spritePatternAddrLow =
+              (control.patternSprite << 12) |
               (spriteScanline[i].id << 4) |
               (scanline - spriteScanline[i].y);
         } else {
-          spritePatternAddrLow = (control.patternSprite << 12) |
+          spritePatternAddrLow =
+              (control.patternSprite << 12) |
               (spriteScanline[i].id << 4) |
               (7 - (scanline - spriteScanline[i].y));
         }
       } else {
         if ((spriteScanline[i].attribute & 0x80) == 0) {
           if (scanline - spriteScanline[i].y < 8) {
-            spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
+            spritePatternAddrLow =
+                ((spriteScanline[i].id & 0x01) << 12) |
                 ((spriteScanline[i].id & 0xFE) << 4) |
                 ((scanline - spriteScanline[i].y) & 0x07);
           } else {
-            spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
+            spritePatternAddrLow =
+                ((spriteScanline[i].id & 0x01) << 12) |
                 (((spriteScanline[i].id & 0xFE) + 1) << 4) |
                 ((scanline - spriteScanline[i].y) & 0x07);
           }
         } else {
           if (scanline - spriteScanline[i].y < 8) {
-            spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
+            spritePatternAddrLow =
+                ((spriteScanline[i].id & 0x01) << 12) |
                 (((spriteScanline[i].id & 0xFE) + 1) << 4) |
                 ((7 - (scanline - spriteScanline[i].y)) & 0x07);
           } else {
-            spritePatternAddrLow = ((spriteScanline[i].id & 0x01) << 12) |
+            spritePatternAddrLow =
+                ((spriteScanline[i].id & 0x01) << 12) |
                 ((spriteScanline[i].id & 0xFE) << 4) |
                 ((7 - (scanline - spriteScanline[i].y)) & 0x07);
           }
@@ -298,9 +306,11 @@ class PPU {
 
     if (mask.renderBackground && (mask.renderBackgroundLeft || cycle >= 9)) {
       final bitMux = 0x8000 >> fineX;
-      backgroundPixel = ((backgroundShifterPatternHigh & bitMux) > 0 ? 2 : 0) |
+      backgroundPixel =
+          ((backgroundShifterPatternHigh & bitMux) > 0 ? 2 : 0) |
           ((backgroundShifterPatternLow & bitMux) > 0 ? 1 : 0);
-      backgroundPalette = ((backgroundShifterAttribHigh & bitMux) > 0 ? 2 : 0) |
+      backgroundPalette =
+          ((backgroundShifterAttribHigh & bitMux) > 0 ? 2 : 0) |
           ((backgroundShifterAttribLow & bitMux) > 0 ? 1 : 0);
     }
 
@@ -314,7 +324,8 @@ class PPU {
       for (var i = 0; i < spriteCount; i++) {
         final sprite = spriteScanline[i];
         if (sprite.x == 0) {
-          fgPixel = ((spriteShifterPatternHigh[i] & 0x80) >> 6) |
+          fgPixel =
+              ((spriteShifterPatternHigh[i] & 0x80) >> 6) |
               ((spriteShifterPatternLow[i] & 0x80) >> 7);
 
           if (fgPixel != 0) {
@@ -700,49 +711,49 @@ class PPU {
   int oamAddress = 0x00;
 
   PPUState saveState() => PPUState(
-        tableData: Uint8List.fromList(tableData),
-        paletteTable: Uint8List.fromList(paletteTable),
-        patternTable: Uint8List.fromList(patternTable),
-        statusReg: status.reg,
-        maskReg: mask.reg,
-        controlReg: control.reg,
-        vramAddressReg: vramAddress.reg,
-        tempAddressReg: temporaryAddressRegister.reg,
-        fineX: fineX,
-        addressLatch: addressLatch,
-        ppuDataBuffer: ppuDataBuffer,
-        oamAddress: oamAddress,
-        backgroundNextTileId: backgroundNextTileId,
-        backgroundNextTileAttrib: backgroundNextTileAttrib,
-        backgroundNextTileLsb: backgroundNextTileLsb,
-        backgroundNextTileMsb: backgroundNextTileMsb,
-        backgroundShifterPatternLow: backgroundShifterPatternLow,
-        backgroundShifterPatternHigh: backgroundShifterPatternHigh,
-        backgroundShifterAttribLow: backgroundShifterAttribLow,
-        backgroundShifterAttribHigh: backgroundShifterAttribHigh,
-        spriteShifterPatternLow: Uint8List.fromList(spriteShifterPatternLow),
-        spriteShifterPatternHigh: Uint8List.fromList(spriteShifterPatternHigh),
-        spriteCount: spriteCount,
-        spriteZeroHitPossible: spriteZeroHitPossible,
-        spriteZeroBeingRendered: spriteZeroBeingRendered,
-        scanline: scanline,
-        cycle: cycle,
-        frameCounter: frameCounter,
-        pOAM: Uint8List.fromList(pOAM),
-        screenPixels: Uint8List.fromList(screenPixels),
-        nmi: nmi,
-        frameComplete: frameComplete,
-        spriteScanlineData: spriteScanline
-            .map(
-              (entry) => SpriteScanlineEntry(
-                y: entry.y,
-                id: entry.id,
-                attribute: entry.attribute,
-                x: entry.x,
-              ),
-            )
-            .toList(),
-      );
+    tableData: Uint8List.fromList(tableData),
+    paletteTable: Uint8List.fromList(paletteTable),
+    patternTable: Uint8List.fromList(patternTable),
+    statusReg: status.reg,
+    maskReg: mask.reg,
+    controlReg: control.reg,
+    vramAddressReg: vramAddress.reg,
+    tempAddressReg: temporaryAddressRegister.reg,
+    fineX: fineX,
+    addressLatch: addressLatch,
+    ppuDataBuffer: ppuDataBuffer,
+    oamAddress: oamAddress,
+    backgroundNextTileId: backgroundNextTileId,
+    backgroundNextTileAttrib: backgroundNextTileAttrib,
+    backgroundNextTileLsb: backgroundNextTileLsb,
+    backgroundNextTileMsb: backgroundNextTileMsb,
+    backgroundShifterPatternLow: backgroundShifterPatternLow,
+    backgroundShifterPatternHigh: backgroundShifterPatternHigh,
+    backgroundShifterAttribLow: backgroundShifterAttribLow,
+    backgroundShifterAttribHigh: backgroundShifterAttribHigh,
+    spriteShifterPatternLow: Uint8List.fromList(spriteShifterPatternLow),
+    spriteShifterPatternHigh: Uint8List.fromList(spriteShifterPatternHigh),
+    spriteCount: spriteCount,
+    spriteZeroHitPossible: spriteZeroHitPossible,
+    spriteZeroBeingRendered: spriteZeroBeingRendered,
+    scanline: scanline,
+    cycle: cycle,
+    frameCounter: frameCounter,
+    pOAM: Uint8List.fromList(pOAM),
+    screenPixels: Uint8List.fromList(screenPixels),
+    nmi: nmi,
+    frameComplete: frameComplete,
+    spriteScanlineData: spriteScanline
+        .map(
+          (entry) => SpriteScanlineEntry(
+            y: entry.y,
+            id: entry.id,
+            attribute: entry.attribute,
+            x: entry.x,
+          ),
+        )
+        .toList(),
+  );
 
   void restoreState(PPUState state) {
     tableData.setAll(0, state.tableData);
@@ -778,9 +789,11 @@ class PPU {
     nmi = state.nmi;
     frameComplete = state.frameComplete;
 
-    for (var i = 0;
-        i < spriteScanline.length && i < state.spriteScanlineData.length;
-        i++) {
+    for (
+      var i = 0;
+      i < spriteScanline.length && i < state.spriteScanlineData.length;
+      i++
+    ) {
       spriteScanline[i].y = state.spriteScanlineData[i].y;
       spriteScanline[i].id = state.spriteScanlineData[i].id;
       spriteScanline[i].attribute = state.spriteScanlineData[i].attribute;

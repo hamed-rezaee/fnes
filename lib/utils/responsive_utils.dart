@@ -73,11 +73,11 @@ class ResponsiveSizing {
   static double nesScreenHeight(double width) => width * 0.9375;
 
   static double debugPanelWidth(BuildContext context) => context.responsive(
-        mobile: context.screenWidth * 0.9,
-        tablet: 385,
-        desktop: 385,
-        largeDesktop: 450,
-      );
+    mobile: context.screenWidth * 0.9,
+    tablet: 385,
+    desktop: 385,
+    largeDesktop: 450,
+  );
 
   static double appBarTitleSize(BuildContext context) =>
       context.responsive(mobile: 12, tablet: 14, desktop: 16);

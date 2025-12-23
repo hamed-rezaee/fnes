@@ -30,56 +30,56 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
 
   @override
   Widget build(BuildContext context) => Watch((_) {
-        final selectedRegion = controller.selectedRegion.value;
+    final selectedRegion = controller.selectedRegion.value;
 
-        widget.nesEmulatorController.frameUpdateTrigger.value;
+    widget.nesEmulatorController.frameUpdateTrigger.value;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 16,
-          children: [
-            _buildDropdown<MemoryRegion>(
-              context: context,
-              label: 'Region',
-              value: selectedRegion,
-              items: MemoryRegion.values
-                  .map(
-                    (region) => DropdownMenuItem(
-                      value: region,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          region.title,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: selectedRegion == region
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontFamily: 'MonospaceFont',
-                          ),
-                        ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 16,
+      children: [
+        _buildDropdown<MemoryRegion>(
+          context: context,
+          label: 'Region',
+          value: selectedRegion,
+          items: MemoryRegion.values
+              .map(
+                (region) => DropdownMenuItem(
+                  value: region,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      region.title,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: selectedRegion == region
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontFamily: 'MonospaceFont',
                       ),
                     ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) controller.selectRegion(value);
-              },
-            ),
-            Center(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: RichText(
-                  text: _getMemoryWindowRichText(
-                    cpu: widget.cpu,
-                    region: selectedRegion,
                   ),
                 ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value != null) controller.selectRegion(value);
+          },
+        ),
+        Center(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: RichText(
+              text: _getMemoryWindowRichText(
+                cpu: widget.cpu,
+                region: selectedRegion,
               ),
             ),
-          ],
-        );
-      });
+          ),
+        ),
+      ],
+    );
+  });
 
   Widget _buildDropdown<T>({
     required BuildContext context,
@@ -87,39 +87,38 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
     required T value,
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
-  }) =>
-      Row(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+  }) => Row(
+    children: [
+      Text(
+        label,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<T>(
+              value: value,
+              items: items,
+              isDense: true,
+              onChanged: onChanged,
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.black,
+                fontFamily: 'MonospaceFont',
               ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<T>(
-                  value: value,
-                  items: items,
-                  isDense: true,
-                  onChanged: onChanged,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.black,
-                    fontFamily: 'MonospaceFont',
-                  ),
-                  dropdownColor: Colors.white,
-                  focusColor: Colors.white,
-                ),
-              ),
+              dropdownColor: Colors.white,
+              focusColor: Colors.white,
             ),
           ),
-        ],
-      );
+        ),
+      ),
+    ],
+  );
 
   TextSpan _getMemoryWindowRichText({
     required CPU cpu,
