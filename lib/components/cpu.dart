@@ -482,9 +482,7 @@ class CPU {
     return 0;
   }
 
-  int _nop() {
-    return 0;
-  }
+  int _nop() => 0;
 
   int _jmp() {
     pc = addrAbs;
@@ -697,7 +695,6 @@ class CPU {
   int cycles = 0;
   int clockCount = 0;
 
-  // Cache for current instruction to avoid repeated lookups
   late Instruction _currentInstruction;
 
   Bus? bus;

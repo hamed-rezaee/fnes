@@ -46,7 +46,7 @@ class _AudioDebugViewState extends State<AudioDebugView> {
       children: [
         _buildChannelSelector(),
         Container(
-          width: 320,
+          width: 380,
           height: 100,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
@@ -80,33 +80,40 @@ class _AudioDebugViewState extends State<AudioDebugView> {
   });
 
   Widget _buildChannelSelector() => Watch(
-    (_) => CustomSegmentedButton<AudioChannel>(
-      showSelectedIcon: false,
-      multiSelectionEnabled: true,
-      isEmptySelectionAllowed: true,
-      toLabel: (channel) => channel.label,
-      items: AudioChannel.values,
-      selectedItems: {
-        if (controller.pulse1Enabled.value) AudioChannel.pulse1,
-        if (controller.pulse2Enabled.value) AudioChannel.pulse2,
-        if (controller.triangleEnabled.value) AudioChannel.triangle,
-        if (controller.noiseEnabled.value) AudioChannel.noise,
-        if (controller.dmcEnabled.value) AudioChannel.dmc,
-      },
-      onSelectedPatternTableChanged: (selected) {
-        controller.pulse1Enabled.value = selected.contains(AudioChannel.pulse1);
-        controller.pulse2Enabled.value = selected.contains(AudioChannel.pulse2);
-        controller.triangleEnabled.value = selected.contains(
-          AudioChannel.triangle,
-        );
-        controller.noiseEnabled.value = selected.contains(AudioChannel.noise);
-        controller.dmcEnabled.value = selected.contains(AudioChannel.dmc);
-        widget.apu.pulse1.enable = controller.pulse1Enabled.value;
-        widget.apu.pulse2.enable = controller.pulse2Enabled.value;
-        widget.apu.triangle.enable = controller.triangleEnabled.value;
-        widget.apu.noise.enable = controller.noiseEnabled.value;
-        widget.apu.dmc.enable = controller.dmcEnabled.value;
-      },
+    (_) => SizedBox(
+      width: 380,
+      child: CustomSegmentedButton<AudioChannel>(
+        showSelectedIcon: false,
+        multiSelectionEnabled: true,
+        isEmptySelectionAllowed: true,
+        toLabel: (channel) => channel.label,
+        items: AudioChannel.values,
+        selectedItems: {
+          if (controller.pulse1Enabled.value) AudioChannel.pulse1,
+          if (controller.pulse2Enabled.value) AudioChannel.pulse2,
+          if (controller.triangleEnabled.value) AudioChannel.triangle,
+          if (controller.noiseEnabled.value) AudioChannel.noise,
+          if (controller.dmcEnabled.value) AudioChannel.dmc,
+        },
+        onSelectedPatternTableChanged: (selected) {
+          controller.pulse1Enabled.value = selected.contains(
+            AudioChannel.pulse1,
+          );
+          controller.pulse2Enabled.value = selected.contains(
+            AudioChannel.pulse2,
+          );
+          controller.triangleEnabled.value = selected.contains(
+            AudioChannel.triangle,
+          );
+          controller.noiseEnabled.value = selected.contains(AudioChannel.noise);
+          controller.dmcEnabled.value = selected.contains(AudioChannel.dmc);
+          widget.apu.pulse1.enable = controller.pulse1Enabled.value;
+          widget.apu.pulse2.enable = controller.pulse2Enabled.value;
+          widget.apu.triangle.enable = controller.triangleEnabled.value;
+          widget.apu.noise.enable = controller.noiseEnabled.value;
+          widget.apu.dmc.enable = controller.dmcEnabled.value;
+        },
+      ),
     ),
   );
 

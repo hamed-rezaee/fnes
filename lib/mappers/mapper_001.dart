@@ -1,7 +1,9 @@
 import 'package:fnes/mappers/mapper.dart';
 
 class Mapper001 extends Mapper {
-  Mapper001(super.programBankCount, super.totalCharBanks);
+  Mapper001(super.programBankCount, super.totalCharBanks) {
+    chrRam = totalCharBanks == 0;
+  }
 
   @override
   String get name => 'MMC1';
@@ -103,12 +105,19 @@ class Mapper001 extends Mapper {
   @override
   int? ppuMapRead(int address) {
     if (address >= 0x0000 && address <= 0x1FFF) {
+      // CHR RAM: just return address directly
+      if (totalCharBanks == 0) {
+        return address;
+      }
+
       final chrMode = (_control >> 4) & 0x01;
 
       if (chrMode == 0) {
+        // 8k mode: ignore bit 0 of bank number
         final bank = (_chrBank0 >> 1) % totalCharBanks;
         return bank * 0x2000 + (address & 0x1FFF);
       } else {
+        // 4k mode: two separate banks
         if (address < 0x1000) {
           final bank = _chrBank0 % (totalCharBanks * 2);
           return bank * 0x1000 + (address & 0x0FFF);

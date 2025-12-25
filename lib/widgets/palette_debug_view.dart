@@ -42,121 +42,119 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Watch((_) {
-      final selectedPalette = controller.selectedPalette.value;
-      final selectedPatternTable = controller.selectedPatternTable.value;
-      final renderMode = widget.nesEmulatorController.renderMode.value;
+  Widget build(BuildContext context) => Watch((_) {
+    final selectedPalette = controller.selectedPalette.value;
+    final selectedPatternTable = controller.selectedPatternTable.value;
+    final renderMode = widget.nesEmulatorController.renderMode.value;
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            spacing: 8,
-            children: [
-              Row(
-                spacing: 21,
-                children: [
-                  const Text(
-                    'Render Mode',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'MonospaceFont',
-                    ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          spacing: 8,
+          children: [
+            Row(
+              spacing: 21,
+              children: [
+                const Text(
+                  'Render Mode',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'MonospaceFont',
                   ),
-                  Expanded(
-                    child: CustomSegmentedButton<RenderMode>(
-                      showSelectedIcon: false,
-                      multiSelectionEnabled: false,
-                      isEmptySelectionAllowed: true,
-                      items: RenderMode.values,
-                      selectedItems: {renderMode},
-                      toLabel: (mode) => mode.label,
-                      onSelectedPatternTableChanged: (selected) {
-                        if (selected.isNotEmpty) {
-                          widget.nesEmulatorController.setRenderMode(
-                            selected.first,
-                          );
-                        }
-                      },
-                    ),
+                ),
+                Expanded(
+                  child: CustomSegmentedButton<RenderMode>(
+                    showSelectedIcon: false,
+                    multiSelectionEnabled: false,
+                    isEmptySelectionAllowed: true,
+                    items: RenderMode.values,
+                    selectedItems: {renderMode},
+                    toLabel: (mode) => mode.label,
+                    onSelectedPatternTableChanged: (selected) {
+                      if (selected.isNotEmpty) {
+                        widget.nesEmulatorController.setRenderMode(
+                          selected.first,
+                        );
+                      }
+                    },
                   ),
-                ],
-              ),
-              Row(
-                spacing: 8,
-                children: [
-                  const Text(
-                    'Pattern Table',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'MonospaceFont',
-                    ),
-                  ),
-                  Expanded(
-                    child: CustomSegmentedButton<PatternTable>(
-                      showSelectedIcon: false,
-                      multiSelectionEnabled: false,
-                      isEmptySelectionAllowed: true,
-                      items: PatternTable.values,
-                      selectedItems: {selectedPatternTable},
-                      toLabel: (table) => table.label,
-                      onSelectedPatternTableChanged: (selected) {
-                        if (selected.isNotEmpty) {
-                          controller.changePatternTable(selected.first);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                spacing: 8,
-                children: [
-                  const Text(
-                    'Palette      ',
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                  Expanded(
-                    child: CustomSegmentedButton<int>(
-                      showSelectedIcon: false,
-                      multiSelectionEnabled: false,
-                      isEmptySelectionAllowed: true,
-                      items: List.generate(8, (index) => index),
-                      selectedItems: {selectedPalette},
-                      toLabel: (palette) => '$palette',
-                      onSelectedPatternTableChanged: (selected) {
-                        if (selected.isNotEmpty) {
-                          controller.changePalette(selected.first);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Center(
-            child: FutureBuilder<Image>(
-              key: ValueKey('$selectedPatternTable-$selectedPalette'),
-              future: _createPatternImage(
-                selectedPatternTable.index,
-                selectedPalette,
-              ),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const SizedBox.shrink();
-
-                return _buildPatternTable(snapshot.data);
-              },
+                ),
+              ],
             ),
+            Row(
+              spacing: 8,
+              children: [
+                const Text(
+                  'Pattern Table',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'MonospaceFont',
+                  ),
+                ),
+                Expanded(
+                  child: CustomSegmentedButton<PatternTable>(
+                    showSelectedIcon: false,
+                    multiSelectionEnabled: false,
+                    isEmptySelectionAllowed: true,
+                    items: PatternTable.values,
+                    selectedItems: {selectedPatternTable},
+                    toLabel: (table) => table.label,
+                    onSelectedPatternTableChanged: (selected) {
+                      if (selected.isNotEmpty) {
+                        controller.changePatternTable(selected.first);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              spacing: 8,
+              children: [
+                const Text(
+                  'Palette      ',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+                Expanded(
+                  child: CustomSegmentedButton<int>(
+                    showSelectedIcon: false,
+                    multiSelectionEnabled: false,
+                    isEmptySelectionAllowed: true,
+                    items: List.generate(8, (index) => index),
+                    selectedItems: {selectedPalette},
+                    toLabel: (palette) => '$palette',
+                    onSelectedPatternTableChanged: (selected) {
+                      if (selected.isNotEmpty) {
+                        controller.changePalette(selected.first);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: FutureBuilder<Image>(
+            key: ValueKey('$selectedPatternTable-$selectedPalette'),
+            future: _createPatternImage(
+              selectedPatternTable.index,
+              selectedPalette,
+            ),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
+
+              return _buildPatternTable(snapshot.data);
+            },
           ),
-        ],
-      );
-    });
-  }
+        ),
+      ],
+    );
+  });
 
   int _readCharData(int address) {
     try {

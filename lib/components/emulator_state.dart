@@ -503,7 +503,6 @@ class RewindBuffer {
   }
 }
 
-// Custom converters for types that json_serializable doesn't handle by default
 class Uint8ListConverter implements JsonConverter<Uint8List, String> {
   const Uint8ListConverter();
 

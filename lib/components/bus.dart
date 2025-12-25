@@ -2,18 +2,25 @@ import 'dart:typed_data';
 
 import 'package:fnes/components/apu.dart';
 import 'package:fnes/components/cartridge.dart';
+import 'package:fnes/components/cheat_engine.dart';
 import 'package:fnes/components/cpu.dart';
 import 'package:fnes/components/emulator_state.dart';
 import 'package:fnes/components/ppu.dart';
 
 class Bus {
-  Bus({required this.cpu, required this.ppu, required this.apu}) {
+  Bus({
+    required this.cpu,
+    required this.ppu,
+    required this.apu,
+    required this.cheatEngine,
+  }) {
     cpu.connect(this);
   }
 
   final CPU cpu;
   final PPU ppu;
   final APU apu;
+  final CheatEngine cheatEngine;
 
   Cartridge? cart;
 
@@ -72,7 +79,7 @@ class Bus {
     var data = 0x00;
 
     if (cart?.cpuRead(address, (v) => data = v) ?? false) {
-      return data;
+      return cheatEngine.applyCheatToRead(address, data);
     }
 
     if (address >= 0x0000 && address <= 0x1FFF) {
@@ -89,7 +96,7 @@ class Bus {
       }
     }
 
-    return data;
+    return cheatEngine.applyCheatToRead(address, data);
   }
 
   void insertCartridge(Cartridge cartridge) {

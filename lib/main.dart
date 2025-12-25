@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:fnes/components/apu.dart';
 import 'package:fnes/components/bus.dart';
+import 'package:fnes/components/cheat_engine.dart';
 import 'package:fnes/components/cpu.dart';
 import 'package:fnes/components/ppu.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
@@ -56,12 +57,13 @@ class NESEmulatorScreen extends StatefulWidget {
 class _NESEmulatorScreenState extends State<NESEmulatorScreen>
     with TickerProviderStateMixin {
   final _nesController = NESEmulatorController(
-    bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU()),
+    bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU(), cheatEngine: CheatEngine()),
   );
 
   late final Ticker _emulationTicker = createTicker(
     (_) => _nesController.updateEmulation(),
   );
+
   late final FocusNode _focusNode = FocusNode();
 
   @override

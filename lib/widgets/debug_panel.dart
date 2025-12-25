@@ -3,6 +3,7 @@ import 'package:fnes/components/bus.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/utils/responsive_utils.dart';
 import 'package:fnes/widgets/audio_debug_view.dart';
+import 'package:fnes/widgets/cheat_manager_view.dart';
 import 'package:fnes/widgets/cpu_debug_view.dart';
 import 'package:fnes/widgets/memory_debug_view.dart';
 import 'package:fnes/widgets/palette_debug_view.dart';
@@ -33,6 +34,7 @@ class _DebugPanelState extends State<DebugPanel> {
       'memory': false,
       'palette': false,
       'audio': false,
+      'cheats': false,
     };
   }
 
@@ -46,6 +48,15 @@ class _DebugPanelState extends State<DebugPanel> {
           spacing: 6,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.nesEmulatorController.isROMLoaded.value)
+              _buildCollapsibleSection(
+                key: 'cheats',
+                title: 'Cheat Engine',
+                child: CheatManagerView(
+                  cheatController: widget.nesEmulatorController.cheatController,
+                  romName: widget.nesEmulatorController.romName.value,
+                ),
+              ),
             _buildCollapsibleSection(
               key: 'registers',
               title: 'Registers',
@@ -100,11 +111,7 @@ class _DebugPanelState extends State<DebugPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onTap: () {
-              setState(() {
-                _expandedSections[key] = !isExpanded;
-              });
-            },
+            onTap: () => setState(() => _expandedSections[key] = !isExpanded),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(

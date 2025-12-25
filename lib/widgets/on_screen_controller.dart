@@ -189,18 +189,16 @@ class _OnScreenControllerState extends State<OnScreenController> {
     );
   }
 
-  Widget _buildStandardUtilityButtons(double scaleFactor) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 16 * scaleFactor,
-      children: [
-        _buildUtilityButton('start', 'START', scaleFactor),
-        _buildUtilityButton('select', 'SELECT', scaleFactor),
-        if (widget.controller.rewindEnabled.value)
-          _buildRewindButton(scaleFactor),
-      ],
-    );
-  }
+  Widget _buildStandardUtilityButtons(double scaleFactor) => Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    spacing: 16 * scaleFactor,
+    children: [
+      _buildUtilityButton('start', 'START', scaleFactor),
+      _buildUtilityButton('select', 'SELECT', scaleFactor),
+      if (widget.controller.rewindEnabled.value)
+        _buildRewindButton(scaleFactor),
+    ],
+  );
 
   Widget _buildRewindButton(double scaleFactor) {
     final isRewinding = widget.controller.isRewinding.value;

@@ -12,6 +12,7 @@ import 'package:fnes/components/cartridge.dart';
 import 'package:fnes/components/color_palette.dart';
 import 'package:fnes/components/emulator_state.dart';
 import 'package:fnes/controllers/audio_state_manager.dart';
+import 'package:fnes/controllers/cheat_controller.dart';
 import 'package:fnes/controllers/frame_rate_controller.dart';
 import 'package:fnes/controllers/input_mapper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,10 +32,13 @@ class NESEmulatorController {
   NESEmulatorController({required this.bus}) {
     bus.setSampleFrequency(44100);
     _audioStateManager = AudioStateManager(_audioPlayer);
+    cheatController = CheatController(bus: bus);
+
     unawaited(_initializeAudio());
   }
 
   final Bus bus;
+  late final CheatController cheatController;
   final StreamController<Image> _imageStreamController =
       StreamController<Image>.broadcast();
 
@@ -162,7 +166,10 @@ class NESEmulatorController {
 
             isROMLoaded.value = true;
             romFileName.value = file.name;
+
             unawaited(_checkSaveStateExists());
+            unawaited(cheatController.loadCheats(romName.value));
+
             startEmulation();
           } else {
             errorMessage.value = 'Invalid ROM file format';
