@@ -783,11 +783,9 @@ class CPU {
       stkp = (stkp - 1) & 0xFF;
       write(0x0100 + stkp, pc & 0x00FF);
       stkp = (stkp - 1) & 0xFF;
-      _setFlag(breakFlag, isFlagSet: false);
-      _setFlag(unusedFlag, isFlagSet: true);
-      _setFlag(disableInterruptsFlag, isFlagSet: true);
-      write(0x0100 + stkp, status);
+      write(0x0100 + stkp, (status & ~breakFlag) | unusedFlag);
       stkp = (stkp - 1) & 0xFF;
+      _setFlag(disableInterruptsFlag, isFlagSet: true);
       addrAbs = 0xFFFE;
       final lowByte = read(addrAbs + 0);
       final highByte = read(addrAbs + 1);
@@ -801,11 +799,9 @@ class CPU {
     stkp = (stkp - 1) & 0xFF;
     write(0x0100 + stkp, pc & 0x00FF);
     stkp = (stkp - 1) & 0xFF;
-    _setFlag(breakFlag, isFlagSet: false);
-    _setFlag(unusedFlag, isFlagSet: true);
-    _setFlag(disableInterruptsFlag, isFlagSet: true);
-    write(0x0100 + stkp, status);
+    write(0x0100 + stkp, (status & ~breakFlag) | unusedFlag);
     stkp = (stkp - 1) & 0xFF;
+    _setFlag(disableInterruptsFlag, isFlagSet: true);
     addrAbs = 0xFFFA;
     final lowByte = read(addrAbs + 0);
     final highByte = read(addrAbs + 1);
