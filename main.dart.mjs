@@ -444,6 +444,7 @@ class CompiledApp {
       _1403: s => JSON.stringify(s),
       _1404: s => printToConsole(s),
       _1405: (o, p, r) => o.replaceAll(p, () => r),
+      _1406: (o, p, r) => o.replace(p, () => r),
       _1407: Function.prototype.call.bind(String.prototype.toLowerCase),
       _1408: s => s.toUpperCase(),
       _1409: s => s.trim(),
@@ -455,6 +456,7 @@ class CompiledApp {
       _1415: (string, token) => string.split(token),
       _1416: Object.is,
       _1417: o => o instanceof Array,
+      _1418: (a, i) => a.push(i),
       _1422: a => a.pop(),
       _1423: (a, i) => a.splice(i, 1),
       _1424: (a, s) => a.join(s),
@@ -522,8 +524,12 @@ class CompiledApp {
       _1497: (ms, c) =>
       setTimeout(() => dartInstance.exports.$invokeCallback(c),ms),
       _1498: (handle) => clearTimeout(handle),
+      _1499: (ms, c) =>
+      setInterval(() => dartInstance.exports.$invokeCallback(c), ms),
+      _1500: (handle) => clearInterval(handle),
       _1501: (c) =>
       queueMicrotask(() => dartInstance.exports.$invokeCallback(c)),
+      _1502: () => Date.now(),
       _1503: (s, m) => {
         try {
           return new RegExp(s, m);
