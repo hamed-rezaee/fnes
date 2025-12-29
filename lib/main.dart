@@ -128,15 +128,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
             tooltip: 'Load ROM',
             onPressed: _nesController.loadROMFile,
           ),
-          const VerticalDivider(
-            indent: 16,
-            endIndent: 16,
-            color: Colors.grey,
-          ),
+          const VerticalDivider(indent: 16, endIndent: 16, color: Colors.grey),
           IconButton(
-            icon: Icon(
-              isRunning ? Icons.pause : Icons.play_arrow,
-            ),
+            icon: Icon(isRunning ? Icons.pause : Icons.play_arrow),
             tooltip: isRunning ? 'Pause' : 'Resume',
             onPressed: romLoaded
                 ? () => isRunning
@@ -154,30 +148,44 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
           IconButton(
             icon: const Icon(Icons.restart_alt),
             tooltip: 'Reset',
-            onPressed: romLoaded ? _nesController.resetEmulation : null,
+            onPressed: romLoaded
+                ? () => _confirmAction(
+                    title: 'Reset Emulator?',
+                    message:
+                        'Resetting clears the current game state. Do you want to continue?',
+                    confirmLabel: 'Reset',
+                    onConfirm: _nesController.resetEmulation,
+                  )
+                : null,
           ),
-          const VerticalDivider(
-            indent: 16,
-            endIndent: 16,
-            color: Colors.grey,
-          ),
+          const VerticalDivider(indent: 16, endIndent: 16, color: Colors.grey),
           IconButton(
             icon: const Icon(Icons.save),
             tooltip: 'Save State',
-            onPressed: romLoaded ? _nesController.saveState : null,
+            onPressed: romLoaded
+                ? () => _confirmAction(
+                    title: 'Overwrite Save State?',
+                    message:
+                        'Saving now will replace your previous save state. Proceed?',
+                    confirmLabel: 'Save',
+                    onConfirm: _nesController.saveState,
+                  )
+                : null,
           ),
           IconButton(
             icon: const Icon(Icons.restore),
             tooltip: 'Load State',
             onPressed: romLoaded && _nesController.hasSaveState.value
-                ? _nesController.loadState
+                ? () => _confirmAction(
+                    title: 'Load Save State?',
+                    message:
+                        'Loading a save will discard current progress. Continue?',
+                    confirmLabel: 'Load',
+                    onConfirm: _nesController.loadState,
+                  )
                 : null,
           ),
-          const VerticalDivider(
-            indent: 16,
-            endIndent: 16,
-            color: Colors.grey,
-          ),
+          const VerticalDivider(indent: 16, endIndent: 16, color: Colors.grey),
           _buildSettingsMenu(),
         ],
       ),
@@ -691,6 +699,39 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
         margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
       ),
     );
+
+  Future<void> _confirmAction({
+    required String title,
+    required String message,
+    required FutureOr<void> Function() onConfirm,
+    String confirmLabel = 'Confirm',
+    String cancelLabel = 'Cancel',
+  }) async {
+    final result =
+        await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(
+              title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            content: Text(message, style: const TextStyle(fontSize: 12)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(cancelLabel, style: const TextStyle(fontSize: 12)),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(confirmLabel, style: const TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (result) await onConfirm();
+  }
 
   @override
   void dispose() {
