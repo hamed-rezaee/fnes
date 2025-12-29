@@ -184,6 +184,8 @@ class NESEmulatorController {
     }
   }
 
+  void clearErrorMessage() => errorMessage.value = null;
+
   void startEmulation() {
     if (isRunning.value || !isROMLoaded.value) return;
 

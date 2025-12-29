@@ -88,6 +88,16 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
     final isRewindEnabled = _nesController.rewindEnabled.value;
     final isRewinding = _nesController.isRewinding.value;
     final rewindProgress = _nesController.rewindProgress.value;
+    final errorMessage = _nesController.errorMessage.value;
+
+    if (errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        _showErrorToast(errorMessage);
+        _nesController.clearErrorMessage();
+      });
+    }
 
     if (isRunning) {
       if (!_emulationTicker.isActive) {
@@ -113,99 +123,62 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          if (context.isDesktopOrLarger)
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.folder),
-                  tooltip: 'Load ROM',
-                  onPressed: _nesController.loadROMFile,
-                ),
-                const VerticalDivider(
-                  indent: 16,
-                  endIndent: 16,
-                  color: Colors.grey,
-                ),
-                IconButton(
-                  icon: Icon(
-                    isRunning ? Icons.pause : Icons.play_arrow,
-                  ),
-                  tooltip: isRunning ? 'Pause' : 'Resume',
-                  onPressed: romLoaded
-                      ? () {
-                          if (isRunning) {
-                            _nesController.pauseEmulation();
-                          } else {
-                            _nesController.startEmulation();
-                          }
-                        }
-                      : null,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.skip_next),
-                  tooltip: 'Step',
-                  onPressed: romLoaded && !isRunning
-                      ? _nesController.stepEmulation
-                      : null,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.restart_alt),
-                  tooltip: 'Reset',
-                  onPressed: romLoaded ? _nesController.resetEmulation : null,
-                ),
-                const VerticalDivider(
-                  indent: 16,
-                  endIndent: 16,
-                  color: Colors.grey,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.save),
-                  tooltip: 'Save State',
-                  onPressed: romLoaded ? _nesController.saveState : null,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.restore),
-                  tooltip: 'Load State',
-                  onPressed: romLoaded && _nesController.hasSaveState.value
-                      ? _nesController.loadState
-                      : null,
-                ),
-                const VerticalDivider(
-                  indent: 16,
-                  endIndent: 16,
-                  color: Colors.grey,
-                ),
-                _buildSettingsMenu(),
-              ],
-            )
-          else
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.folder),
-                  tooltip: 'Load ROM',
-                  onPressed: _nesController.loadROMFile,
-                  iconSize: ResponsiveSizing.appBarIconSize(context),
-                ),
-                IconButton(
-                  icon: Icon(
-                    isRunning ? Icons.pause : Icons.play_arrow,
-                  ),
-                  tooltip: isRunning ? 'Pause' : 'Resume',
-                  onPressed: romLoaded
-                      ? () {
-                          if (isRunning) {
-                            _nesController.pauseEmulation();
-                          } else {
-                            _nesController.startEmulation();
-                          }
-                        }
-                      : null,
-                  iconSize: ResponsiveSizing.appBarIconSize(context),
-                ),
-                _buildSettingsMenu(),
-              ],
+          IconButton(
+            icon: const Icon(Icons.folder),
+            tooltip: 'Load ROM',
+            onPressed: _nesController.loadROMFile,
+          ),
+          const VerticalDivider(
+            indent: 16,
+            endIndent: 16,
+            color: Colors.grey,
+          ),
+          IconButton(
+            icon: Icon(
+              isRunning ? Icons.pause : Icons.play_arrow,
             ),
+            tooltip: isRunning ? 'Pause' : 'Resume',
+            onPressed: romLoaded
+                ? () => isRunning
+                      ? _nesController.pauseEmulation()
+                      : _nesController.startEmulation()
+                : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.skip_next),
+            tooltip: 'Step',
+            onPressed: romLoaded && !isRunning
+                ? _nesController.stepEmulation
+                : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.restart_alt),
+            tooltip: 'Reset',
+            onPressed: romLoaded ? _nesController.resetEmulation : null,
+          ),
+          const VerticalDivider(
+            indent: 16,
+            endIndent: 16,
+            color: Colors.grey,
+          ),
+          IconButton(
+            icon: const Icon(Icons.save),
+            tooltip: 'Save State',
+            onPressed: romLoaded ? _nesController.saveState : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.restore),
+            tooltip: 'Load State',
+            onPressed: romLoaded && _nesController.hasSaveState.value
+                ? _nesController.loadState
+                : null,
+          ),
+          const VerticalDivider(
+            indent: 16,
+            endIndent: 16,
+            color: Colors.grey,
+          ),
+          _buildSettingsMenu(),
         ],
       ),
       body: KeyboardListener(
@@ -706,6 +679,18 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
       ),
     ],
   );
+
+  void _showErrorToast(String message) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(message.replaceAll('Exception: ', '')),
+        backgroundColor: Colors.black.withValues(alpha: 0.9),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 5),
+        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+      ),
+    );
 
   @override
   void dispose() {
