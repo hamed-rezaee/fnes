@@ -5,7 +5,7 @@ class CPU {
   CPU() {
     lookup[0x00] = Instruction(InstructionType.brk, AddressMode.imp, 7);
     lookup[0x01] = Instruction(InstructionType.ora, AddressMode.izx, 6);
-    lookup[0x02] = Instruction(InstructionType.skb, AddressMode.imm, 2);
+    lookup[0x02] = Instruction(InstructionType.nop, AddressMode.imp, 2);
     lookup[0x03] = Instruction(InstructionType.slo, AddressMode.izx, 8);
     lookup[0x04] = Instruction(InstructionType.nop, AddressMode.zp0, 3);
     lookup[0x05] = Instruction(InstructionType.ora, AddressMode.zp0, 3);
@@ -37,7 +37,7 @@ class CPU {
     lookup[0x1F] = Instruction(InstructionType.slo, AddressMode.abx, 7);
     lookup[0x20] = Instruction(InstructionType.jsr, AddressMode.abs, 6);
     lookup[0x21] = Instruction(InstructionType.and, AddressMode.izx, 6);
-    lookup[0x22] = Instruction(InstructionType.skb, AddressMode.imm, 2);
+    lookup[0x22] = Instruction(InstructionType.nop, AddressMode.imp, 2);
     lookup[0x23] = Instruction(InstructionType.rla, AddressMode.izx, 8);
     lookup[0x24] = Instruction(InstructionType.bit, AddressMode.zp0, 3);
     lookup[0x25] = Instruction(InstructionType.and, AddressMode.zp0, 3);
@@ -69,7 +69,7 @@ class CPU {
     lookup[0x3F] = Instruction(InstructionType.rla, AddressMode.abx, 7);
     lookup[0x40] = Instruction(InstructionType.rti, AddressMode.imp, 6);
     lookup[0x41] = Instruction(InstructionType.eor, AddressMode.izx, 6);
-    lookup[0x42] = Instruction(InstructionType.skb, AddressMode.imm, 2);
+    lookup[0x42] = Instruction(InstructionType.nop, AddressMode.imp, 2);
     lookup[0x43] = Instruction(InstructionType.sre, AddressMode.izx, 8);
     lookup[0x44] = Instruction(InstructionType.nop, AddressMode.zp0, 3);
     lookup[0x45] = Instruction(InstructionType.eor, AddressMode.zp0, 3);
@@ -101,7 +101,7 @@ class CPU {
     lookup[0x5F] = Instruction(InstructionType.sre, AddressMode.abx, 7);
     lookup[0x60] = Instruction(InstructionType.rts, AddressMode.imp, 6);
     lookup[0x61] = Instruction(InstructionType.adc, AddressMode.izx, 6);
-    lookup[0x62] = Instruction(InstructionType.skb, AddressMode.imm, 2);
+    lookup[0x62] = Instruction(InstructionType.nop, AddressMode.imp, 2);
     lookup[0x63] = Instruction(InstructionType.rra, AddressMode.izx, 8);
     lookup[0x64] = Instruction(InstructionType.nop, AddressMode.zp0, 3);
     lookup[0x65] = Instruction(InstructionType.adc, AddressMode.zp0, 3);
@@ -140,7 +140,7 @@ class CPU {
     lookup[0x86] = Instruction(InstructionType.stx, AddressMode.zp0, 3);
     lookup[0x87] = Instruction(InstructionType.sax, AddressMode.zp0, 3);
     lookup[0x88] = Instruction(InstructionType.dey, AddressMode.imp, 2);
-    lookup[0x89] = Instruction(InstructionType.skb, AddressMode.imm, 2);
+    lookup[0x89] = Instruction(InstructionType.nop, AddressMode.imm, 2);
     lookup[0x8A] = Instruction(InstructionType.txa, AddressMode.imp, 2);
     lookup[0x8B] = Instruction(InstructionType.xaa, AddressMode.imm, 2);
     lookup[0x8C] = Instruction(InstructionType.sty, AddressMode.abs, 4);
@@ -197,7 +197,7 @@ class CPU {
     lookup[0xBF] = Instruction(InstructionType.lax, AddressMode.aby, 4);
     lookup[0xC0] = Instruction(InstructionType.cpy, AddressMode.imm, 2);
     lookup[0xC1] = Instruction(InstructionType.cmp, AddressMode.izx, 6);
-    lookup[0xC2] = Instruction(InstructionType.skb, AddressMode.imm, 2);
+    lookup[0xC2] = Instruction(InstructionType.nop, AddressMode.imm, 2);
     lookup[0xC3] = Instruction(InstructionType.dcp, AddressMode.izx, 8);
     lookup[0xC4] = Instruction(InstructionType.cpy, AddressMode.zp0, 3);
     lookup[0xC5] = Instruction(InstructionType.cmp, AddressMode.zp0, 3);
@@ -229,7 +229,7 @@ class CPU {
     lookup[0xDF] = Instruction(InstructionType.dcp, AddressMode.abx, 7);
     lookup[0xE0] = Instruction(InstructionType.cpx, AddressMode.imm, 2);
     lookup[0xE1] = Instruction(InstructionType.sbc, AddressMode.izx, 6);
-    lookup[0xE2] = Instruction(InstructionType.skb, AddressMode.imm, 2);
+    lookup[0xE2] = Instruction(InstructionType.nop, AddressMode.imm, 2);
     lookup[0xE3] = Instruction(InstructionType.isc, AddressMode.izx, 8);
     lookup[0xE4] = Instruction(InstructionType.cpx, AddressMode.zp0, 3);
     lookup[0xE5] = Instruction(InstructionType.sbc, AddressMode.zp0, 3);
@@ -482,7 +482,7 @@ class CPU {
     return 0;
   }
 
-  int _nop() => 0;
+  int _nop() => 1;
 
   int _jmp() {
     pc = addrAbs;
@@ -612,7 +612,7 @@ class CPU {
     x = fetched;
     _setFlag(zeroFlag, isFlagSet: x == 0);
     _setFlag(negativeFlag, isFlagSet: (x & 0x80) != 0);
-    return 0;
+    return 1;
   }
 
   int _ldy() {
@@ -620,7 +620,7 @@ class CPU {
     y = fetched;
     _setFlag(zeroFlag, isFlagSet: y == 0);
     _setFlag(negativeFlag, isFlagSet: (y & 0x80) != 0);
-    return 0;
+    return 1;
   }
 
   int _stx() {
@@ -639,7 +639,7 @@ class CPU {
     x = a;
     _setFlag(zeroFlag, isFlagSet: a == 0);
     _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
-    return 0;
+    return 1;
   }
 
   int _sax() {
@@ -655,11 +655,6 @@ class CPU {
     a ^= temp;
     _setFlag(zeroFlag, isFlagSet: a == 0);
     _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
-    return 0;
-  }
-
-  int _skb() {
-    pc++;
     return 0;
   }
 
@@ -818,7 +813,7 @@ class CPU {
       cycles = _currentInstruction.cycles;
       final addl1 = _executeAddressMode(_currentInstruction.addressMode);
       final addl2 = _executeInstruction(_currentInstruction.instructionType);
-      cycles += addl1 & addl2;
+      cycles += addl1 | addl2;
       status |= unusedFlag;
     }
     cycles--;
@@ -915,7 +910,6 @@ class CPU {
     InstructionType.shx => _shx(),
     InstructionType.shy => _shy(),
     InstructionType.sre => _sre(),
-    InstructionType.skb => _skb(),
     InstructionType.tas => _tas(),
     InstructionType.xaa => _xaa(),
     InstructionType.xxx => _xxx(),
@@ -1258,7 +1252,7 @@ class CPU {
     stkp = temp;
     _setFlag(zeroFlag, isFlagSet: a == 0);
     _setFlag(negativeFlag, isFlagSet: (a & 0x80) != 0);
-    return 0;
+    return 1;
   }
 
   int _shx() {
@@ -1504,7 +1498,6 @@ enum InstructionType {
   shy('SHY'),
 
   sre('SRE'),
-  skb('SKB'),
   tas('TAS'),
   xaa('XAA'),
 
@@ -1589,7 +1582,6 @@ enum InstructionType {
     InstructionType.shx => cpu._shx,
     InstructionType.shy => cpu._shy,
     InstructionType.sre => cpu._sre,
-    InstructionType.skb => cpu._skb,
     InstructionType.tas => cpu._tas,
     InstructionType.xaa => cpu._xaa,
     InstructionType.xxx => cpu._xxx,
