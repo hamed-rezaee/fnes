@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart' hide Image;
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:fnes/components/apu.dart';
 import 'package:fnes/components/bus.dart';
@@ -54,15 +53,13 @@ class NESEmulatorScreen extends StatefulWidget {
   State<NESEmulatorScreen> createState() => _NESEmulatorScreenState();
 }
 
-class _NESEmulatorScreenState extends State<NESEmulatorScreen>
-    with TickerProviderStateMixin {
+class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
   final _nesController = NESEmulatorController(
     bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU(), cheatEngine: CheatEngine()),
   );
 
-  late final Ticker _emulationTicker = createTicker(
-    (_) => _nesController.updateEmulation(),
-  );
+  StreamSubscription<int>? _emulationSubscription;
+  static const _targetFrameTime = Duration(microseconds: 16667);
 
   late final FocusNode _focusNode = FocusNode();
 
@@ -100,13 +97,13 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
     }
 
     if (isRunning) {
-      if (!_emulationTicker.isActive) {
-        unawaited(_emulationTicker.start());
+      if (_emulationSubscription == null) {
+        _startEmulationLoop();
       }
 
       _focusNode.requestFocus();
-    } else if (!isRunning && _emulationTicker.isActive) {
-      _emulationTicker.stop();
+    } else if (!isRunning && _emulationSubscription != null) {
+      _stopEmulationLoop();
     }
 
     return Scaffold(
@@ -735,9 +732,24 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
 
   @override
   void dispose() {
-    _emulationTicker.dispose();
+    _stopEmulationLoop();
     _focusNode.dispose();
 
     super.dispose();
+  }
+
+  void _startEmulationLoop() {
+    _emulationSubscription?.cancel();
+    _emulationSubscription = Stream.periodic(_targetFrameTime, (count) => count)
+        .listen((_) {
+          if (mounted) {
+            _nesController.updateEmulation();
+          }
+        });
+  }
+
+  void _stopEmulationLoop() {
+    _emulationSubscription?.cancel();
+    _emulationSubscription = null;
   }
 }
