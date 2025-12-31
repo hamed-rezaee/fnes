@@ -261,6 +261,7 @@ class CPU {
     lookup[0xFF] = Instruction(InstructionType.isc, AddressMode.abx, 7);
   }
 
+  @pragma('vm:prefer-inline')
   int _inx() {
     x = (x + 1) & 0xFF;
     _setFlag(zeroFlag, isFlagSet: x == 0);
@@ -268,6 +269,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _iny() {
     y = (y + 1) & 0xFF;
     _setFlag(zeroFlag, isFlagSet: y == 0);
@@ -275,6 +277,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _dex() {
     x = (x - 1) & 0xFF;
     _setFlag(zeroFlag, isFlagSet: x == 0);
@@ -283,6 +286,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _dey() {
     y = (y - 1) & 0xFF;
     _setFlag(zeroFlag, isFlagSet: y == 0);
@@ -291,6 +295,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _bcc() {
     if (_getFlag(carryFlag) == 0) {
       cycles++;
@@ -302,6 +307,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _bcs() {
     if (_getFlag(carryFlag) == 1) {
       cycles++;
@@ -313,6 +319,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _beq() {
     if (_getFlag(zeroFlag) == 1) {
       cycles++;
@@ -335,6 +342,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _bne() {
     if (_getFlag(zeroFlag) == 0) {
       cycles++;
@@ -407,6 +415,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _clc() {
     _setFlag(carryFlag, isFlagSet: false);
     return 0;
@@ -427,6 +436,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _sec() {
     _setFlag(carryFlag, isFlagSet: true);
     return 0;
@@ -589,6 +599,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _inc() {
     _fetch();
     final val = (fetched + 1) & 0xFF;
@@ -598,6 +609,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _dec() {
     _fetch();
     final val = (fetched - 1) & 0xFF;
@@ -607,6 +619,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _ldx() {
     _fetch();
     x = fetched;
@@ -615,6 +628,7 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _ldy() {
     _fetch();
     y = fetched;
@@ -623,11 +637,13 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _stx() {
     write(addrAbs, x);
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _sty() {
     write(addrAbs, y);
     return 0;
@@ -710,8 +726,10 @@ class CPU {
 
   void connect(Bus bus) => this.bus = bus;
 
+  @pragma('vm:prefer-inline')
   int read(int address) => bus?.cpuRead(address) ?? 0x00;
 
+  @pragma('vm:prefer-inline')
   void write(int address, int data) => bus?.cpuWrite(address, data);
 
   @pragma('vm:prefer-inline')
@@ -951,6 +969,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _rel() {
     addrRel = read(pc) & 0xFF;
     pc = (pc + 1) & 0xFFFF;
@@ -960,6 +979,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _abs() {
     final lowByte = read(pc);
     pc = (pc + 1) & 0xFFFF;
@@ -969,6 +989,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _abx() {
     final lowByte = read(pc);
     pc = (pc + 1) & 0xFFFF;
@@ -980,6 +1001,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _aby() {
     final lowByte = read(pc);
     pc = (pc + 1) & 0xFFFF;
@@ -991,6 +1013,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _ind() {
     final ptrLow = read(pc);
     pc = (pc + 1) & 0xFFFF;
@@ -1005,6 +1028,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _izx() {
     final temp = (read(pc) + x) & 0x00FF;
     pc = (pc + 1) & 0xFFFF;
@@ -1014,6 +1038,7 @@ class CPU {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _izy() {
     final temp = read(pc) & 0x00FF;
     pc = (pc + 1) & 0xFFFF;
@@ -1033,6 +1058,7 @@ class CPU {
     return fetched;
   }
 
+  @pragma('vm:prefer-inline')
   int _adc() {
     _fetch();
     final tempSum = a + fetched + _getFlag(carryFlag);
@@ -1047,6 +1073,7 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _sbc() {
     _fetch();
     final value = fetched ^ 0xFF;
@@ -1062,6 +1089,7 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _and() {
     _fetch();
     a = a & fetched;
@@ -1070,6 +1098,7 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _ora() {
     _fetch();
     a = a | fetched;
@@ -1078,6 +1107,7 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _eor() {
     _fetch();
     a = a ^ fetched;
@@ -1086,6 +1116,7 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _lda() {
     _fetch();
     a = fetched;
@@ -1094,11 +1125,13 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _sta() {
     write(addrAbs, a);
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   int _cmp() {
     _fetch();
     final temp = a - fetched;
@@ -1108,6 +1141,7 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _cpx() {
     _fetch();
     final temp = x - fetched;
@@ -1117,6 +1151,7 @@ class CPU {
     return 1;
   }
 
+  @pragma('vm:prefer-inline')
   int _cpy() {
     _fetch();
     final temp = y - fetched;

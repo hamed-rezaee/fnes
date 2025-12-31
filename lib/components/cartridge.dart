@@ -144,6 +144,7 @@ class Cartridge {
 
   bool imageValid() => _imageValid;
 
+  @pragma('vm:prefer-inline')
   bool cpuRead(int address, void Function(int) setData) {
     int? mappedAddress;
     int? dataFromMapper;
@@ -167,6 +168,7 @@ class Cartridge {
     return false;
   }
 
+  @pragma('vm:prefer-inline')
   bool cpuWrite(int address, int data) {
     final mappedAddress = _mapper.cpuMapWrite(address, data);
 
@@ -182,6 +184,7 @@ class Cartridge {
     return false;
   }
 
+  @pragma('vm:prefer-inline')
   bool ppuRead(int address, void Function(int) setData) {
     final mappedAddress = _mapper.ppuMapRead(address);
     if (mappedAddress != null) {
@@ -199,6 +202,7 @@ class Cartridge {
     return false;
   }
 
+  @pragma('vm:prefer-inline')
   bool ppuWrite(int address, int data) {
     final mappedAddress = _mapper.ppuMapWrite(address);
 

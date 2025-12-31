@@ -539,6 +539,7 @@ class PulseWave {
     sweeper.reload = false;
   }
 
+  @pragma('vm:prefer-inline')
   int output() {
     if (!enable ||
         lengthCounter.counter == 0 ||
@@ -552,6 +553,7 @@ class PulseWave {
     return APU._dutySequences[duty][phase] * envelope.output;
   }
 
+  @pragma('vm:prefer-inline')
   void _updateSweepSilencing() {
     final offset = reload >> sweeper.shift;
     sweeper.mute =
@@ -752,6 +754,7 @@ class TriangleWave {
     linearCounter.controlFlag = false;
   }
 
+  @pragma('vm:prefer-inline')
   int output() {
     if (!enable || lengthCounter.counter == 0 || linearCounter.counter == 0) {
       return 0;
@@ -818,6 +821,7 @@ class NoiseWave {
     lengthCounter.halt = false;
   }
 
+  @pragma('vm:prefer-inline')
   int output() {
     if (!enable || lengthCounter.counter == 0) return 0;
     if ((shiftRegister & 1) == 0) return envelope.output;
@@ -945,6 +949,7 @@ class DMC {
     duration = 0;
   }
 
+  @pragma('vm:prefer-inline')
   int output() => dmcOutput;
 
   DMCState saveState() => DMCState(

@@ -291,6 +291,7 @@ class PPU {
     }
   }
 
+  @pragma('vm:prefer-inline')
   int _flipByte(int value) {
     var result = value;
     result = ((result & 0xF0) >> 4) | ((result & 0x0F) << 4);
@@ -526,6 +527,7 @@ class PPU {
     }
   }
 
+  @pragma('vm:prefer-inline')
   int ppuRead(int address) {
     var memoryAddress = address;
     var data = 0x00;
@@ -581,6 +583,7 @@ class PPU {
     return data;
   }
 
+  @pragma('vm:prefer-inline')
   void ppuWrite(int address, int data) {
     var memoryAddress = address;
     memoryAddress &= 0x3FFF;
