@@ -18,6 +18,7 @@ class Mapper001 extends Mapper {
   int _chrBank0 = 0;
   int _chrBank1 = 0;
   int _prgBank = 0;
+  int _lastWriteCycles = 0;
 
   @override
   void reset() {
@@ -73,13 +74,18 @@ class Mapper001 extends Mapper {
   }
 
   @override
-  int? cpuMapWrite(int address, int data) {
+  int? cpuMapWrite(int address, int data, [int cycles = 0]) {
     if (address >= 0x6000 && address < 0x8000) {
       _prgRam[address - 0x6000] = data;
       return 0xFFFFFFFF;
     }
 
     if (address >= 0x8000 && address <= 0xFFFF) {
+      final consecutive = cycles > 0 && cycles - _lastWriteCycles < 6;
+      _lastWriteCycles = cycles;
+
+      if (consecutive) return null;
+
       if ((data & 0x80) != 0) {
         _shiftRegister = 0x10;
         _writeCount = 0;
@@ -101,7 +107,7 @@ class Mapper001 extends Mapper {
           } else if (address < 0xE000) {
             _chrBank1 = value & 0x1F;
           } else {
-            _prgBank = value & 0x0F;
+            _prgBank = value & 0x1F;
           }
         }
       }

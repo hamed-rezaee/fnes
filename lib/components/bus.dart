@@ -55,7 +55,7 @@ class Bus {
 
   @pragma('vm:prefer-inline')
   void cpuWrite(int address, int data) {
-    if (cart?.cpuWrite(address, data) ?? false) return;
+    if (cart?.cpuWrite(address, data, _systemClockCounter) ?? false) return;
 
     if (address >= 0x0000 && address <= 0x1FFF) {
       _cpuRam[address & 0x07FF] = data;

@@ -548,6 +548,7 @@ class CPU {
     if (_currentInstruction.addressMode == AddressMode.imp) {
       a = val & 0xFF;
     } else {
+      write(addrAbs, fetched);
       write(addrAbs, val & 0xFF);
     }
 
@@ -563,6 +564,7 @@ class CPU {
     if (_currentInstruction.addressMode == AddressMode.imp) {
       a = val;
     } else {
+      write(addrAbs, fetched);
       write(addrAbs, val);
     }
 
@@ -578,6 +580,7 @@ class CPU {
     if (_currentInstruction.addressMode == AddressMode.imp) {
       a = val;
     } else {
+      write(addrAbs, fetched);
       write(addrAbs, val);
     }
 
@@ -593,6 +596,7 @@ class CPU {
     if (_currentInstruction.addressMode == AddressMode.imp) {
       a = val;
     } else {
+      write(addrAbs, fetched);
       write(addrAbs, val);
     }
 
@@ -603,6 +607,7 @@ class CPU {
   int _inc() {
     _fetch();
     final val = (fetched + 1) & 0xFF;
+    write(addrAbs, fetched);
     write(addrAbs, val);
     _setFlag(zeroFlag, isFlagSet: val == 0);
     _setFlag(negativeFlag, isFlagSet: (val & 0x80) != 0);
@@ -613,6 +618,7 @@ class CPU {
   int _dec() {
     _fetch();
     final val = (fetched - 1) & 0xFF;
+    write(addrAbs, fetched);
     write(addrAbs, val);
     _setFlag(zeroFlag, isFlagSet: val == 0);
     _setFlag(negativeFlag, isFlagSet: (val & 0x80) != 0);

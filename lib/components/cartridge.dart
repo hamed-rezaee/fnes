@@ -169,8 +169,8 @@ class Cartridge {
   }
 
   @pragma('vm:prefer-inline')
-  bool cpuWrite(int address, int data) {
-    final mappedAddress = _mapper.cpuMapWrite(address, data);
+  bool cpuWrite(int address, int data, [int cycles = 0]) {
+    final mappedAddress = _mapper.cpuMapWrite(address, data, cycles);
 
     if (mappedAddress != null) {
       if (mappedAddress == 0xFFFFFFFF) {

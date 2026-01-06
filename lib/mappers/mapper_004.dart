@@ -108,7 +108,7 @@ class Mapper004 extends Mapper {
   }
 
   @override
-  int? cpuMapWrite(int address, int data) {
+  int? cpuMapWrite(int address, int data, [int cycles = 0]) {
     if (address >= 0x6000 && address <= 0x7FFF) {
       if (_programRamEnabled && !_programRamWriteProtect) {
         programRam[address & 0x1FFF] = data;

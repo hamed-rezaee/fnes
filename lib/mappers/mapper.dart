@@ -63,7 +63,7 @@ abstract class Mapper {
 
   int? cpuMapRead(int address, [void Function(int data)? setData]);
 
-  int? cpuMapWrite(int address, int data);
+  int? cpuMapWrite(int address, int data, [int cycles = 0]);
 
   int? ppuMapRead(int address);
 

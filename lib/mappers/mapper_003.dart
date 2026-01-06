@@ -31,7 +31,7 @@ class Mapper003 extends Mapper {
   }
 
   @override
-  int? cpuMapWrite(int address, int data) {
+  int? cpuMapWrite(int address, int data, [int cycles = 0]) {
     if (address >= 0x8000 && address <= 0xFFFF) {
       _selectedCharBank = data & 0x03;
       setChrBank8k(_selectedCharBank);

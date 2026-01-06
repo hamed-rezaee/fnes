@@ -30,7 +30,7 @@ class Mapper066 extends Mapper {
   }
 
   @override
-  int? cpuMapWrite(int address, int data) {
+  int? cpuMapWrite(int address, int data, [int cycles = 0]) {
     if (address >= 0x8000 && address <= 0xFFFF) {
       _charBankSelect = data & 0x03;
       _programBankSelect = (data & 0x30) >> 4;

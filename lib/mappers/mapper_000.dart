@@ -26,7 +26,7 @@ class Mapper000 extends Mapper {
   }
 
   @override
-  int? cpuMapWrite(int address, int data) {
+  int? cpuMapWrite(int address, int data, [int cycles = 0]) {
     if (address >= 0x8000 && address <= 0xFFFF) {
       final mask = programBankCount > 1 ? 0x7FFF : 0x3FFF;
 
