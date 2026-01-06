@@ -35,8 +35,8 @@ class _DebugPanelState extends State<DebugPanel> {
       'memory': false,
       'palette': false,
       'audio': false,
+      'cartridge': false,
       'cheats': false,
-      'cartridge': true,
     };
   }
 

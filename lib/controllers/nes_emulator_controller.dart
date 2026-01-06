@@ -50,7 +50,6 @@ class NESEmulatorController {
   final Signal<FilterQuality> filterQuality = signal<FilterQuality>(
     FilterQuality.none,
   );
-  final Signal<bool> isDebuggerVisible = signal(true);
   final Signal<bool> isOnScreenControllerVisible = signal(false);
   final Signal<RenderMode> renderMode = signal(RenderMode.both);
 
@@ -518,8 +517,6 @@ class NESEmulatorController {
 
   void changeFilterQuality(FilterQuality quality) =>
       filterQuality.value = quality;
-
-  void toggleDebugger() => isDebuggerVisible.value = !isDebuggerVisible.value;
 
   void toggleOnScreenController() =>
       isOnScreenControllerVisible.value = !isOnScreenControllerVisible.value;

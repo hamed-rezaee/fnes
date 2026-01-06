@@ -81,7 +81,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     final isRunning = _nesController.isRunning.value;
     final romLoaded = _nesController.isROMLoaded.value;
     final romName = _nesController.romName.value;
-    final isDebuggerVisible = _nesController.isDebuggerVisible.value;
     final showOnScreenController =
         _nesController.isOnScreenControllerVisible.value;
     final currentFPS = _nesController.currentFPS.value;
@@ -203,7 +202,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isMobile = context.isMobileOrTablet;
-            final showDebuggerInline = isDebuggerVisible && !isMobile;
 
             return SingleChildScrollView(
               child: isMobile
@@ -218,11 +216,10 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
                           rewindProgress,
                           isRewindEnabled,
                         ),
-                        if (isDebuggerVisible)
-                          DebugPanel(
-                            nesEmulatorController: _nesController,
-                            bus: _nesController.bus,
-                          ),
+                        DebugPanel(
+                          nesEmulatorController: _nesController,
+                          bus: _nesController.bus,
+                        ),
                       ],
                     )
                   : Row(
@@ -239,11 +236,10 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
                             isRewindEnabled,
                           ),
                         ),
-                        if (showDebuggerInline)
-                          DebugPanel(
-                            nesEmulatorController: _nesController,
-                            bus: _nesController.bus,
-                          ),
+                        DebugPanel(
+                          nesEmulatorController: _nesController,
+                          bus: _nesController.bus,
+                        ),
                       ],
                     ),
             );
@@ -401,7 +397,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
   );
 
   Widget _buildSettingsMenu() => Watch((_) {
-    final showDebugger = _nesController.isDebuggerVisible.value;
     final filterQuality = _nesController.filterQuality.value;
     final showOnScreenController =
         _nesController.isOnScreenControllerVisible.value;
