@@ -12,8 +12,12 @@ class AudioManager {
   bool _isPlaying = false;
 
   final List<double> _audioQueue = [];
-  final int _maxBufferSize = 0x2000;
+
+  final int _maxBufferSize = 0x8000;
   final int _chunkSize = 0x0800;
+  final int _minBufferThreshold = 0x0400;
+
+  double _volume = 1;
 
   late final AudioStream _audioStream;
 
@@ -23,10 +27,7 @@ class AudioManager {
     try {
       _audioStream = getAudioStream();
 
-      _audioStream.init(
-        sampleRate: sampleRate,
-        bufferMilliSec: 0xC8,
-      );
+      _audioStream.init(sampleRate: sampleRate);
 
       _isInitialized = true;
     } on Exception catch (_) {
@@ -39,23 +40,31 @@ class AudioManager {
 
     await Future.microtask(() {
       for (final sample in samples) {
-        final audioSample = sample.clamp(-1.0, 1.0);
+        final audioSample = (sample * _volume).clamp(-1.0, 1.0);
         _audioQueue.add(audioSample);
       }
 
-      while (_audioQueue.length >= _chunkSize) {
-        final chunk = Float32List(_chunkSize);
-        for (var i = 0; i < _chunkSize; i++) {
-          chunk[i] = _audioQueue.removeAt(0);
-        }
+      if (_audioQueue.length >= _minBufferThreshold) {
+        while (_audioQueue.length >= _chunkSize) {
+          final chunk = Float32List.fromList(
+            _audioQueue.getRange(0, _chunkSize).toList(),
+          );
 
-        try {
-          _audioStream.push(chunk);
-        } on Exception catch (_) {}
+          _audioQueue.removeRange(0, _chunkSize);
+
+          try {
+            _audioStream.push(chunk);
+          } on Exception catch (_) {
+            _audioQueue.insertAll(0, chunk);
+            break;
+          }
+        }
       }
 
-      while (_audioQueue.length > _maxBufferSize) {
-        _audioQueue.removeRange(0, _audioQueue.length - _maxBufferSize);
+      if (_audioQueue.length > _maxBufferSize) {
+        final overflow = _audioQueue.length - _maxBufferSize;
+
+        _audioQueue.removeRange(0, overflow);
       }
     });
   }
@@ -80,8 +89,18 @@ class AudioManager {
 
   void clear() {
     _audioQueue.clear();
+
     pause();
   }
+
+  void setVolume(double volume) => _volume = volume.clamp(0.0, 1.0);
+
+  double get volume => _volume;
+
+  double get bufferFillPercentage =>
+      _isInitialized ? (_audioQueue.length / _maxBufferSize) : 0.0;
+
+  int get bufferedSamples => _audioQueue.length;
 
   Future<void> dispose() async {
     _audioQueue.clear();

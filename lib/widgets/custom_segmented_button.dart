@@ -31,7 +31,7 @@ class CustomSegmentedButton<T> extends StatelessWidget {
       ),
       textStyle: WidgetStateProperty.resolveWith(
         (states) => TextStyle(
-          fontSize: 8,
+          fontSize: 9,
           fontWeight: states.contains(WidgetState.selected)
               ? FontWeight.bold
               : FontWeight.normal,

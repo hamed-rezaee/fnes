@@ -168,7 +168,11 @@ class AudioDebugViewController {
         apu.noise.enable = true;
       case AudioChannel.dmc:
         dmcEnabled.value = true;
-        apu.dmc.enable = true;
+
+        if (apu.dmc.duration == 0) {
+          apu.dmc.duration = apu.dmc.sampleLength;
+          apu.dmc.currentAddress = apu.dmc.sampleAddress;
+        }
     }
   }
 
@@ -188,7 +192,7 @@ class AudioDebugViewController {
         apu.noise.enable = false;
       case AudioChannel.dmc:
         dmcEnabled.value = false;
-        apu.dmc.enable = false;
+        apu.dmc.duration = 0;
     }
   }
 
@@ -208,7 +212,14 @@ class AudioDebugViewController {
         apu.noise.enable = noiseEnabled.value;
       case AudioChannel.dmc:
         dmcEnabled.value = !dmcEnabled.value;
-        apu.dmc.enable = dmcEnabled.value;
+        if (dmcEnabled.value) {
+          if (apu.dmc.duration == 0) {
+            apu.dmc.duration = apu.dmc.sampleLength;
+            apu.dmc.currentAddress = apu.dmc.sampleAddress;
+          }
+        } else {
+          apu.dmc.duration = 0;
+        }
     }
   }
 

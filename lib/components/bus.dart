@@ -15,6 +15,8 @@ class Bus {
     required this.cheatEngine,
   }) {
     cpu.connect(this);
+
+    apu.dmcMemoryRead = (int address) => cpuRead(address, readOnly: true);
   }
 
   final CPU cpu;
@@ -121,9 +123,10 @@ class Bus {
 
   bool clock() {
     ppu.clock();
-    apu.clock();
 
     if (_systemClockCounter % 3 == 0) {
+      apu.clock();
+
       if (_dmaTransfer) {
         if (_dmaDummy) {
           if (_systemClockCounter.isOdd) _dmaDummy = false;
@@ -170,7 +173,6 @@ class Bus {
     }
 
     if (apu.frameIrq) {
-      apu.frameIrq = false;
       cpu.irq();
     }
 

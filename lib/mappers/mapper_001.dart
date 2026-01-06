@@ -1,9 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:fnes/mappers/mapper.dart';
 
 class Mapper001 extends Mapper {
   Mapper001(super.programBankCount, super.totalCharBanks) {
     chrRam = totalCharBanks == 0;
   }
+
+  final Uint8List _prgRam = Uint8List(8192);
 
   @override
   String get name => 'MMC1';
@@ -35,7 +39,10 @@ class Mapper001 extends Mapper {
 
   @override
   int? cpuMapRead(int address, [void Function(int data)? setData]) {
-    if (address >= 0x6000 && address < 0x8000) return null;
+    if (address >= 0x6000 && address < 0x8000) {
+      setData?.call(_prgRam[address - 0x6000]);
+      return 0xFFFFFFFF;
+    }
 
     if (address >= 0x8000 && address <= 0xFFFF) {
       final prgMode = (_control >> 2) & 0x03;
@@ -67,7 +74,10 @@ class Mapper001 extends Mapper {
 
   @override
   int? cpuMapWrite(int address, int data) {
-    if (address >= 0x6000 && address < 0x8000) return null;
+    if (address >= 0x6000 && address < 0x8000) {
+      _prgRam[address - 0x6000] = data;
+      return 0xFFFFFFFF;
+    }
 
     if (address >= 0x8000 && address <= 0xFFFF) {
       if ((data & 0x80) != 0) {
@@ -145,6 +155,7 @@ class Mapper001 extends Mapper {
     'chrBank0': _chrBank0,
     'chrBank1': _chrBank1,
     'prgBank': _prgBank,
+    'prgRam': _prgRam.toList(),
   };
 
   @override
@@ -155,5 +166,11 @@ class Mapper001 extends Mapper {
     _chrBank0 = (state['chrBank0'] as int?) ?? 0;
     _chrBank1 = (state['chrBank1'] as int?) ?? 0;
     _prgBank = (state['prgBank'] as int?) ?? 0;
+
+    if (state.containsKey('prgRam')) {
+      final ram = (state['prgRam'] as List).cast<int>();
+
+      _prgRam.setAll(0, ram);
+    }
   }
 }

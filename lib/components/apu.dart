@@ -1,7 +1,7 @@
 import 'package:fnes/components/emulator_state.dart';
 
 class APU {
-  APU();
+  int Function(int address)? dmcMemoryRead;
 
   static const List<List<int>> _dutySequences = [
     [0, 1, 0, 0, 0, 0, 0, 0],
@@ -10,10 +10,10 @@ class APU {
     [1, 0, 0, 1, 1, 1, 1, 1],
   ];
 
-  static const double _highPassCoeff = 0.99925;
-  static const double _lowPassInput = 1;
-  static const double _lowPassFeedback = 0.50;
-  static const double _pulseGain = 3;
+  static const double _highPassCoeff = 0.999835;
+  static const double _lowPassInput = 0.815686;
+  static const double _lowPassFeedback = 0.184314;
+  static const double _pulseGain = 2.5;
 
   int globalTime = 0;
   bool frameCounterMode = false;
@@ -29,7 +29,7 @@ class APU {
   void cpuWrite(int address, int data) {
     switch (address) {
       case 0x4000:
-        pulse1.dutycycle = ((data >> 6) & 0x03) / 8.0;
+        pulse1.dutyIndex = (data >> 6) & 0x03;
         pulse1.envelope.loop = (data & 0x20) != 0;
         pulse1.envelope.disable = (data & 0x10) != 0;
         pulse1.envelope.volume = data & 0x0F;
@@ -52,7 +52,7 @@ class APU {
         pulse1.phase = 0;
         pulse1._updateSweepSilencing();
       case 0x4004:
-        pulse2.dutycycle = ((data >> 6) & 0x03) / 8.0;
+        pulse2.dutyIndex = (data >> 6) & 0x03;
         pulse2.envelope.loop = (data & 0x20) != 0;
         pulse2.envelope.disable = (data & 0x10) != 0;
         pulse2.envelope.volume = data & 0x0F;
@@ -77,6 +77,7 @@ class APU {
       case 0x4008:
         triangle.linearCounter.controlFlag = (data & 0x80) != 0;
         triangle.linearCounter.reload = data & 0x7F;
+        triangle.lengthCounter.halt = (data & 0x80) != 0;
       case 0x400A:
         triangle.reload = (triangle.reload & 0xFF00) | data;
       case 0x400B:
@@ -114,6 +115,9 @@ class APU {
         noise.envelope.start = true;
       case 0x4010:
         dmc.irqEnabled = (data & 0x80) != 0;
+
+        if (!dmc.irqEnabled) dmc.irqFlag = false;
+
         dmc.loop = (data & 0x40) != 0;
         dmc.timerLoad = [
           0x1AC,
@@ -141,13 +145,25 @@ class APU {
         dmc.sampleLength = (data * 0x10) + 1;
       case 0x4015:
         pulse1.enable = (data & 0x01) != 0;
+        if (!pulse1.enable) pulse1.lengthCounter.counter = 0;
+
         pulse2.enable = (data & 0x02) != 0;
+        if (!pulse2.enable) pulse2.lengthCounter.counter = 0;
+
         triangle.enable = (data & 0x04) != 0;
+        if (!triangle.enable) triangle.lengthCounter.counter = 0;
+
         noise.enable = (data & 0x08) != 0;
+        if (!noise.enable) noise.lengthCounter.counter = 0;
+
         if ((data & 0x10) != 0) {
-          dmc.enableDMC(dmc.sampleAddress, dmc.sampleLength);
+          if (dmc.duration == 0) {
+            dmc.currentAddress = dmc.sampleAddress;
+            dmc.duration = dmc.sampleLength;
+          }
         } else {
-          dmc.disableDMC();
+          dmc.duration = 0;
+          dmc.irqFlag = false;
         }
       case 0x4017:
         frameCounterMode = (data & 0x80) != 0;
@@ -155,8 +171,13 @@ class APU {
         if (irqDisable) frameIrq = false;
 
         globalTime = 0;
+        _frameStep = 0;
 
-        if (frameCounterMode) _clockFrameCounter();
+        if (frameCounterMode) {
+          _clockEnvelopes();
+          _clockLengthCounters();
+          _clockSweepers();
+        }
     }
   }
 
@@ -170,6 +191,7 @@ class APU {
       data |= (noise.lengthCounter.counter > 0 ? 0x08 : 0);
       data |= (dmc.duration > 0 ? 0x10 : 0);
       data |= (frameIrq ? 0x40 : 0);
+      data |= (dmc.irqFlag ? 0x80 : 0);
 
       frameIrq = false;
     }
@@ -232,26 +254,43 @@ class APU {
   }
 
   void clock() {
-    globalTime++;
-
     if (frameCounterMode) {
-      if (globalTime == 0x1D21 ||
-          globalTime == 0x3A41 ||
-          globalTime == 0x5763 ||
-          globalTime == 0x7485 ||
-          globalTime == 0x91A1) {
-        if (globalTime == 0x91A1) globalTime = 0;
-        _clockFrameCounter();
+      if (globalTime == 7457) {
+        _clockEnvelopes();
+      } else if (globalTime == 14913) {
+        _clockEnvelopes();
+        _clockLengthCounters();
+        _clockSweepers();
+      } else if (globalTime == 22371) {
+        _clockEnvelopes();
+      } else if (globalTime == 29828) {
+      } else if (globalTime == 37281) {
+        _clockEnvelopes();
+        _clockLengthCounters();
+        _clockSweepers();
+        globalTime = -1;
       }
     } else {
-      if (globalTime == 0x1D21 ||
-          globalTime == 0x3A41 ||
-          globalTime == 0x5763 ||
-          globalTime == 0x7485) {
-        if (globalTime == 0x7485) globalTime = 0;
-        _clockFrameCounter();
+      if (globalTime == 7457) {
+        _clockEnvelopes();
+      } else if (globalTime == 14913) {
+        _clockEnvelopes();
+        _clockLengthCounters();
+        _clockSweepers();
+      } else if (globalTime == 22371) {
+        _clockEnvelopes();
+      } else if (globalTime == 29829) {
+        _clockEnvelopes();
+        _clockLengthCounters();
+        _clockSweepers();
+        if (!irqDisable) frameIrq = true;
+      } else if (globalTime == 29830) {
+        if (!irqDisable) frameIrq = true;
+        globalTime = -1;
       }
     }
+
+    globalTime++;
 
     if ((globalTime & 1) == 0) {
       pulse1.clock();
@@ -260,50 +299,11 @@ class APU {
     }
 
     triangle.clock();
-    dmc.clock();
+
+    dmc.clock(dmcMemoryRead);
   }
 
   int _frameStep = 0;
-  void _clockFrameCounter() {
-    if (frameCounterMode) {
-      switch (_frameStep) {
-        case 0:
-          _clockEnvelopes();
-          _clockLengthCounters();
-          _clockSweepers();
-        case 1:
-          _clockEnvelopes();
-        case 2:
-          _clockEnvelopes();
-          _clockLengthCounters();
-          _clockSweepers();
-        case 3:
-          _clockEnvelopes();
-        case 4:
-          break;
-      }
-
-      _frameStep = (_frameStep + 1) % 5;
-    } else {
-      switch (_frameStep) {
-        case 0:
-          _clockEnvelopes();
-        case 1:
-          _clockEnvelopes();
-          _clockLengthCounters();
-          _clockSweepers();
-        case 2:
-          _clockEnvelopes();
-        case 3:
-          _clockEnvelopes();
-          _clockLengthCounters();
-          _clockSweepers();
-          if (!irqDisable) frameIrq = true;
-      }
-
-      _frameStep = (_frameStep + 1) % 4;
-    }
-  }
 
   void _clockEnvelopes() {
     pulse1.envelope.clock();
@@ -501,7 +501,7 @@ class LengthCounter {
 }
 
 class PulseWave {
-  double dutycycle = 0.5;
+  int dutyIndex = 0;
   int timer = 0;
   int reload = 0;
   int phase = 0;
@@ -525,11 +525,13 @@ class PulseWave {
     reload = 0;
     phase = 0;
     enable = false;
-    dutycycle = 0.5;
+    dutyIndex = 0;
     envelope.disable = false;
     envelope.start = false;
     envelope.loop = false;
     envelope.volume = 0;
+    envelope.dividerCount = 0;
+    envelope.decayCount = 0;
     lengthCounter.counter = 0;
     lengthCounter.halt = false;
     sweeper.enabled = false;
@@ -537,6 +539,8 @@ class PulseWave {
     sweeper.down = false;
     sweeper.shift = 0;
     sweeper.reload = false;
+    sweeper.timer = 0;
+    sweeper.mute = false;
   }
 
   @pragma('vm:prefer-inline')
@@ -548,9 +552,7 @@ class PulseWave {
       return 0;
     }
 
-    final duty = (dutycycle * 8).clamp(0, 3).toInt();
-
-    return APU._dutySequences[duty][phase] * envelope.output;
+    return APU._dutySequences[dutyIndex][phase] * envelope.output;
   }
 
   @pragma('vm:prefer-inline')
@@ -562,7 +564,7 @@ class PulseWave {
 
   PulseWaveState saveState() => PulseWaveState(
     enable: enable,
-    dutycycle: dutycycle,
+    dutycycle: dutyIndex.toDouble(),
     timer: timer,
     reload: reload,
     phase: phase,
@@ -573,7 +575,7 @@ class PulseWave {
 
   void restoreState(PulseWaveState state) {
     enable = state.enable;
-    dutycycle = state.dutycycle;
+    dutyIndex = state.dutycycle.round();
     timer = state.timer;
     reload = state.reload;
     phase = state.phase;
@@ -599,9 +601,7 @@ class Sweeper {
     void Function(int) setTarget, {
     required bool isPulse1,
   }) {
-    if (timer == 0 && enabled) {
-      timer = period;
-
+    if (timer == 0 && enabled && shift > 0 && !mute) {
       final changeAmount = target >> shift;
       int newPeriod;
 
@@ -611,23 +611,33 @@ class Sweeper {
         newPeriod = target + changeAmount;
       }
 
-      if (shift > 0 && newPeriod >= 0 && newPeriod <= 0x7FF) {
+      if (newPeriod >= 0 && newPeriod <= 0x7FF) {
         setTarget(newPeriod);
       }
-    } else if (timer > 0) {
+      _updateMute(newPeriod, isPulse1);
+    }
+
+    if (timer == 0 || reload) {
+      timer = period;
+      reload = false;
+    } else {
       timer--;
     }
 
-    if (reload) {
-      timer = period;
-      reload = false;
-    }
+    _updateMute(target, isPulse1);
+  }
 
-    mute = (target < 8) || (target > 0x7FF);
+  void _updateMute(int target, bool isPulse1) {
+    if (target < 8) {
+      mute = true;
+      return;
+    }
 
     if (!down && shift > 0) {
       final futureValue = target + (target >> shift);
-      if (futureValue > 0x7FF) mute = true;
+      mute = futureValue > 0x7FF;
+    } else {
+      mute = false;
     }
   }
 
@@ -732,13 +742,16 @@ class TriangleWave {
   final LinearCounter linearCounter = LinearCounter();
 
   void clock() {
-    if (linearCounter.counter > 0 && lengthCounter.counter > 0) {
-      if (timer == 0) {
-        timer = reload;
+    if (timer == 0) {
+      timer = reload;
+
+      if (reload >= 2 &&
+          linearCounter.counter > 0 &&
+          lengthCounter.counter > 0) {
         phase = (phase + 1) & 0x1F;
-      } else {
-        timer--;
       }
+    } else {
+      timer--;
     }
   }
 
@@ -752,13 +765,12 @@ class TriangleWave {
     linearCounter.counter = 0;
     linearCounter.reload = 0;
     linearCounter.controlFlag = false;
+    linearCounter.reloadFlag = false;
   }
 
   @pragma('vm:prefer-inline')
   int output() {
-    if (!enable || lengthCounter.counter == 0 || linearCounter.counter == 0) {
-      return 0;
-    }
+    if (reload < 2) return 7;
 
     return _sequence[phase];
   }
@@ -797,11 +809,11 @@ class NoiseWave {
     if (timer == 0) {
       timer = reload;
       final bit0 = shiftRegister & 0x0001;
-      final bit = mode
+      final otherBit = mode
           ? (shiftRegister >> 6) & 0x01
           : (shiftRegister >> 1) & 0x01;
-      final feedback = bit0 ^ bit;
-      shiftRegister = (shiftRegister >> 1) | (feedback << 14);
+      final feedback = bit0 ^ otherBit;
+      shiftRegister = ((shiftRegister >> 1) & 0x3FFF) | (feedback << 14);
     } else {
       timer--;
     }
@@ -817,6 +829,8 @@ class NoiseWave {
     envelope.start = false;
     envelope.loop = false;
     envelope.volume = 0;
+    envelope.dividerCount = 0;
+    envelope.decayCount = 0;
     lengthCounter.counter = 0;
     lengthCounter.halt = false;
   }
@@ -856,11 +870,10 @@ class DMC {
   int timerLoad = 0;
   int outputShift = 0;
   int dmcOutput = 0;
-  int bitsRemaining = 0;
+  int bitsRemaining = 8;
   int currentAddress = 0;
   int sampleAddress = 0;
   int sampleLength = 0;
-  bool enable = false;
   bool irqEnabled = false;
   bool irqFlag = false;
   bool loop = false;
@@ -869,30 +882,48 @@ class DMC {
   bool silence = true;
   int duration = 0;
 
-  void clock() {
-    if (!enable) return;
+  void clock(int Function(int)? memoryRead) {
+    if (sampleBufferEmpty && duration > 0) {
+      if (memoryRead != null) {
+        sampleBuffer = memoryRead(currentAddress);
+      }
+      sampleBufferEmpty = false;
+
+      currentAddress = (currentAddress == 0xFFFF) ? 0x8000 : currentAddress + 1;
+      duration--;
+
+      if (duration == 0) {
+        if (loop) {
+          currentAddress = sampleAddress;
+          duration = sampleLength;
+        } else if (irqEnabled) {
+          irqFlag = true;
+        }
+      }
+    }
 
     if (timerCounter == 0) {
       timerCounter = timerLoad;
 
       if (!silence) {
-        if (outputShift & 0x01 != 0) {
-          if (dmcOutput < 126) dmcOutput += 2;
+        if ((outputShift & 0x01) != 0) {
+          if (dmcOutput <= 125) dmcOutput += 2;
         } else {
-          if (dmcOutput > 1) dmcOutput -= 2;
+          if (dmcOutput >= 2) dmcOutput -= 2;
         }
       }
 
       outputShift >>= 1;
-      if (--bitsRemaining == 0) {
+      bitsRemaining--;
+
+      if (bitsRemaining == 0) {
         bitsRemaining = 8;
         if (sampleBufferEmpty) {
           silence = true;
         } else {
+          silence = false;
           outputShift = sampleBuffer;
           sampleBufferEmpty = true;
-          _fillSampleBuffer();
-          silence = false;
         }
       }
     } else {
@@ -900,46 +931,15 @@ class DMC {
     }
   }
 
-  void _fillSampleBuffer() {
-    if (sampleBufferEmpty && duration > 0) {
-      sampleBufferEmpty = false;
-
-      if (--duration == 0) {
-        if (loop) {
-          currentAddress = sampleAddress;
-          duration = sampleLength;
-        } else {
-          if (irqEnabled) irqFlag = true;
-        }
-      }
-    }
-  }
-
-  void enableDMC(int startAddress, int length) {
-    if (duration == 0) {
-      currentAddress = startAddress;
-      duration = length;
-      sampleBufferEmpty = true;
-      _fillSampleBuffer();
-      enable = true;
-    }
-  }
-
-  void disableDMC() {
-    enable = false;
-    duration = 0;
-  }
-
   void reset() {
     timerCounter = 0;
-    timerLoad = 0;
+    timerLoad = 0x1AC;
     outputShift = 0;
     dmcOutput = 0;
-    bitsRemaining = 1;
+    bitsRemaining = 8;
     currentAddress = 0;
-    sampleAddress = 0;
-    sampleLength = 0;
-    enable = false;
+    sampleAddress = 0xC000;
+    sampleLength = 1;
     irqEnabled = false;
     irqFlag = false;
     loop = false;
@@ -953,7 +953,7 @@ class DMC {
   int output() => dmcOutput;
 
   DMCState saveState() => DMCState(
-    enable: enable,
+    enable: duration > 0,
     irqEnabled: irqEnabled,
     loop: loop,
     timerLoad: timerLoad,
@@ -970,7 +970,6 @@ class DMC {
   );
 
   void restoreState(DMCState state) {
-    enable = state.enable;
     irqEnabled = state.irqEnabled;
     loop = state.loop;
     timerLoad = state.timerLoad;

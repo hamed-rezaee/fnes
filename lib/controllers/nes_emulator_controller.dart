@@ -526,6 +526,8 @@ class NESEmulatorController {
 
   void toggleAudio() => _audioStateManager.toggle();
 
+  AudioManager get audioPlayer => _audioPlayer;
+
   void toggleRewind() {
     rewindEnabled.value = !rewindEnabled.value;
 

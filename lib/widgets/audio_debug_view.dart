@@ -21,6 +21,7 @@ class AudioDebugView extends StatefulWidget {
 
 class _AudioDebugViewState extends State<AudioDebugView> {
   late final AudioDebugViewController controller;
+  late final Signal<double> volume;
 
   @override
   void initState() {
@@ -30,6 +31,8 @@ class _AudioDebugViewState extends State<AudioDebugView> {
       apu: widget.apu,
       nesEmulatorController: widget.nesEmulatorController,
     );
+
+    volume = signal(widget.nesEmulatorController.audioPlayer.volume);
   }
 
   @override
@@ -45,6 +48,7 @@ class _AudioDebugViewState extends State<AudioDebugView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildChannelSelector(),
+        _buildVolumeSlider(),
         Container(
           width: 380,
           height: 100,
@@ -111,11 +115,52 @@ class _AudioDebugViewState extends State<AudioDebugView> {
           widget.apu.pulse2.enable = controller.pulse2Enabled.value;
           widget.apu.triangle.enable = controller.triangleEnabled.value;
           widget.apu.noise.enable = controller.noiseEnabled.value;
-          widget.apu.dmc.enable = controller.dmcEnabled.value;
+
+          if (controller.dmcEnabled.value) {
+            if (widget.apu.dmc.duration == 0) {
+              widget.apu.dmc.duration = widget.apu.dmc.sampleLength;
+              widget.apu.dmc.currentAddress = widget.apu.dmc.sampleAddress;
+            }
+          } else {
+            widget.apu.dmc.duration = 0;
+          }
         },
       ),
     ),
   );
+
+  Widget _buildVolumeSlider() => Watch((_) {
+    final audioManager = widget.nesEmulatorController.audioPlayer;
+
+    return SizedBox(
+      width: 370,
+      child: Row(
+        children: [
+          const Text(
+            'Volume',
+            style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+          ),
+          Expanded(
+            child: Slider(
+              value: volume.value,
+              divisions: 20,
+              onChanged: (value) {
+                volume.value = value;
+                audioManager.setVolume(value);
+              },
+            ),
+          ),
+          SizedBox(
+            child: Text(
+              '${(volume.value * 100).round()}%',
+              style: const TextStyle(fontSize: 9),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  });
 
   static String _formatLevel(double level) {
     final percentage = (level * 100).toStringAsFixed(1);
