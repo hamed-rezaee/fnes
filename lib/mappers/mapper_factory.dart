@@ -4,6 +4,7 @@ import 'package:fnes/mappers/mapper_001.dart';
 import 'package:fnes/mappers/mapper_002.dart';
 import 'package:fnes/mappers/mapper_003.dart';
 import 'package:fnes/mappers/mapper_004.dart';
+import 'package:fnes/mappers/mapper_005.dart';
 import 'package:fnes/mappers/mapper_007.dart';
 import 'package:fnes/mappers/mapper_066.dart';
 
@@ -68,6 +69,7 @@ class MapperFactory {
         2 => Mapper002(programBanks, charBanks),
         3 => Mapper003(programBanks, charBanks),
         4 => Mapper004(programBanks, charBanks),
+        5 => Mapper005(programBanks, charBanks),
         7 => Mapper007(programBanks, charBanks),
         66 => Mapper066(programBanks, charBanks),
         _ => throw Exception('Unsupported mapper ID: $mapperId'),
@@ -134,6 +136,24 @@ class MapperFactory {
       batteryBacked: true,
       supportedMirroring: [MirroringType.mapperControlled],
       specialChip: CartridgeSpecialChip.scanlineCounter,
+    ),
+    MapperInfo(
+      id: 5,
+      name: 'MMC5',
+      category: MapperCategory.mmc,
+      manufacturer: 'Nintendo',
+      features: {
+        MapperFeature.irq,
+        MapperFeature.programRam,
+        MapperFeature.nameTableControl,
+      },
+      minProgramSizeKB: 128,
+      maxProgramSizeKB: 1024,
+      minCharSizeKB: 0,
+      maxCharSizeKB: 1024,
+      batteryBacked: true,
+      supportedMirroring: [MirroringType.mapperControlled],
+      specialChip: CartridgeSpecialChip.extraAudio,
     ),
     MapperInfo(
       id: 7,

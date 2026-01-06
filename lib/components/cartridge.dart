@@ -186,8 +186,20 @@ class Cartridge {
 
   @pragma('vm:prefer-inline')
   bool ppuRead(int address, void Function(int) setData) {
-    final mappedAddress = _mapper.ppuMapRead(address);
+    int? dataFromMapper;
+
+    final mappedAddress = _mapper.ppuMapRead(
+      address,
+      (data) => dataFromMapper = data,
+    );
+
     if (mappedAddress != null) {
+      if (mappedAddress == 0xFFFFFFFF) {
+        if (dataFromMapper != null) setData(dataFromMapper!);
+
+        return true;
+      }
+
       if (mappedAddress >= 0 && mappedAddress < _charMemory.length) {
         setData(_charMemory[mappedAddress]);
 
@@ -204,6 +216,8 @@ class Cartridge {
 
   @pragma('vm:prefer-inline')
   bool ppuWrite(int address, int data) {
+    _mapper.ppuWriteNotify(address, data);
+
     final mappedAddress = _mapper.ppuMapWrite(address);
 
     if (mappedAddress != null) {

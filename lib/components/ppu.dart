@@ -687,7 +687,7 @@ class PPU {
 
     if (cycle == 260) {
       if (mask.renderBackground || mask.renderSprites) {
-        cart?.getMapper().scanline();
+        cart?.getMapper().scanline(scanline);
       }
     }
 

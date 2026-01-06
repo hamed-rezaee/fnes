@@ -155,7 +155,7 @@ class Mapper004 extends Mapper {
   }
 
   @override
-  int? ppuMapRead(int address) {
+  int? ppuMapRead(int address, [void Function(int data)? setData]) {
     if (address >= 0x0000 && address <= 0x1FFF) {
       final bankIndex = address >> 10;
       final bankOffset = address & 0x03FF;
@@ -176,7 +176,7 @@ class Mapper004 extends Mapper {
   }
 
   @override
-  void scanline() {
+  void scanline(int row) {
     if (_irqCounter == 0 || _irqReloadPending) {
       _irqCounter = _irqLatch;
       _irqReloadPending = false;

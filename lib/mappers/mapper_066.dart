@@ -43,7 +43,7 @@ class Mapper066 extends Mapper {
   }
 
   @override
-  int? ppuMapRead(int address) {
+  int? ppuMapRead(int address, [void Function(int data)? setData]) {
     if (address >= 0x0000 && address <= 0x1FFF) {
       return (_charBankSelect * 0x2000) + (address & 0x1FFF);
     }

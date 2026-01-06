@@ -65,7 +65,7 @@ abstract class Mapper {
 
   int? cpuMapWrite(int address, int data, [int cycles = 0]);
 
-  int? ppuMapRead(int address);
+  int? ppuMapRead(int address, [void Function(int data)? setData]);
 
   int? ppuMapWrite(int address);
 
@@ -77,7 +77,7 @@ abstract class Mapper {
 
   void irqClear() {}
 
-  void scanline() {}
+  void scanline(int row) {}
 
   void ppuWriteNotify(int address, int data) {}
 
