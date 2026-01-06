@@ -3,6 +3,7 @@ import 'package:fnes/components/bus.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/utils/responsive_utils.dart';
 import 'package:fnes/widgets/audio_debug_view.dart';
+import 'package:fnes/widgets/cartridge_debug_view.dart';
 import 'package:fnes/widgets/cheat_manager_view.dart';
 import 'package:fnes/widgets/cpu_debug_view.dart';
 import 'package:fnes/widgets/memory_debug_view.dart';
@@ -35,6 +36,7 @@ class _DebugPanelState extends State<DebugPanel> {
       'palette': false,
       'audio': false,
       'cheats': false,
+      'cartridge': true,
     };
   }
 
@@ -48,15 +50,6 @@ class _DebugPanelState extends State<DebugPanel> {
           spacing: 6,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.nesEmulatorController.isROMLoaded.value)
-              _buildCollapsibleSection(
-                key: 'cheats',
-                title: 'Cheat Engine',
-                child: CheatManagerView(
-                  cheatController: widget.nesEmulatorController.cheatController,
-                  romName: widget.nesEmulatorController.romName.value,
-                ),
-              ),
             _buildCollapsibleSection(
               key: 'registers',
               title: 'Registers',
@@ -87,6 +80,20 @@ class _DebugPanelState extends State<DebugPanel> {
               child: AudioDebugView(
                 apu: widget.bus.apu,
                 nesEmulatorController: widget.nesEmulatorController,
+              ),
+            ),
+            _buildCollapsibleSection(
+              key: 'cartridge',
+              title: 'Cartridge Info',
+              child: CartridgeDebugView(bus: widget.bus),
+            ),
+            _buildCollapsibleSection(
+              key: 'cheats',
+              title: 'Cheat Engine',
+              child: CheatManagerView(
+                bus: widget.bus,
+                cheatController: widget.nesEmulatorController.cheatController,
+                romName: widget.nesEmulatorController.romName.value,
               ),
             ),
           ],

@@ -11,6 +11,7 @@ import 'package:fnes/components/ppu.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/utils/responsive_utils.dart';
 import 'package:fnes/widgets/debug_panel.dart';
+import 'package:fnes/widgets/no_rom_loaded.dart';
 import 'package:fnes/widgets/on_screen_controller.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -344,16 +345,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
                       ),
                   ],
                 )
-              : Center(
-                  child: Text(
-                    'No ROM Loaded',
-                    style: TextStyle(
-                      fontSize: context.isMobile ? 20.0 : 32.0,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+              : const Center(child: NoRomLoaded(fontSize: 22)),
         );
       },
     ),
@@ -477,34 +469,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
             ],
           ),
         ),
-        _buildMenuGroupHeader('DEBUG'),
-        PopupMenuItem<String>(
-          value: 'toggle_debugger',
-          onTap: _nesController.toggleDebugger,
-          child: Row(
-            spacing: 12,
-            children: [
-              Icon(
-                showDebugger ? Icons.check_box : Icons.check_box_outline_blank,
-                size: 16,
-                color: Colors.black,
-              ),
-              const Text('Debugger Panels', style: TextStyle(fontSize: 12)),
-            ],
-          ),
-        ),
         _buildMenuGroupHeader('INFORMATION'),
-        PopupMenuItem<String>(
-          value: 'rom_info',
-          onTap: _showROMInfoDialog,
-          child: const Row(
-            spacing: 12,
-            children: [
-              Icon(Icons.info_outline, size: 16, color: Colors.black),
-              Text('Cartridge Information', style: TextStyle(fontSize: 12)),
-            ],
-          ),
-        ),
         PopupMenuItem<String>(
           value: 'about',
           onTap: () => _showAboutDialog(context),
@@ -572,73 +537,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
             textAlign: TextAlign.center,
           ),
       ],
-    );
-  }
-
-  Future<void> _showROMInfoDialog() async {
-    final info = _nesController.bus.cart?.getMapperInfoMap();
-    final isROMLoaded = _nesController.isROMLoaded.value;
-    final hasCart = _nesController.bus.cart != null;
-
-    return showDialog<void>(
-      context: context,
-      builder: (context) {
-        Widget content;
-
-        if (isROMLoaded && hasCart && info != null) {
-          content = Column(
-            mainAxisSize: MainAxisSize.min,
-            children: info.entries
-                .map(
-                  (MapEntry<String, String> e) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            e.key,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            e.value,
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
-          );
-        } else {
-          content = const Text(
-            'No ROM loaded.',
-            style: TextStyle(fontSize: 12),
-          );
-        }
-
-        return AlertDialog(
-          title: const Text(
-            'Cartridge Information',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(child: content),
-          actions: [
-            TextButton(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('Close', style: TextStyle(fontSize: 12)),
-            ),
-          ],
-        );
-      },
     );
   }
 

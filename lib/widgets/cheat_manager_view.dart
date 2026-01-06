@@ -1,17 +1,21 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cheat_code.dart';
 import 'package:fnes/controllers/cheat_controller.dart';
+import 'package:fnes/widgets/no_rom_loaded.dart';
 import 'package:signals/signals_flutter.dart';
 
 class CheatManagerView extends StatefulWidget {
   const CheatManagerView({
+    required this.bus,
     required this.cheatController,
     required this.romName,
     super.key,
   });
 
+  final Bus bus;
   final CheatController cheatController;
   final String? romName;
 
@@ -21,84 +25,88 @@ class CheatManagerView extends StatefulWidget {
 
 class _CheatManagerViewState extends State<CheatManagerView> {
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 320,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Watch((context) {
-          final count = widget.cheatController.enabledCheatCount.value;
-          return RichText(
-            text: TextSpan(
-              style: _monoTextStyle(9, color: Colors.black),
-              children: [
-                const TextSpan(
-                  text: 'ACTIVE ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(text: count.toString()),
-              ],
-            ),
-          );
-        }),
-        const SizedBox(height: 12),
-        Expanded(
-          child: Watch((context) {
-            final cheats = widget.cheatController.cheats.value;
-
-            if (cheats.isEmpty) {
-              return Center(
-                child: Text(
-                  'No cheats added.',
-                  style: _bodyTextStyle(Colors.grey.shade600),
-                ),
-              );
-            }
-
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  for (final cheat in cheats) ...[
-                    _CheatListItem(
-                      cheat: cheat,
-                      onToggle: (enabled) => widget.cheatController.toggleCheat(
-                        id: cheat.id,
-                        enabled: enabled,
-                        romName: widget.romName,
+  Widget build(BuildContext context) =>
+      widget.bus.cart?.getMapperInfoMap() == null
+      ? const NoRomLoaded()
+      : SizedBox(
+          height: 320,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Watch((context) {
+                final count = widget.cheatController.enabledCheatCount.value;
+                return RichText(
+                  text: TextSpan(
+                    style: _monoTextStyle(9, color: Colors.black),
+                    children: [
+                      const TextSpan(
+                        text: 'ACTIVE ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      onDelete: () => widget.cheatController.removeCheat(
-                        cheat.id,
-                        widget.romName,
+                      TextSpan(text: count.toString()),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Watch((context) {
+                  final cheats = widget.cheatController.cheats.value;
+
+                  if (cheats.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No cheats added.',
+                        style: _bodyTextStyle(Colors.grey.shade600),
                       ),
+                    );
+                  }
+
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (final cheat in cheats) ...[
+                          _CheatListItem(
+                            cheat: cheat,
+                            onToggle: (enabled) =>
+                                widget.cheatController.toggleCheat(
+                                  id: cheat.id,
+                                  enabled: enabled,
+                                  romName: widget.romName,
+                                ),
+                            onDelete: () => widget.cheatController.removeCheat(
+                              cheat.id,
+                              widget.romName,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                  ],
+                  );
+                }),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildButton(
+                      label: 'Add',
+                      onPressed: _showAddCheatDialog,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildButton(
+                      label: 'Clear',
+                      onPressed: _showClearConfirmDialog,
+                    ),
+                  ),
                 ],
               ),
-            );
-          }),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildButton(
-                label: 'Add',
-                onPressed: _showAddCheatDialog,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildButton(
-                label: 'Clear',
-                onPressed: _showClearConfirmDialog,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
+            ],
+          ),
+        );
 
   Widget _buildButton({
     required String label,
