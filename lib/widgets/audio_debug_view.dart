@@ -152,7 +152,7 @@ class _AudioDebugViewState extends State<AudioDebugView> {
           ),
           SizedBox(
             child: Text(
-              '${(volume.value * 100).round()}%',
+              '${(volume.value * 100).round().toString().padLeft(2)}%',
               style: const TextStyle(fontSize: 9),
               textAlign: TextAlign.right,
             ),
