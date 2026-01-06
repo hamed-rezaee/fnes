@@ -58,8 +58,11 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU(), cheatEngine: CheatEngine()),
   );
 
-  StreamSubscription<int>? _emulationSubscription;
-  static const _targetFrameTime = Duration(microseconds: 16667);
+  static const _targetFrameTimeMicros = 16639;
+
+  Timer? _emulationTimer;
+  DateTime? _lastFrameTime;
+  int _accumulatedTimeMicros = 0;
 
   late final FocusNode _focusNode = FocusNode();
 
@@ -97,12 +100,12 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     }
 
     if (isRunning) {
-      if (_emulationSubscription == null) {
+      if (_emulationTimer == null || !_emulationTimer!.isActive) {
         _startEmulationLoop();
       }
 
       _focusNode.requestFocus();
-    } else if (!isRunning && _emulationSubscription != null) {
+    } else if (!isRunning && _emulationTimer != null) {
       _stopEmulationLoop();
     }
 
@@ -410,7 +413,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     final filterQuality = _nesController.filterQuality.value;
     final showOnScreenController =
         _nesController.isOnScreenControllerVisible.value;
-    final uncapFramerate = _nesController.uncapFramerate.value;
     final rewindEnabled = _nesController.rewindEnabled.value;
 
     return PopupMenuButton<String>(
@@ -437,23 +439,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
             filterQuality == FilterQuality.high
                 ? FilterQuality.none
                 : FilterQuality.high,
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: 'toggle_uncap_framerate',
-          onTap: _nesController.toggleUncapFramerate,
-          child: Row(
-            spacing: 12,
-            children: [
-              Icon(
-                uncapFramerate
-                    ? Icons.check_box
-                    : Icons.check_box_outline_blank,
-                size: 16,
-                color: Colors.black,
-              ),
-              const Text('Uncap Framerate', style: TextStyle(fontSize: 12)),
-            ],
           ),
         ),
         _buildMenuGroupHeader('GAMEPLAY'),
@@ -730,26 +715,49 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     if (result) await onConfirm();
   }
 
+  void _startEmulationLoop() {
+    _emulationTimer?.cancel();
+    _lastFrameTime = DateTime.now();
+    _accumulatedTimeMicros = 0;
+
+    _emulationTimer = Timer.periodic(const Duration(milliseconds: 4), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      final now = DateTime.now();
+      if (_lastFrameTime != null) {
+        final elapsed = now.difference(_lastFrameTime!).inMicroseconds;
+        _accumulatedTimeMicros += elapsed;
+
+        while (_accumulatedTimeMicros >= _targetFrameTimeMicros) {
+          _nesController.updateEmulation();
+          _accumulatedTimeMicros -= _targetFrameTimeMicros;
+
+          if (_accumulatedTimeMicros > _targetFrameTimeMicros * 3) {
+            _accumulatedTimeMicros = 0;
+            break;
+          }
+        }
+      }
+
+      _lastFrameTime = now;
+    });
+  }
+
+  void _stopEmulationLoop() {
+    _emulationTimer?.cancel();
+    _emulationTimer = null;
+    _lastFrameTime = null;
+    _accumulatedTimeMicros = 0;
+  }
+
   @override
-  void dispose() {
+  Future<void> dispose() async {
     _stopEmulationLoop();
     _focusNode.dispose();
 
     super.dispose();
-  }
-
-  void _startEmulationLoop() {
-    _emulationSubscription?.cancel();
-    _emulationSubscription = Stream.periodic(_targetFrameTime, (count) => count)
-        .listen((_) {
-          if (mounted) {
-            _nesController.updateEmulation();
-          }
-        });
-  }
-
-  void _stopEmulationLoop() {
-    _emulationSubscription?.cancel();
-    _emulationSubscription = null;
   }
 }

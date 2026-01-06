@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -53,7 +52,6 @@ class NESEmulatorController {
   );
   final Signal<bool> isDebuggerVisible = signal(true);
   final Signal<bool> isOnScreenControllerVisible = signal(false);
-  final Signal<bool> uncapFramerate = signal(false);
   final Signal<RenderMode> renderMode = signal(RenderMode.both);
 
   final Signal<bool> isLoadingROM = signal(false);
@@ -228,12 +226,7 @@ class NESEmulatorController {
 
     bus.ppu.renderMode = renderMode.value;
 
-    if (!_frameRateController.shouldUpdateFrame(
-      uncapFramerate: uncapFramerate.value,
-    )) {
-      _updateAudioIfReady();
-      return;
-    }
+    _updateAudioIfReady();
 
     _frameRateController.markFrameTime();
 
@@ -287,8 +280,8 @@ class NESEmulatorController {
   }
 
   void _handleEmulationError(Exception e) {
-    developer.log('Emulation error: $e');
     pauseEmulation();
+
     errorMessage.value = '$e';
   }
 
@@ -397,11 +390,11 @@ class NESEmulatorController {
       await prefs.setString(key, jsonString);
 
       hasSaveState.value = true;
-      developer.log('Save state saved for ${romName.value}');
+
       return true;
     } on Exception catch (e) {
-      developer.log('Failed to save state: $e');
       errorMessage.value = 'Failed to save state: $e';
+
       return false;
     }
   }
@@ -435,11 +428,10 @@ class NESEmulatorController {
       clearRewindBuffer();
       unawaited(updatePixelBuffer());
 
-      developer.log('Save state loaded for ${romName.value}');
       return true;
     } on Exception catch (e) {
-      developer.log('Failed to load state: $e');
       errorMessage.value = 'Failed to load state: $e';
+
       return false;
     }
   }
@@ -526,8 +518,6 @@ class NESEmulatorController {
 
   void changeFilterQuality(FilterQuality quality) =>
       filterQuality.value = quality;
-
-  void toggleUncapFramerate() => uncapFramerate.value = !uncapFramerate.value;
 
   void toggleDebugger() => isDebuggerVisible.value = !isDebuggerVisible.value;
 

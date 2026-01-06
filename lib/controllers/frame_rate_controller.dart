@@ -3,11 +3,15 @@ import 'package:signals/signals_flutter.dart';
 class FrameRateController {
   static const int maxFrameSkip = 0;
   static const double targetFrameTimeMs = 1000 / 60;
+  static const int fpsUpdateIntervalMs = 500;
 
   int frameCount = 0;
   int skipFrames = 0;
   DateTime lastFPSUpdate = DateTime.now();
   DateTime lastFrameTime = DateTime.now();
+
+  final List<double> _fpsHistory = [];
+  static const int _fpsHistorySize = 10;
 
   final Signal<double> currentFPS = signal(0);
 
@@ -16,14 +20,7 @@ class FrameRateController {
     skipFrames = 0;
     lastFPSUpdate = DateTime.now();
     lastFrameTime = DateTime.now();
-  }
-
-  bool shouldUpdateFrame({required bool uncapFramerate}) {
-    final now = DateTime.now();
-    final elapsedMicroseconds = now.difference(lastFrameTime).inMicroseconds;
-    final elapsedMs = elapsedMicroseconds / 1000;
-
-    return uncapFramerate || elapsedMs >= targetFrameTimeMs;
+    _fpsHistory.clear();
   }
 
   void markFrameTime() => lastFrameTime = DateTime.now();
@@ -31,17 +28,24 @@ class FrameRateController {
   void updateFPSCounter(double currentFps) {
     frameCount++;
     final now = DateTime.now();
+    final elapsed = now.difference(lastFPSUpdate).inMilliseconds;
 
-    if (now.difference(lastFPSUpdate).inMilliseconds >= 1000) {
-      final fps =
-          frameCount / (now.difference(lastFPSUpdate).inMilliseconds / 1000);
-      currentFPS.value = fps;
+    if (elapsed >= fpsUpdateIntervalMs) {
+      final fps = frameCount / (elapsed / 1000);
+
+      _fpsHistory.add(fps);
+
+      if (_fpsHistory.length > _fpsHistorySize) _fpsHistory.removeAt(0);
+
+      final avgFps = _fpsHistory.reduce((a, b) => a + b) / _fpsHistory.length;
+      currentFPS.value = avgFps;
+
       frameCount = 0;
       lastFPSUpdate = now;
 
-      if (fps < 58 && skipFrames < maxFrameSkip) {
+      if (avgFps < 58 && skipFrames < maxFrameSkip) {
         skipFrames++;
-      } else if (fps > 62 && skipFrames > 0) {
+      } else if (avgFps > 62 && skipFrames > 0) {
         skipFrames--;
       }
     }

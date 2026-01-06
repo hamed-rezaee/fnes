@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -159,9 +158,7 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
   int _readCharData(int address) {
     try {
       return widget.bus.ppu.ppuRead(address);
-    } on Exception catch (e) {
-      developer.log('Error reading CHR data: $e');
-
+    } on Exception catch (_) {
       if (widget.bus.cart != null) {
         var data = 0;
 
@@ -192,9 +189,7 @@ class _PaletteDebugViewState extends State<PaletteDebugView> {
       final b = hex & 0xFF;
 
       return Color.fromARGB(255, r, g, b);
-    } on Exception catch (e) {
-      developer.log('Error getting pixel color: $e');
-
+    } on Exception catch (_) {
       final gray = pixelValue * 85;
 
       return Color.fromARGB(255, gray, gray, gray);
