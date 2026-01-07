@@ -538,4 +538,97 @@ class Mapper005 extends Mapper {
       }
     }
   }
+
+  @override
+  Map<String, dynamic> saveState() => {
+    'prgMode': _prgMode,
+    'chrMode': _chrMode,
+    'prgRamProtect1': _prgRamProtect1,
+    'prgRamProtect2': _prgRamProtect2,
+    'exRamMode': _exRamMode,
+    'chrHighBits': _chrHighBits,
+    'fillTile': _fillTile,
+    'fillColor': _fillColor,
+    'nametableMapping': List<int>.from(_nametableMapping),
+    'prgRegs': List<int>.from(_prgRegs),
+    'chrRegs': List<int>.from(_chrRegs),
+    'lastBgBank': _lastBgBank,
+    'lastPalette': _lastPalette,
+    'vSplitMode': _vSplitMode,
+    'vSplitScroll': _vSplitScroll,
+    'vSplitBank': _vSplitBank,
+    'irqLineCompare': _irqLineCompare,
+    'irqEnabled': _irqEnabled,
+    'irqPending': _irqPending,
+    'inFrame': _inFrame,
+    'scanlineC': _scanlineC,
+    'inSplitRegion': _inSplitRegion,
+    'bgFetchRemaining': _bgFetchRemaining,
+    'bgTileCount': _bgTileCount,
+    'scanlineReads': _scanlineReads,
+    'multiplierA': _multiplierA,
+    'multiplierB': _multiplierB,
+    'prgRam': _prgRam.toList(),
+    'exRam': _exRam.toList(),
+    'internalNametableRam': _internalNametableRam.toList(),
+  };
+
+  @override
+  void restoreState(Map<String, dynamic> state) {
+    _prgMode = state['prgMode'] as int;
+    _chrMode = state['chrMode'] as int;
+    _prgRamProtect1 = state['prgRamProtect1'] as int;
+    _prgRamProtect2 = state['prgRamProtect2'] as int;
+    _exRamMode = state['exRamMode'] as int;
+    _chrHighBits = state['chrHighBits'] as int;
+    _fillTile = state['fillTile'] as int;
+    _fillColor = state['fillColor'] as int;
+
+    final nametableMapping = state['nametableMapping'] as List<dynamic>;
+    for (var i = 0; i < 4; i++) {
+      _nametableMapping[i] = nametableMapping[i] as int;
+    }
+
+    final prgRegs = state['prgRegs'] as List<dynamic>;
+    for (var i = 0; i < 5; i++) {
+      _prgRegs[i] = prgRegs[i] as int;
+    }
+
+    final chrRegs = state['chrRegs'] as List<dynamic>;
+    for (var i = 0; i < 12; i++) {
+      _chrRegs[i] = chrRegs[i] as int;
+    }
+
+    _lastBgBank = state['lastBgBank'] as int;
+    _lastPalette = state['lastPalette'] as int;
+    _vSplitMode = state['vSplitMode'] as int;
+    _vSplitScroll = state['vSplitScroll'] as int;
+    _vSplitBank = state['vSplitBank'] as int;
+    _irqLineCompare = state['irqLineCompare'] as int;
+    _irqEnabled = state['irqEnabled'] as bool;
+    _irqPending = state['irqPending'] as bool;
+    _inFrame = state['inFrame'] as bool;
+    _scanlineC = state['scanlineC'] as int;
+    _inSplitRegion = state['inSplitRegion'] as bool;
+    _bgFetchRemaining = state['bgFetchRemaining'] as int;
+    _bgTileCount = state['bgTileCount'] as int;
+    _scanlineReads = state['scanlineReads'] as int;
+    _multiplierA = state['multiplierA'] as int;
+    _multiplierB = state['multiplierB'] as int;
+
+    final prgRamList = state['prgRam'] as List<dynamic>;
+    for (var i = 0; i < _prgRam.length; i++) {
+      _prgRam[i] = prgRamList[i] as int;
+    }
+
+    final exRamList = state['exRam'] as List<dynamic>;
+    for (var i = 0; i < _exRam.length; i++) {
+      _exRam[i] = exRamList[i] as int;
+    }
+
+    final nametableRamList = state['internalNametableRam'] as List<dynamic>;
+    for (var i = 0; i < _internalNametableRam.length; i++) {
+      _internalNametableRam[i] = nametableRamList[i] as int;
+    }
+  }
 }
