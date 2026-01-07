@@ -51,20 +51,24 @@ class Mapper001 extends Mapper {
 
       if (prgMode == 0 || prgMode == 1) {
         final bank = (_prgBank >> 1) % (bankSize16k ~/ 2);
+
         return bank * 0x8000 + (address & 0x7FFF);
       } else if (prgMode == 2) {
         if (address < 0xC000) {
           return address & 0x3FFF;
         } else {
           final bank = _prgBank % bankSize16k;
+
           return bank * 0x4000 + (address & 0x3FFF);
         }
       } else {
         if (address < 0xC000) {
           final bank = _prgBank % bankSize16k;
+
           return bank * 0x4000 + (address & 0x3FFF);
         } else {
           final lastBank = bankSize16k - 1;
+
           return lastBank * 0x4000 + (address & 0x3FFF);
         }
       }
@@ -77,11 +81,12 @@ class Mapper001 extends Mapper {
   int? cpuMapWrite(int address, int data, [int cycles = 0]) {
     if (address >= 0x6000 && address < 0x8000) {
       _prgRam[address - 0x6000] = data;
+
       return 0xFFFFFFFF;
     }
 
     if (address >= 0x8000 && address <= 0xFFFF) {
-      final consecutive = cycles > 0 && cycles - _lastWriteCycles < 6;
+      final consecutive = cycles > 0 && cycles - _lastWriteCycles < 5;
       _lastWriteCycles = cycles;
 
       if (consecutive) return null;
@@ -118,37 +123,43 @@ class Mapper001 extends Mapper {
     return null;
   }
 
+  int _mapPpu(int address) {
+    var bankCount = totalCharBanks;
+    if (bankCount == 0) bankCount = 2; // Treat 8k RAM as 2x 4k banks
+
+    final chrMode = (_control >> 4) & 0x01;
+
+    if (chrMode == 0) {
+      final bank = (_chrBank0 >> 1) % bankCount;
+
+      return bank * 0x2000 + (address & 0x1FFF);
+    } else {
+      if (address < 0x1000) {
+        final bank = _chrBank0 % (bankCount * 2);
+
+        return bank * 0x1000 + (address & 0x0FFF);
+      } else {
+        final bank = _chrBank1 % (bankCount * 2);
+
+        return bank * 0x1000 + (address & 0x0FFF);
+      }
+    }
+  }
+
   @override
   int? ppuMapRead(int address, [void Function(int data)? setData]) {
     if (address >= 0x0000 && address <= 0x1FFF) {
-      // CHR RAM: just return address directly
-      if (totalCharBanks == 0) {
-        return address;
-      }
-
-      final chrMode = (_control >> 4) & 0x01;
-
-      if (chrMode == 0) {
-        // 8k mode: ignore bit 0 of bank number
-        final bank = (_chrBank0 >> 1) % totalCharBanks;
-        return bank * 0x2000 + (address & 0x1FFF);
-      } else {
-        // 4k mode: two separate banks
-        if (address < 0x1000) {
-          final bank = _chrBank0 % (totalCharBanks * 2);
-          return bank * 0x1000 + (address & 0x0FFF);
-        } else {
-          final bank = _chrBank1 % (totalCharBanks * 2);
-          return bank * 0x1000 + (address & 0x0FFF);
-        }
-      }
+      return _mapPpu(address);
     }
+
     return null;
   }
 
   @override
   int? ppuMapWrite(int address) {
-    if (address >= 0x0000 && address <= 0x1FFF && chrRam) return address;
+    if (address >= 0x0000 && address <= 0x1FFF && chrRam) {
+      return _mapPpu(address);
+    }
 
     return null;
   }
@@ -161,6 +172,7 @@ class Mapper001 extends Mapper {
     'chrBank0': _chrBank0,
     'chrBank1': _chrBank1,
     'prgBank': _prgBank,
+    'lastWriteCycles': _lastWriteCycles,
     'prgRam': _prgRam.toList(),
   };
 
@@ -172,6 +184,7 @@ class Mapper001 extends Mapper {
     _chrBank0 = (state['chrBank0'] as int?) ?? 0;
     _chrBank1 = (state['chrBank1'] as int?) ?? 0;
     _prgBank = (state['prgBank'] as int?) ?? 0;
+    _lastWriteCycles = (state['lastWriteCycles'] as int?) ?? 0;
 
     if (state.containsKey('prgRam')) {
       final ram = (state['prgRam'] as List).cast<int>();
