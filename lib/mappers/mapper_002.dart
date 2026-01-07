@@ -2,6 +2,7 @@ import 'package:fnes/mappers/mapper.dart';
 
 class Mapper002 extends Mapper {
   Mapper002(super.programBankCount, super.totalCharBanks) {
+    chrRam = totalCharBanks == 0;
     reset();
   }
 
@@ -34,6 +35,9 @@ class Mapper002 extends Mapper {
   int? cpuMapWrite(int address, int data, [int cycles = 0]) {
     if (address >= 0x8000 && address <= 0xFFFF) {
       _selectedProgramBankLow = data & 0x0F;
+
+      if (programBankCount > 0) _selectedProgramBankLow %= programBankCount;
+
       setPrgBank16k(0, _selectedProgramBankLow);
     }
 
@@ -67,7 +71,6 @@ class Mapper002 extends Mapper {
   };
 
   @override
-  void restoreState(Map<String, dynamic> state) {
-    _selectedProgramBankLow = state['selectedProgramBankLow'] as int;
-  }
+  void restoreState(Map<String, dynamic> state) =>
+      _selectedProgramBankLow = state['selectedProgramBankLow'] as int;
 }

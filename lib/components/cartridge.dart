@@ -103,14 +103,15 @@ class Cartridge {
         _charMemory = Uint8List(8192);
       } else {
         _charMemory = Uint8List(charBanks * 8192);
+
         if (offset + _charMemory.length <= bytes.length) {
           _charMemory.setAll(
             0,
             bytes.sublist(offset, offset + _charMemory.length),
           );
         }
+        offset += _charMemory.length;
       }
-      offset += _charMemory.length;
     } else if (fileType == 2) {
       programBanks =
           ((header.programRamSize & 0x07) << 8) | header.programRomChunks;
