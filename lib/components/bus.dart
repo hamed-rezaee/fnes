@@ -39,6 +39,9 @@ class Bus {
   int _audioBufferCount = 0;
 
   int _systemClockCounter = 0;
+  int _cpuClockCounter = 0;
+  double _cpuClockAccumulator = 0;
+  bool _isPal = false;
 
   final Uint8List _controllerState = Uint8List(2);
 
@@ -48,9 +51,20 @@ class Bus {
   bool _dmaDummy = true;
   bool _dmaTransfer = false;
 
+  void setSystemType({required bool isPal}) {
+    _isPal = isPal;
+    ppu.setSystemType(isPal: isPal);
+    apu.setSystemType(isPal: isPal);
+
+    final clockFreq = isPal ? 5320342.0 : 5369318.0;
+
+    _audioTimePerNESClock = 1.0 / clockFreq;
+  }
+
   void setSampleFrequency(int sampleRate) {
     _audioTimePerSystemSample = 1 / sampleRate;
-    _audioTimePerNESClock = 1 / 5369318.0;
+
+    if (_audioTimePerNESClock == 0) _audioTimePerNESClock = 1 / 5369318.0;
   }
 
   @pragma('vm:prefer-inline')
@@ -112,6 +126,8 @@ class Bus {
     ppu.reset();
 
     _systemClockCounter = 0;
+    _cpuClockCounter = 0;
+    _cpuClockAccumulator = 0.0;
     _dmaPage = 0x00;
     _dmaAddress = 0x00;
     _dmaData = 0x00;
@@ -124,14 +140,20 @@ class Bus {
   bool clock() {
     ppu.clock();
 
-    if (_systemClockCounter % 3 == 0) {
+    final cpuRatio = _isPal ? 3.2 : 3.0;
+    _cpuClockAccumulator += 1.0;
+
+    if (_cpuClockAccumulator >= cpuRatio) {
+      _cpuClockAccumulator -= cpuRatio;
+      _cpuClockCounter++;
+
       apu.clock();
 
       if (_dmaTransfer) {
         if (_dmaDummy) {
-          if (_systemClockCounter.isOdd) _dmaDummy = false;
+          if (_cpuClockCounter.isOdd) _dmaDummy = false;
         } else {
-          if (_systemClockCounter.isEven) {
+          if (_cpuClockCounter.isEven) {
             _dmaData = cpuRead((_dmaPage << 8) | _dmaAddress);
           } else {
             ppu.pOAM[_dmaAddress] = _dmaData;

@@ -59,7 +59,8 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU(), cheatEngine: CheatEngine()),
   );
 
-  static const _targetFrameTimeMicros = 16639;
+  int get _targetFrameTimeMicros =>
+      _nesController.systemType.value == SystemType.pal ? 20000 : 16639;
 
   Timer? _emulationTimer;
   DateTime? _lastFrameTime;
@@ -401,12 +402,29 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     final showOnScreenController =
         _nesController.isOnScreenControllerVisible.value;
     final rewindEnabled = _nesController.rewindEnabled.value;
+    final systemType = _nesController.systemType.value;
 
     return PopupMenuButton<String>(
       icon: const Icon(Icons.settings),
       tooltip: 'Settings',
       itemBuilder: (BuildContext context) => [
         _buildMenuGroupHeader('VIDEO'),
+        PopupMenuItem<String>(
+          value: 'toggle_system',
+          child: Row(
+            spacing: 12,
+            children: [
+              const Icon(Icons.ondemand_video_rounded, size: 16),
+              Text(
+                systemType == SystemType.pal ? 'PAL (50Hz)' : 'NTSC (60Hz)',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          onTap: () => _nesController.changeSystemType(
+            systemType == SystemType.pal ? SystemType.ntsc : SystemType.pal,
+          ),
+        ),
         PopupMenuItem<String>(
           value: 'toggle_filter',
           child: Row(
@@ -417,7 +435,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
                     ? Icons.check_box
                     : Icons.check_box_outline_blank,
                 size: 16,
-                color: Colors.black,
               ),
               const Text('Video Filter', style: TextStyle(fontSize: 12)),
             ],
@@ -440,7 +457,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
                     ? Icons.check_box
                     : Icons.check_box_outline_blank,
                 size: 16,
-                color: Colors.black,
               ),
               const Text(
                 'On-Screen Controller',
@@ -458,7 +474,6 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
               Icon(
                 rewindEnabled ? Icons.check_box : Icons.check_box_outline_blank,
                 size: 16,
-                color: Colors.black,
               ),
               const Text('Enable Rewind', style: TextStyle(fontSize: 12)),
             ],
@@ -471,7 +486,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
           child: const Row(
             spacing: 12,
             children: [
-              Icon(Icons.info, size: 16, color: Colors.black),
+              Icon(Icons.info, size: 16),
               Text('About', style: TextStyle(fontSize: 12)),
             ],
           ),

@@ -26,6 +26,86 @@ class APU {
   final NoiseWave noise = NoiseWave();
   final DMC dmc = DMC();
 
+  static const List<int> _noiseTimerNTSC = [
+    0x004,
+    0x008,
+    0x010,
+    0x020,
+    0x040,
+    0x060,
+    0x080,
+    0x0A0,
+    0x0CA,
+    0x0FE,
+    0x17C,
+    0x1FC,
+    0x2FA,
+    0x3F8,
+    0x7F2,
+    0xFE4,
+  ];
+
+  static const List<int> _noiseTimerPAL = [
+    0x004,
+    0x008,
+    0x00E,
+    0x01E,
+    0x03C,
+    0x058,
+    0x076,
+    0x094,
+    0x0BC,
+    0x0EC,
+    0x162,
+    0x1D8,
+    0x2C4,
+    0x3B0,
+    0x762,
+    0xEC4,
+  ];
+
+  static const List<int> _dmcTimerNTSC = [
+    0x1AC,
+    0x17C,
+    0x154,
+    0x140,
+    0x11E,
+    0x0FE,
+    0x0E2,
+    0x0D6,
+    0x0BE,
+    0x0A0,
+    0x08E,
+    0x080,
+    0x06A,
+    0x054,
+    0x048,
+    0x036,
+  ];
+
+  static const List<int> _dmcTimerPAL = [
+    0x18E,
+    0x162,
+    0x13C,
+    0x12A,
+    0x114,
+    0x0EC,
+    0x0D2,
+    0x0C6,
+    0x0B0,
+    0x094,
+    0x084,
+    0x076,
+    0x062,
+    0x04E,
+    0x042,
+    0x032,
+  ];
+
+  bool _isPal = false;
+
+  void setSystemType({required bool isPal}) => _isPal = isPal;
+
   void cpuWrite(int address, int data) {
     switch (address) {
       case 0x4000:
@@ -92,24 +172,9 @@ class APU {
         noise.lengthCounter.halt = (data & 0x20) != 0;
       case 0x400E:
         noise.mode = (data & 0x80) != 0;
-        noise.reload = [
-          0x004,
-          0x008,
-          0x010,
-          0x020,
-          0x040,
-          0x060,
-          0x080,
-          0x0A0,
-          0x0CA,
-          0x0FE,
-          0x17C,
-          0x1FC,
-          0x2FA,
-          0x3F8,
-          0x7F2,
-          0xFE4,
-        ][(data & 0x0F)];
+        noise.reload = (_isPal
+            ? _noiseTimerPAL
+            : _noiseTimerNTSC)[(data & 0x0F)];
       case 0x400F:
         noise.lengthCounter.load(data >> 3);
         noise.envelope.start = true;
@@ -119,24 +184,7 @@ class APU {
         if (!dmc.irqEnabled) dmc.irqFlag = false;
 
         dmc.loop = (data & 0x40) != 0;
-        dmc.timerLoad = [
-          0x1AC,
-          0x17C,
-          0x154,
-          0x140,
-          0x11E,
-          0x0FE,
-          0x0E2,
-          0x0D6,
-          0x0BE,
-          0x0A0,
-          0x08E,
-          0x080,
-          0x06A,
-          0x054,
-          0x048,
-          0x036,
-        ][(data & 0x0F)];
+        dmc.timerLoad = (_isPal ? _dmcTimerPAL : _dmcTimerNTSC)[(data & 0x0F)];
       case 0x4011:
         dmc.dmcOutput = data & 0x7F;
       case 0x4012:
@@ -253,38 +301,56 @@ class APU {
     _lowPassPrev = 0;
   }
 
+  static const int _fcStep1NTSC = 7457;
+  static const int _fcStep2NTSC = 14913;
+  static const int _fcStep3NTSC = 22371;
+  static const int _fcStep4NTSC = 29828;
+  static const int _fcStep5NTSC = 37281;
+
+  static const int _fcStep1PAL = 8314;
+  static const int _fcStep2PAL = 16628;
+  static const int _fcStep3PAL = 24940;
+  static const int _fcStep4PAL = 33254;
+  static const int _fcStep5PAL = 41566;
+
   void clock() {
+    final s1 = _isPal ? _fcStep1PAL : _fcStep1NTSC;
+    final s2 = _isPal ? _fcStep2PAL : _fcStep2NTSC;
+    final s3 = _isPal ? _fcStep3PAL : _fcStep3NTSC;
+    final s4 = _isPal ? _fcStep4PAL : _fcStep4NTSC;
+    final s5 = _isPal ? _fcStep5PAL : _fcStep5NTSC;
+
     if (frameCounterMode) {
-      if (globalTime == 7457) {
+      if (globalTime == s1) {
         _clockEnvelopes();
-      } else if (globalTime == 14913) {
+      } else if (globalTime == s2) {
         _clockEnvelopes();
         _clockLengthCounters();
         _clockSweepers();
-      } else if (globalTime == 22371) {
+      } else if (globalTime == s3) {
         _clockEnvelopes();
-      } else if (globalTime == 29828) {
-      } else if (globalTime == 37281) {
+      } else if (globalTime == s4) {
+      } else if (globalTime == s5) {
         _clockEnvelopes();
         _clockLengthCounters();
         _clockSweepers();
         globalTime = -1;
       }
     } else {
-      if (globalTime == 7457) {
+      if (globalTime == s1) {
         _clockEnvelopes();
-      } else if (globalTime == 14913) {
+      } else if (globalTime == s2) {
         _clockEnvelopes();
         _clockLengthCounters();
         _clockSweepers();
-      } else if (globalTime == 22371) {
+      } else if (globalTime == s3) {
         _clockEnvelopes();
-      } else if (globalTime == 29829) {
+      } else if (globalTime == s4 + 1) {
         _clockEnvelopes();
         _clockLengthCounters();
         _clockSweepers();
         if (!irqDisable) frameIrq = true;
-      } else if (globalTime == 29830) {
+      } else if (globalTime == s4 + 2) {
         if (!irqDisable) frameIrq = true;
         globalTime = -1;
       }

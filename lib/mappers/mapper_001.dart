@@ -125,7 +125,8 @@ class Mapper001 extends Mapper {
 
   int _mapPpu(int address) {
     var bankCount = totalCharBanks;
-    if (bankCount == 0) bankCount = 2; // Treat 8k RAM as 2x 4k banks
+
+    if (bankCount == 0) bankCount = 2;
 
     final chrMode = (_control >> 4) & 0x01;
 

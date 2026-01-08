@@ -27,6 +27,8 @@ enum RenderMode {
   final String label;
 }
 
+enum SystemType { ntsc, pal }
+
 class NESEmulatorController {
   NESEmulatorController({required this.bus}) {
     bus.setSampleFrequency(44100);
@@ -34,6 +36,7 @@ class NESEmulatorController {
     cheatController = CheatController(bus: bus);
 
     unawaited(_initializeAudio());
+    unawaited(_loadSettings());
   }
 
   final Bus bus;
@@ -50,6 +53,7 @@ class NESEmulatorController {
   final Signal<FilterQuality> filterQuality = signal<FilterQuality>(
     FilterQuality.none,
   );
+  final Signal<SystemType> systemType = signal(SystemType.pal);
   final Signal<bool> isOnScreenControllerVisible = signal(false);
   final Signal<RenderMode> renderMode = signal(RenderMode.both);
 
@@ -81,6 +85,23 @@ class NESEmulatorController {
   final Stopwatch _frameStopwatch = Stopwatch();
 
   Stream<Image> get imageStream => _imageStreamController.stream;
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isPal = prefs.getBool('isPal') ?? false;
+
+    unawaited(changeSystemType(isPal ? SystemType.pal : SystemType.ntsc));
+  }
+
+  Future<void> changeSystemType(SystemType type) async {
+    systemType.value = type;
+    bus.setSystemType(isPal: type == SystemType.pal);
+    _frameRateController.setTargetFps(type == SystemType.pal ? 50.0 : 60.0);
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setBool('isPal', type == SystemType.pal);
+  }
 
   Future<void> _initializeAudio() async => _audioPlayer.initialize();
 

@@ -636,9 +636,21 @@ class PPU {
     }
   }
 
+  int _totalScanlines = 262;
+  bool _isPal = false;
+
+  void setSystemType({required bool isPal}) {
+    _totalScanlines = isPal ? 312 : 262;
+    _isPal = isPal;
+  }
+
   void clock() {
     if (scanline >= -1 && scanline < 240) _handleVisibleScanline();
-    if (scanline >= 241 && scanline < 261) _handleVerticalBlank();
+
+    if (scanline >= 241 && scanline < _totalScanlines - 1) {
+      _handleVerticalBlank();
+    }
+
     if (scanline >= 0 && scanline < 240) _composeScanline();
 
     cycle++;
@@ -646,7 +658,8 @@ class PPU {
     if (cycle >= 341) {
       cycle = 0;
       scanline++;
-      if (scanline >= 261) {
+
+      if (scanline >= _totalScanlines - 1) {
         scanline = -1;
         frameComplete = true;
         frameCounter++;
@@ -655,7 +668,8 @@ class PPU {
   }
 
   void _handleVisibleScanline() {
-    if (scanline == -1 &&
+    if (!_isPal &&
+        scanline == -1 &&
         cycle == 0 &&
         (mask.renderBackground || mask.renderSprites) &&
         (frameCounter & 1) == 1) {

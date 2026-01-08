@@ -2,8 +2,11 @@ import 'package:signals/signals_flutter.dart';
 
 class FrameRateController {
   static const int maxFrameSkip = 0;
-  static const double targetFrameTimeMs = 1000 / 60;
   static const int fpsUpdateIntervalMs = 500;
+
+  double _targetFps = 60;
+
+  void setTargetFps(double fps) => _targetFps = fps;
 
   int frameCount = 0;
   int skipFrames = 0;
@@ -43,9 +46,9 @@ class FrameRateController {
       frameCount = 0;
       lastFPSUpdate = now;
 
-      if (avgFps < 58 && skipFrames < maxFrameSkip) {
+      if (avgFps < (_targetFps - 2) && skipFrames < maxFrameSkip) {
         skipFrames++;
-      } else if (avgFps > 62 && skipFrames > 0) {
+      } else if (avgFps > (_targetFps + 2) && skipFrames > 0) {
         skipFrames--;
       }
     }
