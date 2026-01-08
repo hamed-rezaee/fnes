@@ -18,7 +18,11 @@ class AudioDebugViewController {
   AudioDebugViewController({
     required this.apu,
     required this.nesEmulatorController,
-  }) {
+  }) : pulse1Enabled = signal(apu.pulse1.debugEnable),
+       pulse2Enabled = signal(apu.pulse2.debugEnable),
+       triangleEnabled = signal(apu.triangle.debugEnable),
+       noiseEnabled = signal(apu.noise.debugEnable),
+       dmcEnabled = signal(apu.dmc.debugEnable) {
     effect(() {
       nesEmulatorController.frameUpdateTrigger.value;
 
@@ -78,11 +82,11 @@ class AudioDebugViewController {
 
   final Signal<AudioChannel> selectedChannel = signal(AudioChannel.pulse1);
 
-  final Signal<bool> pulse1Enabled = signal(true);
-  final Signal<bool> pulse2Enabled = signal(true);
-  final Signal<bool> triangleEnabled = signal(true);
-  final Signal<bool> noiseEnabled = signal(true);
-  final Signal<bool> dmcEnabled = signal(true);
+  final Signal<bool> pulse1Enabled;
+  final Signal<bool> pulse2Enabled;
+  final Signal<bool> triangleEnabled;
+  final Signal<bool> noiseEnabled;
+  final Signal<bool> dmcEnabled;
 
   void updateAudioData() {
     final p1Out = apu.pulse1.output().toDouble().clamp(-1.0, 1.0);
@@ -156,23 +160,19 @@ class AudioDebugViewController {
     switch (channel) {
       case AudioChannel.pulse1:
         pulse1Enabled.value = true;
-        apu.pulse1.enable = true;
+        apu.pulse1.debugEnable = true;
       case AudioChannel.pulse2:
         pulse2Enabled.value = true;
-        apu.pulse2.enable = true;
+        apu.pulse2.debugEnable = true;
       case AudioChannel.triangle:
         triangleEnabled.value = true;
-        apu.triangle.enable = true;
+        apu.triangle.debugEnable = true;
       case AudioChannel.noise:
         noiseEnabled.value = true;
-        apu.noise.enable = true;
+        apu.noise.debugEnable = true;
       case AudioChannel.dmc:
         dmcEnabled.value = true;
-
-        if (apu.dmc.duration == 0) {
-          apu.dmc.duration = apu.dmc.sampleLength;
-          apu.dmc.currentAddress = apu.dmc.sampleAddress;
-        }
+        apu.dmc.debugEnable = true;
     }
   }
 
@@ -180,19 +180,19 @@ class AudioDebugViewController {
     switch (channel) {
       case AudioChannel.pulse1:
         pulse1Enabled.value = false;
-        apu.pulse1.enable = false;
+        apu.pulse1.debugEnable = false;
       case AudioChannel.pulse2:
         pulse2Enabled.value = false;
-        apu.pulse2.enable = false;
+        apu.pulse2.debugEnable = false;
       case AudioChannel.triangle:
         triangleEnabled.value = false;
-        apu.triangle.enable = false;
+        apu.triangle.debugEnable = false;
       case AudioChannel.noise:
         noiseEnabled.value = false;
-        apu.noise.enable = false;
+        apu.noise.debugEnable = false;
       case AudioChannel.dmc:
         dmcEnabled.value = false;
-        apu.dmc.duration = 0;
+        apu.dmc.debugEnable = false;
     }
   }
 
@@ -200,26 +200,19 @@ class AudioDebugViewController {
     switch (channel) {
       case AudioChannel.pulse1:
         pulse1Enabled.value = !pulse1Enabled.value;
-        apu.pulse1.enable = pulse1Enabled.value;
+        apu.pulse1.debugEnable = pulse1Enabled.value;
       case AudioChannel.pulse2:
         pulse2Enabled.value = !pulse2Enabled.value;
-        apu.pulse2.enable = pulse2Enabled.value;
+        apu.pulse2.debugEnable = pulse2Enabled.value;
       case AudioChannel.triangle:
         triangleEnabled.value = !triangleEnabled.value;
-        apu.triangle.enable = triangleEnabled.value;
+        apu.triangle.debugEnable = triangleEnabled.value;
       case AudioChannel.noise:
         noiseEnabled.value = !noiseEnabled.value;
-        apu.noise.enable = noiseEnabled.value;
+        apu.noise.debugEnable = noiseEnabled.value;
       case AudioChannel.dmc:
         dmcEnabled.value = !dmcEnabled.value;
-        if (dmcEnabled.value) {
-          if (apu.dmc.duration == 0) {
-            apu.dmc.duration = apu.dmc.sampleLength;
-            apu.dmc.currentAddress = apu.dmc.sampleAddress;
-          }
-        } else {
-          apu.dmc.duration = 0;
-        }
+        apu.dmc.debugEnable = dmcEnabled.value;
     }
   }
 

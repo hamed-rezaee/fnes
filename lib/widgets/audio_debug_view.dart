@@ -111,19 +111,11 @@ class _AudioDebugViewState extends State<AudioDebugView> {
           );
           controller.noiseEnabled.value = selected.contains(AudioChannel.noise);
           controller.dmcEnabled.value = selected.contains(AudioChannel.dmc);
-          widget.apu.pulse1.enable = controller.pulse1Enabled.value;
-          widget.apu.pulse2.enable = controller.pulse2Enabled.value;
-          widget.apu.triangle.enable = controller.triangleEnabled.value;
-          widget.apu.noise.enable = controller.noiseEnabled.value;
-
-          if (controller.dmcEnabled.value) {
-            if (widget.apu.dmc.duration == 0) {
-              widget.apu.dmc.duration = widget.apu.dmc.sampleLength;
-              widget.apu.dmc.currentAddress = widget.apu.dmc.sampleAddress;
-            }
-          } else {
-            widget.apu.dmc.duration = 0;
-          }
+          widget.apu.pulse1.debugEnable = controller.pulse1Enabled.value;
+          widget.apu.pulse2.debugEnable = controller.pulse2Enabled.value;
+          widget.apu.triangle.debugEnable = controller.triangleEnabled.value;
+          widget.apu.noise.debugEnable = controller.noiseEnabled.value;
+          widget.apu.dmc.debugEnable = controller.dmcEnabled.value;
         },
       ),
     ),

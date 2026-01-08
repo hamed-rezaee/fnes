@@ -501,6 +501,7 @@ class LengthCounter {
 }
 
 class PulseWave {
+  bool debugEnable = true;
   int dutyIndex = 0;
   int timer = 0;
   int reload = 0;
@@ -545,7 +546,8 @@ class PulseWave {
 
   @pragma('vm:prefer-inline')
   int output() {
-    if (!enable ||
+    if (!debugEnable ||
+        !enable ||
         lengthCounter.counter == 0 ||
         reload < 0x08 ||
         sweeper.mute) {
@@ -698,6 +700,7 @@ class LinearCounter {
 }
 
 class TriangleWave {
+  bool debugEnable = true;
   static const List<int> _sequence = [
     0x0F,
     0x0E,
@@ -770,6 +773,7 @@ class TriangleWave {
 
   @pragma('vm:prefer-inline')
   int output() {
+    if (!debugEnable) return 0;
     if (reload < 2) return 7;
 
     return _sequence[phase];
@@ -796,6 +800,7 @@ class TriangleWave {
 }
 
 class NoiseWave {
+  bool debugEnable = true;
   int timer = 0;
   int reload = 0;
   int shiftRegister = 0x0001;
@@ -837,7 +842,7 @@ class NoiseWave {
 
   @pragma('vm:prefer-inline')
   int output() {
-    if (!enable || lengthCounter.counter == 0) return 0;
+    if (!debugEnable || !enable || lengthCounter.counter == 0) return 0;
     if ((shiftRegister & 1) == 0) return envelope.output;
 
     return 0;
@@ -866,6 +871,7 @@ class NoiseWave {
 }
 
 class DMC {
+  bool debugEnable = true;
   int timerCounter = 0;
   int timerLoad = 0;
   int outputShift = 0;
@@ -950,7 +956,10 @@ class DMC {
   }
 
   @pragma('vm:prefer-inline')
-  int output() => dmcOutput;
+  int output() {
+    if (!debugEnable) return 0;
+    return dmcOutput;
+  }
 
   DMCState saveState() => DMCState(
     enable: duration > 0,
