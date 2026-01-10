@@ -38,6 +38,9 @@ class PPU {
   int addressLatch = 0x00;
   int ppuDataBuffer = 0x00;
 
+  int frameScrollX = 0;
+  int frameScrollY = 0;
+
   int backgroundNextTileId = 0x00;
   int backgroundNextTileAttrib = 0x00;
   int backgroundNextTileLsb = 0x00;
@@ -658,6 +661,17 @@ class PPU {
     if (cycle >= 341) {
       cycle = 0;
       scanline++;
+
+      if (scanline == 240) {
+        frameScrollX =
+            (temporaryAddressRegister.nametableX * 256) +
+            (temporaryAddressRegister.coarseX * 8) +
+            fineX;
+        frameScrollY =
+            (temporaryAddressRegister.nametableY * 240) +
+            (temporaryAddressRegister.coarseY * 8) +
+            temporaryAddressRegister.fineY;
+      }
 
       if (scanline >= _totalScanlines - 1) {
         scanline = -1;

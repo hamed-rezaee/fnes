@@ -7,6 +7,7 @@ import 'package:fnes/widgets/cartridge_debug_view.dart';
 import 'package:fnes/widgets/cheat_manager_view.dart';
 import 'package:fnes/widgets/cpu_debug_view.dart';
 import 'package:fnes/widgets/memory_debug_view.dart';
+import 'package:fnes/widgets/nametable_debug_view.dart';
 import 'package:fnes/widgets/palette_debug_view.dart';
 
 class DebugPanel extends StatefulWidget {
@@ -34,6 +35,7 @@ class _DebugPanelState extends State<DebugPanel> {
       'registers': false,
       'memory': false,
       'palette': false,
+      'nametables': false,
       'audio': false,
       'cartridge': false,
       'cheats': false,
@@ -70,6 +72,14 @@ class _DebugPanelState extends State<DebugPanel> {
               key: 'palette',
               title: 'Graphics',
               child: PaletteDebugView(
+                bus: widget.bus,
+                nesEmulatorController: widget.nesEmulatorController,
+              ),
+            ),
+            _buildCollapsibleSection(
+              key: 'nametables',
+              title: 'Nametables',
+              child: NametableDebugView(
                 bus: widget.bus,
                 nesEmulatorController: widget.nesEmulatorController,
               ),
