@@ -7,6 +7,7 @@ import 'package:fnes/mappers/mapper_004.dart';
 import 'package:fnes/mappers/mapper_005.dart';
 import 'package:fnes/mappers/mapper_007.dart';
 import 'package:fnes/mappers/mapper_009.dart';
+import 'package:fnes/mappers/mapper_010.dart';
 import 'package:fnes/mappers/mapper_023.dart';
 import 'package:fnes/mappers/mapper_033.dart';
 import 'package:fnes/mappers/mapper_066.dart';
@@ -75,6 +76,7 @@ class MapperFactory {
         5 => Mapper005(programBanks, charBanks),
         7 => Mapper007(programBanks, charBanks),
         9 => Mapper009(programBanks, charBanks),
+        10 => Mapper010(programBanks, charBanks),
         23 => Mapper023(programBanks, charBanks),
         33 => Mapper033(programBanks, charBanks),
         66 => Mapper066(programBanks, charBanks),
@@ -181,6 +183,19 @@ class MapperFactory {
       maxProgramSizeKB: 128,
       minCharSizeKB: 128,
       maxCharSizeKB: 128,
+      supportedMirroring: [MirroringType.mapperControlled],
+    ),
+    MapperInfo(
+      id: 10,
+      name: 'MMC4',
+      category: MapperCategory.mmc,
+      manufacturer: 'Nintendo',
+      features: {MapperFeature.programRam},
+      minProgramSizeKB: 128,
+      maxProgramSizeKB: 256,
+      minCharSizeKB: 128,
+      maxCharSizeKB: 128,
+      batteryBacked: true,
       supportedMirroring: [MirroringType.mapperControlled],
     ),
     MapperInfo(
