@@ -7,6 +7,7 @@ import 'package:fnes/mappers/mapper_004.dart';
 import 'package:fnes/mappers/mapper_005.dart';
 import 'package:fnes/mappers/mapper_007.dart';
 import 'package:fnes/mappers/mapper_009.dart';
+import 'package:fnes/mappers/mapper_023.dart';
 import 'package:fnes/mappers/mapper_066.dart';
 
 enum MapperFeature { irq, programRam, charRam, nameTableControl }
@@ -73,6 +74,7 @@ class MapperFactory {
         5 => Mapper005(programBanks, charBanks),
         7 => Mapper007(programBanks, charBanks),
         9 => Mapper009(programBanks, charBanks),
+        23 => Mapper023(programBanks, charBanks),
         66 => Mapper066(programBanks, charBanks),
         _ => throw Exception('Unsupported mapper ID: $mapperId'),
       };
@@ -177,6 +179,18 @@ class MapperFactory {
       maxProgramSizeKB: 128,
       minCharSizeKB: 128,
       maxCharSizeKB: 128,
+      supportedMirroring: [MirroringType.mapperControlled],
+    ),
+    MapperInfo(
+      id: 23,
+      name: 'VRC2b/VRC4e',
+      category: MapperCategory.vrc,
+      manufacturer: 'Konami',
+      features: {MapperFeature.irq, MapperFeature.programRam},
+      minProgramSizeKB: 128,
+      maxProgramSizeKB: 256,
+      minCharSizeKB: 128,
+      maxCharSizeKB: 256,
       supportedMirroring: [MirroringType.mapperControlled],
     ),
     MapperInfo(
