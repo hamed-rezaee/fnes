@@ -6,6 +6,7 @@ import 'package:fnes/mappers/mapper_003.dart';
 import 'package:fnes/mappers/mapper_004.dart';
 import 'package:fnes/mappers/mapper_005.dart';
 import 'package:fnes/mappers/mapper_007.dart';
+import 'package:fnes/mappers/mapper_009.dart';
 import 'package:fnes/mappers/mapper_066.dart';
 
 enum MapperFeature { irq, programRam, charRam, nameTableControl }
@@ -71,6 +72,7 @@ class MapperFactory {
         4 => Mapper004(programBanks, charBanks),
         5 => Mapper005(programBanks, charBanks),
         7 => Mapper007(programBanks, charBanks),
+        9 => Mapper009(programBanks, charBanks),
         66 => Mapper066(programBanks, charBanks),
         _ => throw Exception('Unsupported mapper ID: $mapperId'),
       };
@@ -163,6 +165,18 @@ class MapperFactory {
       features: {MapperFeature.nameTableControl},
       minProgramSizeKB: 32,
       maxProgramSizeKB: 512,
+      supportedMirroring: [MirroringType.mapperControlled],
+    ),
+    MapperInfo(
+      id: 9,
+      name: 'MMC2',
+      category: MapperCategory.mmc,
+      manufacturer: 'Nintendo',
+      features: {MapperFeature.programRam},
+      minProgramSizeKB: 128,
+      maxProgramSizeKB: 128,
+      minCharSizeKB: 128,
+      maxCharSizeKB: 128,
       supportedMirroring: [MirroringType.mapperControlled],
     ),
     MapperInfo(
