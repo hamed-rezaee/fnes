@@ -8,6 +8,7 @@ import 'package:fnes/mappers/mapper_005.dart';
 import 'package:fnes/mappers/mapper_007.dart';
 import 'package:fnes/mappers/mapper_009.dart';
 import 'package:fnes/mappers/mapper_023.dart';
+import 'package:fnes/mappers/mapper_033.dart';
 import 'package:fnes/mappers/mapper_066.dart';
 
 enum MapperFeature { irq, programRam, charRam, nameTableControl }
@@ -75,6 +76,7 @@ class MapperFactory {
         7 => Mapper007(programBanks, charBanks),
         9 => Mapper009(programBanks, charBanks),
         23 => Mapper023(programBanks, charBanks),
+        33 => Mapper033(programBanks, charBanks),
         66 => Mapper066(programBanks, charBanks),
         _ => throw Exception('Unsupported mapper ID: $mapperId'),
       };
@@ -187,6 +189,17 @@ class MapperFactory {
       category: MapperCategory.vrc,
       manufacturer: 'Konami',
       features: {MapperFeature.irq, MapperFeature.programRam},
+      minProgramSizeKB: 128,
+      maxProgramSizeKB: 256,
+      minCharSizeKB: 128,
+      maxCharSizeKB: 256,
+      supportedMirroring: [MirroringType.mapperControlled],
+    ),
+    MapperInfo(
+      id: 33,
+      name: 'Taito TC0190/TC0350',
+      category: MapperCategory.other,
+      manufacturer: 'Taito',
       minProgramSizeKB: 128,
       maxProgramSizeKB: 256,
       minCharSizeKB: 128,
