@@ -422,6 +422,11 @@ class BusState {
     required this.dmaData,
     required this.dmaDummy,
     required this.dmaTransfer,
+    required this.zapperEnabled,
+    required this.zapperTriggerPressed,
+    required this.zapperPointerOnScreen,
+    required this.zapperX,
+    required this.zapperY,
   });
 
   factory BusState.fromJson(Map<String, dynamic> json) =>
@@ -439,6 +444,11 @@ class BusState {
   final int dmaData;
   final bool dmaDummy;
   final bool dmaTransfer;
+  final bool zapperEnabled;
+  final bool zapperTriggerPressed;
+  final bool zapperPointerOnScreen;
+  final double zapperX;
+  final double zapperY;
 
   Map<String, dynamic> toJson() => _$BusStateToJson(this);
 }

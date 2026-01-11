@@ -10,6 +10,7 @@ import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cartridge.dart';
 import 'package:fnes/components/color_palette.dart';
 import 'package:fnes/components/emulator_state.dart';
+import 'package:fnes/components/zapper.dart';
 import 'package:fnes/controllers/audio_state_manager.dart';
 import 'package:fnes/controllers/cheat_controller.dart';
 import 'package:fnes/controllers/frame_rate_controller.dart';
@@ -45,6 +46,8 @@ class NESEmulatorController {
       StreamController<Image>.broadcast();
 
   static const int _saveStateEveryNFrames = 1;
+  static const double _zapperWidth = 255;
+  static const double _zapperHeight = 239;
 
   final Signal<bool> isRunning = signal(false);
   final Signal<bool> isROMLoaded = signal(false);
@@ -56,6 +59,9 @@ class NESEmulatorController {
   final Signal<SystemType> systemType = signal(SystemType.pal);
   final Signal<bool> isOnScreenControllerVisible = signal(false);
   final Signal<RenderMode> renderMode = signal(RenderMode.both);
+  final Signal<bool> isZapperEnabled = signal(true);
+  final Signal<Offset?> zapperCursor = signal<Offset?>(null);
+  final Signal<bool> isZapperTriggerPressed = signal(false);
 
   final Signal<bool> isLoadingROM = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
@@ -89,8 +95,10 @@ class NESEmulatorController {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final isPal = prefs.getBool('isPal') ?? false;
+    final zapperEnabledPref = prefs.getBool('zapperEnabled') ?? true;
 
     unawaited(changeSystemType(isPal ? SystemType.pal : SystemType.ntsc));
+    _applyZapperEnabled(zapperEnabledPref);
   }
 
   Future<void> changeSystemType(SystemType type) async {
@@ -311,11 +319,13 @@ class NESEmulatorController {
     if (state != null) {
       final currentController0 = bus.controller[0];
       final currentController1 = bus.controller[1];
+      final zapperSnapshot = _captureZapperSnapshot();
 
       bus.restoreState(state);
 
       bus.controller[0] = currentController0;
       bus.controller[1] = currentController1;
+      _restoreZapperSnapshot(zapperSnapshot);
 
       _updateRewindProgress();
       unawaited(updatePixelBuffer());
@@ -365,11 +375,13 @@ class NESEmulatorController {
       if (state != null) {
         final currentController0 = bus.controller[0];
         final currentController1 = bus.controller[1];
+        final zapperSnapshot = _captureZapperSnapshot();
 
         bus.restoreState(state);
 
         bus.controller[0] = currentController0;
         bus.controller[1] = currentController1;
+        _restoreZapperSnapshot(zapperSnapshot);
 
         _updateRewindProgress();
         unawaited(updatePixelBuffer());
@@ -437,11 +449,13 @@ class NESEmulatorController {
 
       final currentController0 = bus.controller[0];
       final currentController1 = bus.controller[1];
+      final zapperSnapshot = _captureZapperSnapshot();
 
       bus.restoreState(state);
 
       bus.controller[0] = currentController0;
       bus.controller[1] = currentController1;
+      _restoreZapperSnapshot(zapperSnapshot);
 
       bus.getAudioBuffer();
 
@@ -536,11 +550,90 @@ class NESEmulatorController {
     }
   }
 
+  void _applyZapperEnabled(bool enabled) {
+    isZapperEnabled.value = enabled;
+    bus.zapper.setEnabled(value: enabled);
+
+    if (!enabled) {
+      isZapperTriggerPressed.value = false;
+      zapperCursor.value = null;
+      bus.zapper.setTrigger(pressed: false);
+      bus.zapper.clearSight();
+    }
+
+    _syncZapperSignalsFromHardware();
+  }
+
+  void _syncZapperSignalsFromHardware() {
+    if (isZapperEnabled.value && bus.zapper.pointerOnScreen) {
+      zapperCursor.value = Offset(
+        (bus.zapper.pointerX / _zapperWidth).clamp(0.0, 1.0),
+        (bus.zapper.pointerY / _zapperHeight).clamp(0.0, 1.0),
+      );
+    } else {
+      zapperCursor.value = null;
+    }
+
+    isZapperTriggerPressed.value =
+        isZapperEnabled.value && bus.zapper.triggerPressed;
+  }
+
+  ZapperSnapshot _captureZapperSnapshot() => bus.zapper.snapshot();
+
+  void _restoreZapperSnapshot(ZapperSnapshot snapshot) {
+    bus.zapper.restoreSnapshot(snapshot);
+    _syncZapperSignalsFromHardware();
+  }
+
   void changeFilterQuality(FilterQuality quality) =>
       filterQuality.value = quality;
 
   void toggleOnScreenController() =>
       isOnScreenControllerVisible.value = !isOnScreenControllerVisible.value;
+
+  Future<void> toggleZapper() =>
+      setZapperEnabled(enabled: !isZapperEnabled.value);
+
+  Future<void> setZapperEnabled({required bool enabled}) async {
+    _applyZapperEnabled(enabled);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('zapperEnabled', enabled);
+  }
+
+  void updateZapperPointer({
+    required bool isOnScreen,
+    Offset? normalizedPosition,
+  }) {
+    if (!isZapperEnabled.value) return;
+
+    if (!isOnScreen || normalizedPosition == null) {
+      zapperCursor.value = null;
+      bus.zapper.clearSight();
+
+      return;
+    }
+
+    final clamped = Offset(
+      normalizedPosition.dx.clamp(0.0, 1.0),
+      normalizedPosition.dy.clamp(0.0, 1.0),
+    );
+
+    zapperCursor.value = clamped;
+
+    bus.zapper.updatePosition(
+      clamped.dx * _zapperWidth,
+      clamped.dy * _zapperHeight,
+      isWithinScreen: true,
+    );
+  }
+
+  void setZapperTrigger({required bool pressed}) {
+    if (!isZapperEnabled.value) return;
+
+    isZapperTriggerPressed.value = pressed;
+    bus.zapper.setTrigger(pressed: pressed);
+  }
 
   void toggleAudio() => _audioStateManager.toggle();
 

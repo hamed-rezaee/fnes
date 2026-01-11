@@ -1,6 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
 import 'package:fnes/components/apu.dart';
@@ -8,6 +10,7 @@ import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/cheat_engine.dart';
 import 'package:fnes/components/cpu.dart';
 import 'package:fnes/components/ppu.dart';
+import 'package:fnes/components/zapper.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
 import 'package:fnes/utils/responsive_utils.dart';
 import 'package:fnes/widgets/debug_panel.dart';
@@ -56,7 +59,13 @@ class NESEmulatorScreen extends StatefulWidget {
 
 class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
   final _nesController = NESEmulatorController(
-    bus: Bus(cpu: CPU(), ppu: PPU(), apu: APU(), cheatEngine: CheatEngine()),
+    bus: Bus(
+      cpu: CPU(),
+      ppu: PPU(),
+      apu: APU(),
+      zapper: Zapper(),
+      cheatEngine: CheatEngine(),
+    ),
   );
 
   int get _targetFrameTimeMicros =>
@@ -90,6 +99,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     final isRewinding = _nesController.isRewinding.value;
     final rewindProgress = _nesController.rewindProgress.value;
     final errorMessage = _nesController.errorMessage.value;
+    final isZapperEnabled = _nesController.isZapperEnabled.value;
+    final zapperCursor = _nesController.zapperCursor.value;
+    final isZapperTriggerPressed = _nesController.isZapperTriggerPressed.value;
 
     if (errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -216,6 +228,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
                           isRewinding,
                           rewindProgress,
                           isRewindEnabled,
+                          isZapperEnabled,
+                          zapperCursor,
+                          isZapperTriggerPressed,
                         ),
                         DebugPanel(
                           nesEmulatorController: _nesController,
@@ -235,6 +250,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
                             isRewinding,
                             rewindProgress,
                             isRewindEnabled,
+                            isZapperEnabled,
+                            zapperCursor,
+                            isZapperTriggerPressed,
                           ),
                         ),
                         DebugPanel(
@@ -258,6 +276,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     bool isRewinding,
     double rewindProgress,
     bool isRewindEnabled,
+    bool isZapperEnabled,
+    Offset? zapperCursor,
+    bool isZapperTriggerPressed,
   ) => Column(
     children: [
       Padding(
@@ -281,6 +302,9 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
           showOnScreenController: showOnScreenController,
           isRewinding: isRewinding,
           rewindProgress: rewindProgress,
+          isZapperEnabled: isZapperEnabled,
+          zapperCursor: zapperCursor,
+          isZapperTriggerPressed: isZapperTriggerPressed,
         ),
       ),
       Padding(
@@ -288,7 +312,11 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
           vertical: context.isMobile ? 8.0 : 12.0,
           horizontal: 8,
         ),
-        child: _buildKeyBindingsHint(context, isRewindEnabled),
+        child: _buildKeyBindingsHint(
+          context,
+          isRewindEnabled,
+          isZapperEnabled,
+        ),
       ),
     ],
   );
@@ -299,54 +327,175 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     required bool showOnScreenController,
     required bool isRewinding,
     required double rewindProgress,
-  }) => GestureDetector(
-    onTap: _focusNode.requestFocus,
-    child: StreamBuilder<Image>(
-      stream: _nesController.imageStream,
-      builder: (context, snapshot) {
-        final screenWidth = ResponsiveSizing.nesScreenWidth(context);
-        final screenHeight = ResponsiveSizing.nesScreenHeight(screenWidth);
+    required bool isZapperEnabled,
+    required Offset? zapperCursor,
+    required bool isZapperTriggerPressed,
+  }) => StreamBuilder<Image>(
+    stream: _nesController.imageStream,
+    builder: (context, snapshot) {
+      final screenWidth = ResponsiveSizing.nesScreenWidth(context);
+      final screenHeight = ResponsiveSizing.nesScreenHeight(screenWidth);
+      final crosshairSize = math.max(24, screenWidth * 0.04).toDouble();
+      final hitArmed =
+          (isZapperEnabled && zapperCursor != null) &&
+          _nesController.bus.zapper.previewLightDetection(
+            _nesController.bus.ppu.screenPixels,
+          );
 
-        return Container(
-          width: screenWidth,
-          height: screenHeight,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[600]!),
-          ),
-          child: (snapshot.hasData)
-              ? Stack(
-                  alignment: Alignment.bottomCenter,
-                  children: [
-                    RawImage(
-                      image: snapshot.data,
-                      width: screenWidth,
-                      height: screenHeight,
-                      fit: BoxFit.fill,
-                      filterQuality: filterQuality,
-                    ),
-                    if (isRewinding)
-                      Positioned(
-                        child: _buildRewindIndicator(rewindProgress),
-                      ),
-                    if (showOnScreenController)
-                      Transform.scale(
-                        scale: ResponsiveSizing.onScreenControllerScale(
-                          context,
+      return Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: isZapperEnabled
+            ? (PointerDownEvent event) => _handleZapperPointerDown(
+                event,
+                screenWidth,
+                screenHeight,
+              )
+            : null,
+        onPointerHover: isZapperEnabled
+            ? (event) => _handleZapperPointerMove(
+                event,
+                screenWidth,
+                screenHeight,
+              )
+            : null,
+        onPointerMove: isZapperEnabled
+            ? (event) => _handleZapperPointerMove(
+                event,
+                screenWidth,
+                screenHeight,
+              )
+            : null,
+        onPointerUp: isZapperEnabled ? _handleZapperPointerUp : null,
+        onPointerCancel: isZapperEnabled ? _handleZapperPointerCancel : null,
+        child: MouseRegion(
+          cursor: isZapperEnabled
+              ? SystemMouseCursors.precise
+              : MouseCursor.defer,
+          onExit: isZapperEnabled ? (_) => _handleZapperPointerExit() : null,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: _focusNode.requestFocus,
+            child: Container(
+              width: screenWidth,
+              height: screenHeight,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[600]!),
+              ),
+              child: (snapshot.hasData)
+                  ? Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        RawImage(
+                          image: snapshot.data,
+                          width: screenWidth,
+                          height: screenHeight,
+                          fit: BoxFit.fill,
+                          filterQuality: filterQuality,
                         ),
-                        child: Opacity(
-                          opacity: 0.75,
-                          child: OnScreenController(
-                            controller: _nesController,
+                        if (isRewinding)
+                          Positioned(
+                            child: _buildRewindIndicator(rewindProgress),
                           ),
-                        ),
-                      ),
-                  ],
-                )
-              : const Center(child: NoRomLoaded(fontSize: 22)),
-        );
-      },
-    ),
+                        if (showOnScreenController)
+                          Transform.scale(
+                            scale: ResponsiveSizing.onScreenControllerScale(
+                              context,
+                            ),
+                            child: Opacity(
+                              opacity: 0.75,
+                              child: OnScreenController(
+                                controller: _nesController,
+                              ),
+                            ),
+                          ),
+                        if (isZapperEnabled && zapperCursor != null)
+                          Positioned(
+                            left:
+                                (zapperCursor.dx * screenWidth -
+                                        crosshairSize / 2)
+                                    .clamp(0.0, screenWidth - crosshairSize),
+                            top:
+                                (zapperCursor.dy * screenHeight -
+                                        crosshairSize / 2)
+                                    .clamp(0.0, screenHeight - crosshairSize),
+                            child: _buildZapperCrosshair(
+                              size: crosshairSize,
+                              triggerEngaged: isZapperTriggerPressed,
+                              isOverBrightTarget: hitArmed,
+                            ),
+                          ),
+                      ],
+                    )
+                  : const Center(child: NoRomLoaded(fontSize: 22)),
+            ),
+          ),
+        ),
+      );
+    },
   );
+
+  void _handleZapperPointerDown(
+    PointerDownEvent event,
+    double width,
+    double height,
+  ) {
+    _handleZapperPointerMove(event, width, height);
+
+    if (!_nesController.isZapperEnabled.value) return;
+
+    final isPrimary =
+        event.kind == PointerDeviceKind.touch ||
+        (event.buttons & kPrimaryMouseButton) != 0;
+
+    if (isPrimary) _nesController.setZapperTrigger(pressed: true);
+  }
+
+  void _handleZapperPointerMove(
+    PointerEvent event,
+    double width,
+    double height,
+  ) {
+    if (!_nesController.isZapperEnabled.value) return;
+    if (width == 0 || height == 0) return;
+
+    final local = event.localPosition;
+    final inside =
+        local.dx >= 0 &&
+        local.dx <= width &&
+        local.dy >= 0 &&
+        local.dy <= height;
+
+    final normalized = Offset(
+      (local.dx / width).clamp(0.0, 1.0),
+      (local.dy / height).clamp(0.0, 1.0),
+    );
+
+    _nesController.updateZapperPointer(
+      normalizedPosition: normalized,
+      isOnScreen: inside,
+    );
+  }
+
+  void _handleZapperPointerUp(PointerUpEvent event) {
+    if (!_nesController.isZapperEnabled.value) return;
+
+    _nesController.setZapperTrigger(pressed: false);
+  }
+
+  void _handleZapperPointerCancel(PointerEvent event) {
+    if (!_nesController.isZapperEnabled.value) return;
+
+    _nesController.setZapperTrigger(pressed: false);
+    _handleZapperPointerExit();
+  }
+
+  void _handleZapperPointerExit() {
+    if (!_nesController.isZapperEnabled.value) return;
+
+    _nesController
+      ..updateZapperPointer(isOnScreen: false)
+      ..setZapperTrigger(pressed: false);
+  }
 
   Widget _buildRewindIndicator(double progress) => Center(
     child: Container(
@@ -397,12 +546,53 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     ),
   );
 
+  Widget _buildZapperCrosshair({
+    required double size,
+    required bool triggerEngaged,
+    required bool isOverBrightTarget,
+  }) {
+    final borderColor = triggerEngaged
+        ? Colors.deepOrangeAccent
+        : (isOverBrightTarget ? Colors.lightGreenAccent : Colors.cyanAccent);
+
+    return IgnorePointer(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                border: Border.all(color: borderColor, width: 2),
+                borderRadius: BorderRadius.circular(size * 0.15),
+              ),
+            ),
+            Container(width: 2, height: size, color: Colors.white),
+            Container(width: size, height: 2, color: Colors.white),
+            Container(
+              width: size * 0.15,
+              height: size * 0.15,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: borderColor.withValues(alpha: 0.25),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSettingsMenu() => Watch((_) {
     final filterQuality = _nesController.filterQuality.value;
     final showOnScreenController =
         _nesController.isOnScreenControllerVisible.value;
     final rewindEnabled = _nesController.rewindEnabled.value;
     final systemType = _nesController.systemType.value;
+    final zapperEnabled = _nesController.isZapperEnabled.value;
 
     return PopupMenuButton<String>(
       icon: const Icon(Icons.settings),
@@ -447,6 +637,20 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
         ),
         _buildMenuGroupHeader('GAMEPLAY'),
         PopupMenuItem<String>(
+          value: 'toggle_rewind',
+          onTap: _nesController.toggleRewind,
+          child: Row(
+            spacing: 12,
+            children: [
+              Icon(
+                rewindEnabled ? Icons.check_box : Icons.check_box_outline_blank,
+                size: 16,
+              ),
+              const Text('Enable Rewind', style: TextStyle(fontSize: 12)),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
           value: 'toggle_on_screen_controller',
           onTap: _nesController.toggleOnScreenController,
           child: Row(
@@ -466,16 +670,16 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
           ),
         ),
         PopupMenuItem<String>(
-          value: 'toggle_rewind',
-          onTap: _nesController.toggleRewind,
+          value: 'toggle_zapper',
+          onTap: () => unawaited(_nesController.toggleZapper()),
           child: Row(
             spacing: 12,
             children: [
               Icon(
-                rewindEnabled ? Icons.check_box : Icons.check_box_outline_blank,
+                zapperEnabled ? Icons.check_box : Icons.check_box_outline_blank,
                 size: 16,
               ),
-              const Text('Enable Rewind', style: TextStyle(fontSize: 12)),
+              const Text('Enable Zapper', style: TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -513,6 +717,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
   Widget _buildKeyBindingsHint(
     BuildContext context,
     bool isRewindEnabled,
+    bool isZapperEnabled,
   ) {
     final textSize = ResponsiveSizing.keyBindingsTextSize(context);
 
@@ -536,6 +741,16 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
           ),
           textAlign: TextAlign.center,
         ),
+        if (isZapperEnabled)
+          Text(
+            'Mouse / Tap = Zapper Trigger',
+            style: TextStyle(
+              fontSize: textSize,
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+            textAlign: TextAlign.center,
+          ),
         if (isRewindEnabled)
           Text(
             'Hold R = Rewind',

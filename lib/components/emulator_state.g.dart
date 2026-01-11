@@ -399,6 +399,11 @@ BusState _$BusStateFromJson(Map<String, dynamic> json) => BusState(
   dmaData: (json['dmaData'] as num).toInt(),
   dmaDummy: json['dmaDummy'] as bool,
   dmaTransfer: json['dmaTransfer'] as bool,
+  zapperEnabled: json['zapperEnabled'] as bool,
+  zapperTriggerPressed: json['zapperTriggerPressed'] as bool,
+  zapperPointerOnScreen: json['zapperPointerOnScreen'] as bool,
+  zapperX: (json['zapperX'] as num).toDouble(),
+  zapperY: (json['zapperY'] as num).toDouble(),
 );
 
 Map<String, dynamic> _$BusStateToJson(BusState instance) => <String, dynamic>{
@@ -413,4 +418,9 @@ Map<String, dynamic> _$BusStateToJson(BusState instance) => <String, dynamic>{
   'dmaData': instance.dmaData,
   'dmaDummy': instance.dmaDummy,
   'dmaTransfer': instance.dmaTransfer,
+  'zapperEnabled': instance.zapperEnabled,
+  'zapperTriggerPressed': instance.zapperTriggerPressed,
+  'zapperPointerOnScreen': instance.zapperPointerOnScreen,
+  'zapperX': instance.zapperX,
+  'zapperY': instance.zapperY,
 };

@@ -6,12 +6,14 @@ import 'package:fnes/components/cheat_engine.dart';
 import 'package:fnes/components/cpu.dart';
 import 'package:fnes/components/emulator_state.dart';
 import 'package:fnes/components/ppu.dart';
+import 'package:fnes/components/zapper.dart';
 
 class Bus {
   Bus({
     required this.cpu,
     required this.ppu,
     required this.apu,
+    required this.zapper,
     required this.cheatEngine,
   }) {
     cpu.connect(this);
@@ -22,8 +24,8 @@ class Bus {
   final CPU cpu;
   final PPU ppu;
   final APU apu;
+  final Zapper zapper;
   final CheatEngine cheatEngine;
-
   Cartridge? cart;
 
   final Uint8List controller = Uint8List(2);
@@ -105,10 +107,20 @@ class Bus {
     } else if (address == 0x4015) {
       data = apu.cpuRead(address);
     } else if (address >= 0x4016 && address <= 0x4017) {
-      data = (_controllerState[address & 0x0001] & 0x80) > 0 ? 1 : 0;
+      final controllerIndex = address & 0x0001;
+
+      data = (_controllerState[controllerIndex] & 0x80) > 0 ? 1 : 0;
+
       if (!readOnly) {
-        _controllerState[address & 0x0001] =
-            (_controllerState[address & 0x0001] << 1) & 0xFF;
+        _controllerState[controllerIndex] =
+            (_controllerState[controllerIndex] << 1) & 0xFF;
+      }
+
+      if (controllerIndex == 1 && zapper.enabled) {
+        final lightDetected = zapper.detectLight(ppu.screenPixels);
+
+        lightDetected ? data &= ~0x08 : data |= 0x08;
+        zapper.triggerPressed ? data &= ~0x10 : data |= 0x10;
       }
     }
 
@@ -240,6 +252,11 @@ class Bus {
       dmaData: _dmaData,
       dmaDummy: _dmaDummy,
       dmaTransfer: _dmaTransfer,
+      zapperEnabled: zapper.enabled,
+      zapperTriggerPressed: zapper.triggerPressed,
+      zapperPointerOnScreen: zapper.pointerOnScreen,
+      zapperX: zapper.pointerX,
+      zapperY: zapper.pointerY,
     ),
     mapperState: cart?.saveMapperState() ?? {},
     timestamp: DateTime.now(),
@@ -263,6 +280,14 @@ class Bus {
     _dmaData = busState.dmaData;
     _dmaDummy = busState.dmaDummy;
     _dmaTransfer = busState.dmaTransfer;
+
+    zapper.restorePersistentState(
+      enabledState: busState.zapperEnabled,
+      triggerState: busState.zapperTriggerPressed,
+      x: busState.zapperX,
+      y: busState.zapperY,
+      pointerVisible: busState.zapperPointerOnScreen,
+    );
 
     _audioBufferIndex = 0;
     _audioBufferCount = 0;
