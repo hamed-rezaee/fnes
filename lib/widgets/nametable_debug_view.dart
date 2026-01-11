@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/color_palette.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
+import 'package:fnes/widgets/no_rom_loaded.dart';
 
 class NametableDebugView extends StatefulWidget {
   const NametableDebugView({
@@ -48,6 +49,27 @@ class _NametableDebugViewState extends State<NametableDebugView> {
     });
   }
 
+  @override
+  Widget build(BuildContext context) =>
+      widget.bus.cart?.getMapperInfoMap() == null
+      ? const NoRomLoaded()
+      : Column(
+          children: [
+            AspectRatio(
+              aspectRatio: _width / _height,
+              child: ClipRect(
+                child: CustomPaint(
+                  painter: _NametablePainter(
+                    image: _nametableImage,
+                    scrollX: _scrollX,
+                    scrollY: _scrollY,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+
   void _updateScrollPosition() {
     final ppu = widget.bus.ppu;
 
@@ -57,6 +79,7 @@ class _NametableDebugViewState extends State<NametableDebugView> {
 
   Future<void> _generateImage() async {
     if (_isGenerating) return;
+
     _isGenerating = true;
 
     try {
@@ -137,8 +160,7 @@ class _NametableDebugViewState extends State<NametableDebugView> {
       } else {
         image.dispose();
       }
-    } on Exception catch (e) {
-      debugPrint('Error generating nametable image: $e');
+    } on Exception catch (_) {
     } finally {
       _isGenerating = false;
     }
@@ -161,24 +183,6 @@ class _NametableDebugViewState extends State<NametableDebugView> {
 
     return completer.future;
   }
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      AspectRatio(
-        aspectRatio: _width / _height,
-        child: ClipRect(
-          child: CustomPaint(
-            painter: _NametablePainter(
-              image: _nametableImage,
-              scrollX: _scrollX,
-              scrollY: _scrollY,
-            ),
-          ),
-        ),
-      ),
-    ],
-  );
 
   @override
   void dispose() {
@@ -215,12 +219,12 @@ class _NametablePainter extends CustomPainter {
     final scaleY = size.height / 480.0;
 
     final strokePaint = Paint()
-      ..color = const Color(0xFFFF0000)
+      ..color = Colors.orange
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 2;
 
     final fillPaint = Paint()
-      ..color = const Color(0xFFFF0000).withValues(alpha: 0.3)
+      ..color = Colors.orange.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     _drawWrappedRect(
