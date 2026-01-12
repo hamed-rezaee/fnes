@@ -15,6 +15,8 @@ import 'package:fnes/controllers/audio_state_manager.dart';
 import 'package:fnes/controllers/cheat_controller.dart';
 import 'package:fnes/controllers/frame_rate_controller.dart';
 import 'package:fnes/controllers/input_mapper.dart';
+import 'package:fnes/core/emulator_events.dart';
+import 'package:fnes/core/event.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals_flutter.dart';
 
@@ -31,19 +33,26 @@ enum RenderMode {
 enum SystemType { ntsc, pal }
 
 class NESEmulatorController {
-  NESEmulatorController({required this.bus}) {
+  NESEmulatorController({required this.bus, EventBus? eventBus})
+    : eventBus = eventBus ?? EventBus() {
     bus.setSampleFrequency(44100);
     _audioStateManager = AudioStateManager(_audioPlayer);
     cheatController = CheatController(bus: bus);
+
+    bus.eventBus = this.eventBus;
 
     unawaited(_initializeAudio());
     unawaited(_loadSettings());
   }
 
   final Bus bus;
-  late final CheatController cheatController;
+  final EventBus eventBus;
   final StreamController<Image> _imageStreamController =
       StreamController<Image>.broadcast();
+
+  late final CheatController cheatController;
+
+  int _frameNumber = 0;
 
   static const int _saveStateEveryNFrames = 1;
   static const double _zapperWidth = 255;
@@ -72,10 +81,9 @@ class NESEmulatorController {
   final Signal<double> rewindProgress = signal(0);
   final Signal<bool> hasSaveState = signal(false);
 
-  late final Computed<String?> romName = computed(() {
-    final fileName = romFileName.value;
-    return fileName?.split('.').first;
-  });
+  late final Computed<String?> romName = computed(
+    () => romFileName.value?.split('.').first,
+  );
 
   late final Computed<double> currentFPS = computed(
     () => _frameRateController.currentFPS.value,
@@ -103,12 +111,19 @@ class NESEmulatorController {
 
   Future<void> changeSystemType(SystemType type) async {
     systemType.value = type;
-    bus.setSystemType(isPal: type == SystemType.pal);
-    _frameRateController.setTargetFps(type == SystemType.pal ? 50.0 : 60.0);
+    final isPal = type == SystemType.pal;
+    final targetFps = isPal ? 50.0 : 60.0;
+
+    bus.setSystemType(isPal: isPal);
+    _frameRateController.setTargetFps(targetFps);
+
+    eventBus.dispatch(
+      SystemTypeChangedEvent(isPal: isPal, targetFps: targetFps),
+    );
 
     final prefs = await SharedPreferences.getInstance();
 
-    await prefs.setBool('isPal', type == SystemType.pal);
+    await prefs.setBool('isPal', isPal);
   }
 
   Future<void> _initializeAudio() async => _audioPlayer.initialize();
@@ -150,6 +165,8 @@ class NESEmulatorController {
     screenImage.value = image;
     frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 60000;
 
+    eventBus.dispatch(ScreenImageUpdatedEvent(image: image));
+
     if (!_imageStreamController.isClosed) {
       _imageStreamController.add(image);
     }
@@ -162,6 +179,7 @@ class NESEmulatorController {
         final r = (hex >> 16) & 0xFF;
         final g = (hex >> 8) & 0xFF;
         final b = hex & 0xFF;
+
         return (255 << 24) | (b << 16) | (g << 8) | r;
       },
     ).toList(),
@@ -193,12 +211,22 @@ class NESEmulatorController {
             isROMLoaded.value = true;
             romFileName.value = file.name;
 
+            eventBus.dispatch(
+              ROMLoadedEvent(romName: file.name, cartridge: cart, mapper: 0),
+            );
+
             unawaited(_checkSaveStateExists());
             unawaited(cheatController.loadCheats(romName.value));
 
             startEmulation();
           } else {
             errorMessage.value = 'Invalid ROM file format';
+            eventBus.dispatch(
+              ROMLoadFailedEvent(
+                error: 'Invalid ROM file format',
+                fileName: file.name,
+              ),
+            );
           }
         }
       }
@@ -206,6 +234,8 @@ class NESEmulatorController {
       isLoadingROM.value = false;
     } on Exception catch (e) {
       errorMessage.value = '$e';
+      eventBus.dispatch(ROMLoadFailedEvent(error: '$e', fileName: null));
+
       isLoadingROM.value = false;
     }
   }
@@ -219,16 +249,22 @@ class NESEmulatorController {
     _frameRateController.initialize();
     _frameStopwatch.start();
     _audioStateManager.resumeIfEnabled();
+
+    eventBus.dispatch(EmulationStartedEvent());
   }
 
   void pauseEmulation() {
     isRunning.value = false;
     _frameStopwatch.stop();
     _audioStateManager.pause();
+
+    eventBus.dispatch(EmulationPausedEvent());
   }
 
   void resetEmulation() {
     bus.reset();
+
+    eventBus.dispatch(EmulationResetEvent(hardReset: true));
 
     clearRewindBuffer();
     startEmulation();
@@ -237,9 +273,7 @@ class NESEmulatorController {
   void stepEmulation() {
     if (isRunning.value || !isROMLoaded.value) return;
 
-    do {
-      bus.clock();
-    } while (!bus.cpu.complete());
+    bus.step();
 
     unawaited(updatePixelBuffer());
   }
@@ -267,11 +301,10 @@ class NESEmulatorController {
 
   void _updateEmulationFrame() {
     if (isROMLoaded.value && bus.cart != null) {
-      do {
-        bus.clock();
-      } while (!bus.ppu.frameComplete);
+      final startTime = DateTime.now();
 
-      bus.ppu.frameComplete = false;
+      bus.runFrame();
+      _frameNumber++;
 
       _statesSavedSinceLastFrame++;
       if (_statesSavedSinceLastFrame >= _saveStateEveryNFrames) {
@@ -288,6 +321,17 @@ class NESEmulatorController {
       );
 
       if (_frameRateController.shouldRenderFrame()) {
+        final renderTime =
+            DateTime.now().difference(startTime).inMicroseconds / 1000.0;
+
+        eventBus.dispatch(
+          FrameRenderedEvent(
+            frameNumber: _frameNumber,
+            fps: _frameRateController.currentFPS.value,
+            renderTimeMs: renderTime,
+          ),
+        );
+
         unawaited(updatePixelBuffer());
       }
 
@@ -399,10 +443,7 @@ class NESEmulatorController {
 
   double get rewindBufferSeconds => _rewindBuffer.availableRewindSeconds;
 
-  String _getSaveStateKey() {
-    final name = romName.value ?? 'unknown';
-    return 'save_state_$name';
-  }
+  String _getSaveStateKey() => 'save_state_${romName.value ?? 'unknown'}';
 
   Future<void> _checkSaveStateExists() async {
     final prefs = await SharedPreferences.getInstance();
@@ -423,9 +464,17 @@ class NESEmulatorController {
 
       hasSaveState.value = true;
 
+      eventBus.dispatch(
+        SaveStateCreatedEvent(
+          stateName: romName.value ?? 'unknown',
+          state: state,
+        ),
+      );
+
       return true;
     } on Exception catch (e) {
       errorMessage.value = 'Failed to save state: $e';
+      eventBus.dispatch(SaveStateFailedEvent(operation: 'save', error: '$e'));
 
       return false;
     }
@@ -459,12 +508,20 @@ class NESEmulatorController {
 
       bus.getAudioBuffer();
 
+      eventBus.dispatch(
+        SaveStateLoadedEvent(
+          stateName: romName.value ?? 'unknown',
+          state: state,
+        ),
+      );
+
       clearRewindBuffer();
       unawaited(updatePixelBuffer());
 
       return true;
     } on Exception catch (e) {
       errorMessage.value = 'Failed to load state: $e';
+      eventBus.dispatch(SaveStateFailedEvent(operation: 'load', error: '$e'));
 
       return false;
     }
@@ -485,6 +542,13 @@ class NESEmulatorController {
           bus.controller.first,
           bit,
         );
+
+        final buttonName = InputMapper.getButtonName(bit);
+        if (buttonName != null) {
+          eventBus.dispatch(
+            ControllerButtonPressedEvent(controller: 1, button: buttonName),
+          );
+        }
       }
     }
   }
@@ -504,6 +568,13 @@ class NESEmulatorController {
           bus.controller.first,
           bit,
         );
+
+        final buttonName = InputMapper.getButtonName(bit);
+        if (buttonName != null) {
+          eventBus.dispatch(
+            ControllerButtonReleasedEvent(controller: 1, button: buttonName),
+          );
+        }
       }
     }
   }
@@ -633,9 +704,24 @@ class NESEmulatorController {
 
     isZapperTriggerPressed.value = pressed;
     bus.zapper.setTrigger(pressed: pressed);
+
+    if (pressed && zapperCursor.value != null) {
+      final cursor = zapperCursor.value!;
+      final hit = bus.zapper.detectLight(bus.ppu.screenPixels);
+
+      eventBus.dispatch(
+        ZapperTriggerEvent(x: cursor.dx, y: cursor.dy, hit: hit),
+      );
+    }
   }
 
-  void toggleAudio() => _audioStateManager.toggle();
+  void toggleAudio() {
+    _audioStateManager.toggle();
+
+    eventBus.dispatch(
+      AudioMuteChangedEvent(isMuted: !_audioStateManager.isEnabled.value),
+    );
+  }
 
   AudioManager get audioPlayer => _audioPlayer;
 
@@ -645,7 +731,11 @@ class NESEmulatorController {
     if (!rewindEnabled.value) clearRewindBuffer();
   }
 
-  void setRenderMode(RenderMode mode) => renderMode.value = mode;
+  void setRenderMode(RenderMode mode) {
+    renderMode.value = mode;
+
+    eventBus.dispatch(RenderModeChangedEvent(mode: mode.label));
+  }
 
   void pressButton(String buttonName) {
     final bit = InputMapper.getButtonBit(buttonName);
@@ -670,5 +760,6 @@ class NESEmulatorController {
     screenImage.value?.dispose();
     await _imageStreamController.close();
     await _audioStateManager.dispose();
+    await eventBus.dispose();
   }
 }

@@ -42,6 +42,20 @@ class InputMapper {
         _ => null,
       };
 
+  static String? getButtonName(int buttonBit) => switch (buttonBit) {
+    buttonUp => 'UP',
+    buttonDown => 'DOWN',
+    buttonLeft => 'LEFT',
+    buttonRight => 'RIGHT',
+    buttonA => 'A',
+    buttonB => 'B',
+    buttonStart => 'START',
+    buttonSelect => 'SELECT',
+    turboA => 'TURBO_A',
+    turboB => 'TURBO_B',
+    _ => null,
+  };
+
   static int pressButton(int currentState, int buttonBit) =>
       currentState | buttonBit;
 

@@ -15,11 +15,8 @@ class AudioStateManager {
 
   void pause() => _audioPlayer.pause();
 
-  Future<void> addSamples(List<double> samples) {
-    if (isEnabled.value) return _audioPlayer.addSamples(samples);
-
-    return Future.value();
-  }
+  Future<void> addSamples(List<double> samples) =>
+      (isEnabled.value) ? _audioPlayer.addSamples(samples) : Future.value();
 
   void _enable() {
     if (!isEnabled.value) {

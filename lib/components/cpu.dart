@@ -1,5 +1,6 @@
 import 'package:fnes/components/bus.dart';
 import 'package:fnes/components/emulator_state.dart';
+import 'package:fnes/core/emulator_events.dart';
 
 class CPU {
   CPU() {
@@ -796,7 +797,7 @@ class CPU {
     cycles = 8;
   }
 
-  void irq() {
+  int irq() {
     if (_getFlag(disableInterruptsFlag) == 0) {
       write(0x0100 + stkp, (pc >> 8) & 0x00FF);
       stkp = (stkp - 1) & 0xFF;
@@ -809,11 +810,16 @@ class CPU {
       final lowByte = read(addrAbs + 0);
       final highByte = read(addrAbs + 1);
       pc = (highByte << 8) | lowByte;
-      cycles = 7;
+
+      bus?.eventBus?.dispatch(CPUInterruptEvent(type: 'IRQ', vector: addrAbs));
+
+      return 7;
     }
+
+    return 0;
   }
 
-  void nmi() {
+  int nmi() {
     write(0x0100 + stkp, (pc >> 8) & 0x00FF);
     stkp = (stkp - 1) & 0xFF;
     write(0x0100 + stkp, pc & 0x00FF);
@@ -825,10 +831,13 @@ class CPU {
     final lowByte = read(addrAbs + 0);
     final highByte = read(addrAbs + 1);
     pc = (highByte << 8) | lowByte;
-    cycles = 8;
+
+    bus?.eventBus?.dispatch(CPUInterruptEvent(type: 'NMI', vector: addrAbs));
+
+    return 8;
   }
 
-  void clock() {
+  int step() {
     if (cycles == 0) {
       opcode = read(pc);
       status |= unusedFlag;
@@ -840,8 +849,13 @@ class CPU {
       cycles += addl1 | addl2;
       status |= unusedFlag;
     }
-    cycles--;
-    clockCount++;
+
+    final executedCycles = cycles;
+
+    cycles = 0;
+    clockCount += executedCycles;
+
+    return executedCycles;
   }
 
   @pragma('vm:prefer-inline')

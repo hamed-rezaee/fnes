@@ -486,13 +486,16 @@ class RewindBuffer {
 
     final state = _states.removeLast();
     _currentIndex = _states.length - 1;
+
     return state;
   }
 
   EmulatorState? getStateAtFramesBack(int framesBack) {
     final targetIndex = _states.length - 1 - framesBack;
-    if (targetIndex < 0 || targetIndex >= _states.length) return null;
-    return _states[targetIndex];
+
+    return (targetIndex < 0 || targetIndex >= _states.length)
+        ? null
+        : _states[targetIndex];
   }
 
   EmulatorState? rewindFrames(int frames) {

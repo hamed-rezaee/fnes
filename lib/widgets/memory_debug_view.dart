@@ -174,7 +174,7 @@ class _MemoryDebugViewState extends State<MemoryDebugView> {
       spans
         ..add(
           TextSpan(
-            text: rowData.toString(),
+            text: '$rowData',
             style: const TextStyle(
               fontSize: 9,
               color: Colors.black,

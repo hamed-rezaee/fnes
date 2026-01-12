@@ -43,7 +43,7 @@ class _CheatManagerViewState extends State<CheatManagerView> {
                         text: 'ACTIVE ',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      TextSpan(text: count.toString()),
+                      TextSpan(text: '$count'),
                     ],
                   ),
                 );

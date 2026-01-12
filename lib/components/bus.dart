@@ -7,6 +7,8 @@ import 'package:fnes/components/cpu.dart';
 import 'package:fnes/components/emulator_state.dart';
 import 'package:fnes/components/ppu.dart';
 import 'package:fnes/components/zapper.dart';
+import 'package:fnes/core/emulator_events.dart';
+import 'package:fnes/core/event.dart';
 
 class Bus {
   Bus({
@@ -27,6 +29,15 @@ class Bus {
   final Zapper zapper;
   final CheatEngine cheatEngine;
   Cartridge? cart;
+
+  EventBus? get eventBus => _eventBus;
+  EventBus? _eventBus;
+
+  set eventBus(EventBus? bus) {
+    _eventBus = bus;
+    ppu.eventBus = bus;
+    apu.eventBus = bus;
+  }
 
   final Uint8List controller = Uint8List(2);
   final Uint8List _cpuRam = Uint8List(2048);
@@ -85,6 +96,8 @@ class Bus {
       _dmaPage = data;
       _dmaAddress = 0x00;
       _dmaTransfer = true;
+
+      eventBus?.dispatch(DMATransferEvent(page: data, bytesTransferred: 256));
     } else if (address >= 0x4016 && address <= 0x4017) {
       if ((data & 0x01) == 0) {
         _controllerState[address & 0x0001] = controller[address & 0x0001];
@@ -149,70 +162,71 @@ class Bus {
     _audioBufferCount = 0;
   }
 
-  bool clock() {
-    ppu.clock();
-
-    final cpuRatio = _isPal ? 3.2 : 3.0;
-    _cpuClockAccumulator += 1.0;
-
-    if (_cpuClockAccumulator >= cpuRatio) {
-      _cpuClockAccumulator -= cpuRatio;
-      _cpuClockCounter++;
-
-      apu.clock();
-
-      if (_dmaTransfer) {
-        if (_dmaDummy) {
-          if (_cpuClockCounter.isOdd) _dmaDummy = false;
-        } else {
-          if (_cpuClockCounter.isEven) {
-            _dmaData = cpuRead((_dmaPage << 8) | _dmaAddress);
-          } else {
-            ppu.pOAM[_dmaAddress] = _dmaData;
-            _dmaAddress = (_dmaAddress + 1) & 0xFF;
-
-            if (_dmaAddress == 0x00) {
-              _dmaTransfer = false;
-              _dmaDummy = true;
-            }
-          }
-        }
-      } else {
-        cpu.clock();
-      }
-    }
-
-    var audioSampleReady = false;
-    _audioTime += _audioTimePerNESClock;
-
-    if (_audioTime >= _audioTimePerSystemSample) {
-      _audioTime -= _audioTimePerSystemSample;
-      _audioSample = apu.getOutputSample();
-
-      _audioBuffer[_audioBufferIndex] = _audioSample;
-      _audioBufferIndex = (_audioBufferIndex + 1) % _audioBufferSize;
-      if (_audioBufferCount < _audioBufferSize) _audioBufferCount++;
-
-      audioSampleReady = true;
-    }
+  void step() {
+    var cycles = 0;
 
     if (ppu.nmi) {
       ppu.nmi = false;
-      cpu.nmi();
-    }
-
-    if (cart?.getMapper().irqState() ?? false) {
-      cpu.irq();
+      cycles = cpu.nmi();
+    } else if (cart?.getMapper().irqState() ?? false) {
+      cycles = cpu.irq();
       cart?.getMapper().irqClear();
+    } else if (apu.frameIrq) {
+      cycles = cpu.irq();
     }
 
-    if (apu.frameIrq) {
-      cpu.irq();
+    if (cycles == 0) {
+      if (_dmaTransfer) {
+        for (var i = 0; i < 256; i++) {
+          ppu.pOAM[i] = cpuRead((_dmaPage << 8) | i);
+        }
+        _dmaTransfer = false;
+        _dmaDummy = true;
+        cycles = 513;
+        if (_cpuClockCounter.isOdd) cycles++;
+      } else {
+        cycles = cpu.step();
+      }
     }
 
-    _systemClockCounter++;
+    final cpuRatio = _isPal ? 3.2 : 3.0;
+    var ppuCyclesToRun = (cycles * cpuRatio).round();
+    _cpuClockAccumulator += (cycles * cpuRatio) - ppuCyclesToRun;
 
-    return audioSampleReady;
+    if (_cpuClockAccumulator.abs() >= 1.0) {
+      final fix = _cpuClockAccumulator.truncate();
+      ppuCyclesToRun += fix;
+      _cpuClockAccumulator -= fix;
+    }
+
+    for (var i = 0; i < ppuCyclesToRun; i++) {
+      ppu.clock();
+      _systemClockCounter++;
+
+      _audioTime += _audioTimePerNESClock;
+      if (_audioTime >= _audioTimePerSystemSample) {
+        _audioTime -= _audioTimePerSystemSample;
+        _audioSample = apu.getOutputSample();
+
+        _audioBuffer[_audioBufferIndex] = _audioSample;
+        _audioBufferIndex = (_audioBufferIndex + 1) % _audioBufferSize;
+        if (_audioBufferCount < _audioBufferSize) _audioBufferCount++;
+      }
+    }
+
+    for (var i = 0; i < cycles; i++) {
+      apu.clock();
+    }
+
+    _cpuClockCounter += cycles;
+  }
+
+  void runFrame() {
+    while (!ppu.frameComplete) {
+      step();
+    }
+
+    ppu.frameComplete = false;
   }
 
   List<double> getAudioBuffer() {

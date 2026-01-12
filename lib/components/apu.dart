@@ -1,7 +1,9 @@
 import 'package:fnes/components/emulator_state.dart';
+import 'package:fnes/core/event.dart';
 
 class APU {
   int Function(int address)? dmcMemoryRead;
+  EventBus? eventBus;
 
   static const List<List<int>> _dutySequences = [
     [0, 1, 0, 0, 0, 0, 0, 0],
@@ -251,15 +253,15 @@ class APU {
   double _highPassOut = 0;
   double _lowPassPrev = 0;
 
-  static final List<double> _pulseLookup = List.generate(31, (i) {
-    if (i == 0) return 0.0;
-    return 95.52 / (8128.0 / i + 100.0);
-  });
+  static final List<double> _pulseLookup = List.generate(
+    31,
+    (i) => (i == 0) ? 0.0 : 95.52 / (8128.0 / i + 100.0),
+  );
 
-  static final List<double> _tndLookup = List.generate(203, (i) {
-    if (i == 0) return 0.0;
-    return 163.67 / (24329.0 / i + 100.0);
-  });
+  static final List<double> _tndLookup = List.generate(
+    203,
+    (i) => (i == 0) ? 0.0 : 163.67 / (24329.0 / i + 100.0),
+  );
 
   double getOutputSample() {
     final p1 = pulse1.output();
@@ -1022,10 +1024,7 @@ class DMC {
   }
 
   @pragma('vm:prefer-inline')
-  int output() {
-    if (!debugEnable) return 0;
-    return dmcOutput;
-  }
+  int output() => (!debugEnable) ? 0 : dmcOutput;
 
   DMCState saveState() => DMCState(
     enable: duration > 0,

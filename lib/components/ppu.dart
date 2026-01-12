@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:fnes/components/cartridge.dart';
 import 'package:fnes/components/emulator_state.dart';
 import 'package:fnes/controllers/nes_emulator_controller.dart';
+import 'package:fnes/core/emulator_events.dart';
+import 'package:fnes/core/event.dart';
 import 'package:fnes/mappers/mapper.dart';
 
 class PPU {
@@ -22,6 +24,7 @@ class PPU {
   }
 
   Cartridge? cart;
+  EventBus? eventBus;
   final Uint8List tableData = Uint8List(2048);
   final Uint8List paletteTable = Uint8List(32);
   final Uint8List patternTable = Uint8List(8192);
@@ -297,9 +300,11 @@ class PPU {
   @pragma('vm:prefer-inline')
   int _flipByte(int value) {
     var result = value;
+
     result = ((result & 0xF0) >> 4) | ((result & 0x0F) << 4);
     result = ((result & 0xCC) >> 2) | ((result & 0x33) << 2);
     result = ((result & 0xAA) >> 1) | ((result & 0x55) << 1);
+
     return result;
   }
 
@@ -695,6 +700,8 @@ class PPU {
       status.spriteOverflow = false;
       status.spriteZeroHit = false;
 
+      eventBus?.dispatch(VBlankEndedEvent(frameNumber: frameCounter));
+
       for (var i = 0; i < 8; i++) {
         spriteShifterPatternLow[i] = 0;
         spriteShifterPatternHigh[i] = 0;
@@ -736,6 +743,8 @@ class PPU {
       if (control.enableNmi) {
         nmi = true;
       }
+
+      eventBus?.dispatch(VBlankStartedEvent(frameNumber: frameCounter));
     }
   }
 

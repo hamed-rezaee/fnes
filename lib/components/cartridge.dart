@@ -178,6 +178,7 @@ class Cartridge {
         return true;
       } else {
         _programMemory[mappedAddress] = data;
+
         return true;
       }
     }
@@ -238,11 +239,7 @@ class Cartridge {
   MapperMirror mirror() {
     final mappedMirror = _mapper.mirror();
 
-    if (mappedMirror == MapperMirror.hardware) {
-      return _hwMirror;
-    } else {
-      return mappedMirror;
-    }
+    return (mappedMirror == MapperMirror.hardware) ? _hwMirror : mappedMirror;
   }
 
   Mapper getMapper() => _mapper;

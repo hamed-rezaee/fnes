@@ -90,7 +90,7 @@ class CheatCode {
                 (decoded[5] & 8);
 
       return CheatCode(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: '${DateTime.now().millisecondsSinceEpoch}',
         name: name ?? 'Game Genie: $formattedCode',
         address: address,
         value: value,
@@ -124,7 +124,7 @@ class CheatCode {
       }
 
       return CheatCode(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: '${DateTime.now().millisecondsSinceEpoch}',
         name: name ?? 'Cheat at ${address.toRadixString(16).toUpperCase()}',
         address: address,
         value: value,

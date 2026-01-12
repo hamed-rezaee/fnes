@@ -28,6 +28,7 @@ extension ResponsiveContext on BuildContext {
 
   ScreenSize get screenSize {
     final width = screenWidth;
+
     if (width < Breakpoints.mobile) return ScreenSize.mobile;
     if (width < Breakpoints.tablet) return ScreenSize.tablet;
     if (width < Breakpoints.desktop) return ScreenSize.desktop;

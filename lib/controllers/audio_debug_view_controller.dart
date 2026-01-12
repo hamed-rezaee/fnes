@@ -139,11 +139,9 @@ class AudioDebugViewController {
     bufferSize.value = _mixedBuffer.length;
   }
 
-  double _calculatePeak(List<double> buffer) {
-    if (buffer.isEmpty) return 0;
-
-    return buffer.map((s) => s.abs()).reduce((a, b) => a > b ? a : b);
-  }
+  double _calculatePeak(List<double> buffer) => (buffer.isEmpty)
+      ? 0
+      : buffer.map((s) => s.abs()).reduce((a, b) => a > b ? a : b);
 
   double _calculateRMS(List<double> buffer) {
     if (buffer.isEmpty) return 0;
