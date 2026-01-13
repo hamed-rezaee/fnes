@@ -4,25 +4,27 @@ import 'package:fnes/mappers/mapper.dart';
 class Mapper004 extends Mapper {
   Mapper004(super.programBankCount, super.totalCharBanks) {
     programRam = Uint8List(8 * 1024);
+
     reset();
   }
 
   late Uint8List programRam;
   late List<int> bankRegisters;
 
-  int _targetRegister = 0;
-  bool _programBankMode = false;
-  bool _charA12Inversion = false;
   MapperMirror _mirrorMode = MapperMirror.horizontal;
 
-  bool _programRamEnabled = true;
-  bool _programRamWriteProtect = false;
+  int _targetRegister = 0;
+  bool _prgBankMode = false;
+  bool _chrBankMode = false;
+  bool _fourScreenMode = false;
+  bool _prgRamChipEnable = true;
+  bool _prgRamWriteProtect = false;
 
-  bool _irqActive = false;
-  bool _irqEnabled = false;
-  bool _irqReloadPending = false;
-  int _irqCounter = 0;
   int _irqLatch = 0;
+  int _irqCounter = 0;
+  bool _irqReload = false;
+  bool _irqEnable = false;
+  bool _irqActive = false;
 
   @override
   String get name => 'MMC3';
@@ -32,17 +34,17 @@ class Mapper004 extends Mapper {
     bankRegisters = List.filled(8, 0);
 
     _targetRegister = 0;
-    _programBankMode = false;
-    _charA12Inversion = false;
+    _prgBankMode = false;
+    _chrBankMode = false;
     _mirrorMode = MapperMirror.horizontal;
-    _programRamEnabled = true;
-    _programRamWriteProtect = false;
+    _prgRamChipEnable = true;
+    _prgRamWriteProtect = false;
 
-    _irqActive = false;
-    _irqEnabled = false;
-    _irqReloadPending = false;
-    _irqCounter = 0;
     _irqLatch = 0;
+    _irqCounter = 0;
+    _irqReload = false;
+    _irqEnable = false;
+    _irqActive = false;
 
     _syncBanking();
   }
@@ -53,52 +55,52 @@ class Mapper004 extends Mapper {
   }
 
   void _syncChrBanking() {
-    if (_charA12Inversion) {
+    if (_chrBankMode) {
       setChrBank1k(Mapper.chr0000, bankRegisters[2]);
       setChrBank1k(Mapper.chr0400, bankRegisters[3]);
       setChrBank1k(Mapper.chr0800, bankRegisters[4]);
       setChrBank1k(Mapper.chr0c00, bankRegisters[5]);
-      setChrBank1k(Mapper.chr1000, bankRegisters[0] & 0xFE);
-      setChrBank1k(Mapper.chr1400, (bankRegisters[0] & 0xFE) + 1);
-      setChrBank1k(Mapper.chr1800, bankRegisters[1] & 0xFE);
-      setChrBank1k(Mapper.chr1c00, (bankRegisters[1] & 0xFE) + 1);
+
+      setChrBank2k(2, bankRegisters[0] >> 1);
+      setChrBank2k(3, bankRegisters[1] >> 1);
     } else {
-      setChrBank1k(Mapper.chr0000, bankRegisters[0] & 0xFE);
-      setChrBank1k(Mapper.chr0400, (bankRegisters[0] & 0xFE) + 1);
-      setChrBank1k(Mapper.chr0800, bankRegisters[1] & 0xFE);
-      setChrBank1k(Mapper.chr0c00, (bankRegisters[1] & 0xFE) + 1);
       setChrBank1k(Mapper.chr1000, bankRegisters[2]);
       setChrBank1k(Mapper.chr1400, bankRegisters[3]);
       setChrBank1k(Mapper.chr1800, bankRegisters[4]);
       setChrBank1k(Mapper.chr1c00, bankRegisters[5]);
+
+      setChrBank2k(0, bankRegisters[0] >> 1);
+      setChrBank2k(1, bankRegisters[1] >> 1);
     }
   }
 
   void _syncPrgBanking() {
-    if (_programBankMode) {
-      setPrgBank8k(Mapper.prg8000, prgRomPageCount8k - 2);
-      setPrgBank8k(Mapper.prgA000, bankRegisters[7] & 0x3F);
+    final lastBank = prgRomPageCount8k - 1;
+    final secondLastBank = prgRomPageCount8k - 2;
+
+    if (_prgBankMode) {
       setPrgBank8k(Mapper.prgC000, bankRegisters[6] & 0x3F);
-      setPrgBank8k(Mapper.prgE000, prgRomPageCount8k - 1);
+      setPrgBank8k(Mapper.prgA000, bankRegisters[7] & 0x3F);
+      setPrgBank8k(Mapper.prg8000, secondLastBank);
+      setPrgBank8k(Mapper.prgE000, lastBank);
     } else {
       setPrgBank8k(Mapper.prg8000, bankRegisters[6] & 0x3F);
       setPrgBank8k(Mapper.prgA000, bankRegisters[7] & 0x3F);
-      setPrgBank8k(Mapper.prgC000, prgRomPageCount8k - 2);
-      setPrgBank8k(Mapper.prgE000, prgRomPageCount8k - 1);
+      setPrgBank8k(Mapper.prgC000, secondLastBank);
+      setPrgBank8k(Mapper.prgE000, lastBank);
     }
   }
 
   @override
   int? cpuMapRead(int address, [void Function(int data)? setData]) {
     if (address >= 0x6000 && address <= 0x7FFF) {
-      if (_programRamEnabled) {
-        setData?.call(programRam[address & 0x1FFF]);
-      }
+      if (_prgRamChipEnable) setData?.call(programRam[address & 0x1FFF]);
+
       return 0xFFFFFFFF;
     }
 
     if (address >= 0x8000 && address <= 0xFFFF) {
-      final bankIndex = (address >> 13) & 0x3;
+      final bankIndex = (address >> 13) & 0x03;
       final bankOffset = address & 0x1FFF;
 
       return (prgBank[bankIndex] * 0x2000) + bankOffset;
@@ -110,49 +112,89 @@ class Mapper004 extends Mapper {
   @override
   int? cpuMapWrite(int address, int data, [int cycles = 0]) {
     if (address >= 0x6000 && address <= 0x7FFF) {
-      if (_programRamEnabled && !_programRamWriteProtect) {
+      if (_prgRamChipEnable && !_prgRamWriteProtect) {
         programRam[address & 0x1FFF] = data;
       }
+
       return 0xFFFFFFFF;
     }
 
-    if (address >= 0x8000 && address <= 0x9FFF) {
-      if ((address & 0x0001) == 0) {
-        _targetRegister = data & 0x07;
-        _programBankMode = (data & 0x40) != 0;
-        _charA12Inversion = (data & 0x80) != 0;
-      } else {
-        bankRegisters[_targetRegister] = data;
-        _syncBanking();
-      }
-    } else if (address >= 0xA000 && address <= 0xBFFF) {
-      if ((address & 0x0001) == 0) {
-        _mirrorMode = (data & 0x01) != 0
-            ? MapperMirror.horizontal
-            : MapperMirror.vertical;
-        setMirroring(data & 0x01);
-      } else {
-        _programRamEnabled = (data & 0x80) != 0;
-        _programRamWriteProtect = (data & 0x40) != 0;
-      }
-    } else if (address >= 0xC000 && address <= 0xDFFF) {
-      if ((address & 0x0001) == 0) {
-        _irqLatch = data;
-      } else {
-        _irqCounter = 0;
-        _irqReloadPending = true;
-      }
-    } else if (address >= 0xE000 && address <= 0xFFFF) {
-      if ((address & 0x0001) == 0) {
-        _irqEnabled = false;
-        _irqActive = false;
-      } else {
-        _irqEnabled = true;
-      }
+    if (address >= 0x8000 && address <= 0xFFFF) {
+      _handleRegisterWrite(address, data);
     }
 
     return null;
   }
+
+  void _handleRegisterWrite(int address, int data) {
+    final maskedAddress = address & 0xE001;
+
+    switch (maskedAddress) {
+      case 0x8000:
+        _writeBankSelect(data);
+      case 0x8001:
+        _writeBankData(data);
+      case 0xA000:
+        _writeMirroring(data);
+      case 0xA001:
+        _writePrgRamProtect(data);
+      case 0xC000:
+        _writeIrqLatch(data);
+      case 0xC001:
+        _writeIrqReload();
+      case 0xE000:
+        _writeIrqDisable();
+      case 0xE001:
+        _writeIrqEnable();
+    }
+  }
+
+  void _writeBankSelect(int data) {
+    final oldPrgMode = _prgBankMode;
+    final oldChrMode = _chrBankMode;
+
+    _targetRegister = data & 0x07;
+    _prgBankMode = (data & 0x40) != 0;
+    _chrBankMode = (data & 0x80) != 0;
+
+    if (_prgBankMode != oldPrgMode) _syncPrgBanking();
+    if (_chrBankMode != oldChrMode) _syncChrBanking();
+  }
+
+  void _writeBankData(int data) {
+    bankRegisters[_targetRegister] = data;
+
+    _targetRegister <= 5 ? _syncChrBanking() : _syncPrgBanking();
+  }
+
+  void _writeMirroring(int data) {
+    if (_fourScreenMode) return;
+
+    _mirrorMode = (data & 0x01) != 0
+        ? MapperMirror.horizontal
+        : MapperMirror.vertical;
+
+    setMirroring(data & 0x01);
+  }
+
+  void _writePrgRamProtect(int data) {
+    _prgRamChipEnable = (data & 0x80) != 0;
+    _prgRamWriteProtect = (data & 0x40) != 0;
+  }
+
+  void _writeIrqLatch(int data) => _irqLatch = data;
+
+  void _writeIrqReload() {
+    _irqCounter = 0;
+    _irqReload = true;
+  }
+
+  void _writeIrqDisable() {
+    _irqEnable = false;
+    _irqActive = false;
+  }
+
+  void _writeIrqEnable() => _irqEnable = true;
 
   @override
   int? ppuMapRead(int address, [void Function(int data)? setData]) {
@@ -168,8 +210,8 @@ class Mapper004 extends Mapper {
 
   @override
   int? ppuMapWrite(int address) {
-    if (totalCharBanks == 0 && address <= 0x1FFF) {
-      return address;
+    if (address >= 0x0000 && address <= 0x1FFF) {
+      if (totalCharBanks == 0) return address;
     }
 
     return null;
@@ -177,14 +219,14 @@ class Mapper004 extends Mapper {
 
   @override
   void scanline(int row) {
-    if (_irqCounter == 0 || _irqReloadPending) {
+    if (_irqCounter == 0 || _irqReload) {
       _irqCounter = _irqLatch;
-      _irqReloadPending = false;
+      _irqReload = false;
     } else {
       _irqCounter--;
     }
 
-    if (_irqCounter == 0 && _irqEnabled) {
+    if (_irqCounter == 0 && _irqEnable) {
       _irqActive = true;
     }
   }
@@ -201,40 +243,42 @@ class Mapper004 extends Mapper {
   @override
   Map<String, dynamic> saveState() => {
     'targetRegister': _targetRegister,
-    'programBankMode': _programBankMode,
-    'charA12Inversion': _charA12Inversion,
+    'prgBankMode': _prgBankMode,
+    'chrBankMode': _chrBankMode,
     'mirrorMode': _mirrorMode.index,
-    'programRamEnabled': _programRamEnabled,
-    'programRamWriteProtect': _programRamWriteProtect,
+    'fourScreenMode': _fourScreenMode,
+    'prgRamChipEnable': _prgRamChipEnable,
+    'prgRamWriteProtect': _prgRamWriteProtect,
     'bankRegisters': bankRegisters.toList(),
-    'irqActive': _irqActive,
-    'irqEnabled': _irqEnabled,
-    'irqReloadPending': _irqReloadPending,
-    'irqCounter': _irqCounter,
     'irqLatch': _irqLatch,
+    'irqCounter': _irqCounter,
+    'irqReload': _irqReload,
+    'irqEnable': _irqEnable,
+    'irqActive': _irqActive,
     'programRam': programRam.toList(),
   };
 
   @override
   void restoreState(Map<String, dynamic> state) {
     _targetRegister = state['targetRegister'] as int;
-    _programBankMode = state['programBankMode'] as bool;
-    _charA12Inversion = state['charA12Inversion'] as bool;
+    _prgBankMode = state['prgBankMode'] as bool;
+    _chrBankMode = state['chrBankMode'] as bool;
     _mirrorMode = MapperMirror.values[state['mirrorMode'] as int];
-    _programRamEnabled = state['programRamEnabled'] as bool;
-    _programRamWriteProtect = state['programRamWriteProtect'] as bool;
+    _fourScreenMode = state['fourScreenMode'] as bool? ?? false;
+    _prgRamChipEnable = state['prgRamChipEnable'] as bool;
+    _prgRamWriteProtect = state['prgRamWriteProtect'] as bool;
 
     final bankRegs = (state['bankRegisters'] as List).cast<int>();
-
     for (var i = 0; i < bankRegs.length; i++) {
       bankRegisters[i] = bankRegs[i];
     }
 
-    _irqActive = state['irqActive'] as bool;
-    _irqEnabled = state['irqEnabled'] as bool;
-    _irqReloadPending = state['irqReloadPending'] as bool;
-    _irqCounter = state['irqCounter'] as int;
     _irqLatch = state['irqLatch'] as int;
+    _irqCounter = state['irqCounter'] as int;
+    _irqReload = state['irqReload'] as bool;
+    _irqEnable = state['irqEnable'] as bool;
+    _irqActive = state['irqActive'] as bool;
+
     programRam.setAll(0, (state['programRam'] as List).cast<int>());
 
     _syncBanking();
