@@ -178,11 +178,13 @@ class Bus {
     if (cycles == 0) {
       if (_dmaTransfer) {
         for (var i = 0; i < 256; i++) {
-          ppu.pOAM[i] = cpuRead((_dmaPage << 8) | i);
+          ppu.pOAM[(ppu.oamAddress + i) & 0xFF] = cpuRead((_dmaPage << 8) | i);
         }
+
         _dmaTransfer = false;
         _dmaDummy = true;
         cycles = 513;
+
         if (_cpuClockCounter.isOdd) cycles++;
       } else {
         cycles = cpu.step();

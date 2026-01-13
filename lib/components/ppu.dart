@@ -480,11 +480,10 @@ class PPU {
           break;
         case 0x0007:
           data = ppuDataBuffer;
-          ppuDataBuffer = ppuRead(vramAddress.reg);
+          ppuDataBuffer = ppuRead(vramAddress.reg, ignorePalette: true);
 
-          if (vramAddress.reg >= 0x3F00) {
-            data = ppuDataBuffer;
-          }
+          if (vramAddress.reg >= 0x3F00) data = ppuRead(vramAddress.reg);
+
           vramAddress.reg += (control.incrementMode ? 32 : 1);
           vramAddress.reg &= 0x3FFF;
       }
@@ -536,7 +535,7 @@ class PPU {
   }
 
   @pragma('vm:prefer-inline')
-  int ppuRead(int address) {
+  int ppuRead(int address, {bool ignorePalette = false}) {
     var memoryAddress = address;
     var data = 0x00;
     memoryAddress &= 0x3FFF;
@@ -573,6 +572,8 @@ class PPU {
         data = tableData[0x0400 + (memoryAddress & 0x03FF)];
       }
     } else if (memoryAddress >= 0x3F00 && memoryAddress <= 0x3FFF) {
+      if (ignorePalette) return ppuRead(address - 0x1000);
+
       memoryAddress &= 0x001F;
 
       if (memoryAddress == 0x0010) {
