@@ -13,8 +13,10 @@ class FrameRateController {
   DateTime lastFPSUpdate = DateTime.now();
   DateTime lastFrameTime = DateTime.now();
 
-  final List<double> _fpsHistory = [];
+  final List<double> _fpsHistory = List.filled(_fpsHistorySize, 0);
   static const int _fpsHistorySize = 10;
+  int _fpsHistoryIndex = 0;
+  int _fpsHistoryCount = 0;
 
   final Signal<double> currentFPS = signal(0);
 
@@ -23,7 +25,8 @@ class FrameRateController {
     skipFrames = 0;
     lastFPSUpdate = DateTime.now();
     lastFrameTime = DateTime.now();
-    _fpsHistory.clear();
+    _fpsHistoryIndex = 0;
+    _fpsHistoryCount = 0;
   }
 
   void markFrameTime() => lastFrameTime = DateTime.now();
@@ -36,13 +39,20 @@ class FrameRateController {
     if (elapsed >= fpsUpdateIntervalMs) {
       final fps = frameCount / (elapsed / 1000);
 
-      _fpsHistory.add(fps);
+      _fpsHistory[_fpsHistoryIndex] = fps;
+      _fpsHistoryIndex = (_fpsHistoryIndex + 1) % _fpsHistorySize;
 
-      if (_fpsHistory.length > _fpsHistorySize) _fpsHistory.removeAt(0);
+      if (_fpsHistoryCount < _fpsHistorySize) _fpsHistoryCount++;
 
-      final avgFps = _fpsHistory.reduce((a, b) => a + b) / _fpsHistory.length;
+      var sum = 0.0;
+
+      for (var i = 0; i < _fpsHistoryCount; i++) {
+        sum += _fpsHistory[i];
+      }
+
+      final avgFps = sum / _fpsHistoryCount;
+
       currentFPS.value = avgFps;
-
       frameCount = 0;
       lastFPSUpdate = now;
 

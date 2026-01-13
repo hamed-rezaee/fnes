@@ -162,7 +162,10 @@ class NESEmulatorController {
     final pixelBuffer = buffer32.buffer.asUint8List();
     final image = await _createScreenImage(pixelBuffer);
 
+    final oldImage = screenImage.value;
     screenImage.value = image;
+    oldImage?.dispose();
+
     frameUpdateTrigger.value = (frameUpdateTrigger.value + 1) % 60000;
 
     eventBus.dispatch(ScreenImageUpdatedEvent(image: image));
@@ -357,7 +360,7 @@ class NESEmulatorController {
     errorMessage.value = '$e';
   }
 
-  Future<void> _handleRewind() async => Future.microtask(() {
+  Future<void> _handleRewind() async {
     final state = _rewindBuffer.popState();
 
     if (state != null) {
@@ -376,7 +379,7 @@ class NESEmulatorController {
     } else {
       stopRewind();
     }
-  });
+  }
 
   void _updateRewindProgress() {
     if (_rewindBuffer.maxFrames > 0) {
@@ -386,11 +389,11 @@ class NESEmulatorController {
     }
   }
 
-  Future<void> _saveRewindState() async => Future.microtask(() {
-    final state = bus.saveState();
-    _rewindBuffer.pushState(state);
+  Future<void> _saveRewindState() async {
+    _rewindBuffer.pushState(bus.saveState());
+
     _updateRewindProgress();
-  });
+  }
 
   void startRewind() {
     final canRewind =
@@ -413,24 +416,22 @@ class NESEmulatorController {
   Future<void> rewindFrames(int frames) async {
     if (!isROMLoaded.value) return;
 
-    await Future.microtask(() {
-      final state = _rewindBuffer.rewindFrames(frames);
+    final state = _rewindBuffer.rewindFrames(frames);
 
-      if (state != null) {
-        final currentController0 = bus.controller[0];
-        final currentController1 = bus.controller[1];
-        final zapperSnapshot = _captureZapperSnapshot();
+    if (state != null) {
+      final currentController0 = bus.controller[0];
+      final currentController1 = bus.controller[1];
+      final zapperSnapshot = _captureZapperSnapshot();
 
-        bus.restoreState(state);
+      bus.restoreState(state);
 
-        bus.controller[0] = currentController0;
-        bus.controller[1] = currentController1;
-        _restoreZapperSnapshot(zapperSnapshot);
+      bus.controller[0] = currentController0;
+      bus.controller[1] = currentController1;
+      _restoreZapperSnapshot(zapperSnapshot);
 
-        _updateRewindProgress();
-        unawaited(updatePixelBuffer());
-      }
-    });
+      _updateRewindProgress();
+      unawaited(updatePixelBuffer());
+    }
   }
 
   void clearRewindBuffer() {
@@ -757,9 +758,16 @@ class NESEmulatorController {
   }
 
   Future<void> dispose() async {
+    if (isRunning.value) pauseEmulation();
+
     screenImage.value?.dispose();
+    screenImage.value = null;
+
     await _imageStreamController.close();
     await _audioStateManager.dispose();
+
+    clearRewindBuffer();
+
     await eventBus.dispose();
   }
 }

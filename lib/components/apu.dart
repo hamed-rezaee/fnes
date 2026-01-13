@@ -106,6 +106,7 @@ class APU {
 
   bool _isPal = false;
 
+  @pragma('vm:prefer-inline')
   void setSystemType({required bool isPal}) => _isPal = isPal;
 
   void cpuWrite(int address, int data) {
@@ -263,6 +264,7 @@ class APU {
     (i) => (i == 0) ? 0.0 : 163.67 / (24329.0 / i + 100.0),
   );
 
+  @pragma('vm:prefer-inline')
   double getOutputSample() {
     final p1 = pulse1.output();
     final p2 = pulse2.output();
@@ -315,6 +317,7 @@ class APU {
   static const int _fcStep4PAL = 33254;
   static const int _fcStep5PAL = 41566;
 
+  @pragma('vm:prefer-inline')
   void clock() {
     final s1 = _isPal ? _fcStep1PAL : _fcStep1NTSC;
     final s2 = _isPal ? _fcStep2PAL : _fcStep2NTSC;
@@ -373,6 +376,7 @@ class APU {
 
   int _frameStep = 0;
 
+  @pragma('vm:prefer-inline')
   void _clockEnvelopes() {
     pulse1.envelope.clock();
     pulse2.envelope.clock();
@@ -438,6 +442,7 @@ class Sequencer {
   int reload = 0;
   int output = 0;
 
+  @pragma('vm:prefer-inline')
   int clock({required bool enable, required int Function(int) func}) {
     if (enable) {
       timer--;
@@ -462,6 +467,7 @@ class Envelope {
   int decayCount = 0;
   bool loop = false;
 
+  @pragma('vm:prefer-inline')
   void clock() {
     if (start) {
       start = false;
@@ -485,6 +491,7 @@ class Envelope {
     output = disable ? volume : decayCount;
   }
 
+  @pragma('vm:prefer-inline')
   EnvelopeState saveState() => EnvelopeState(
     start: start,
     disable: disable,
@@ -495,6 +502,7 @@ class Envelope {
     loop: loop,
   );
 
+  @pragma('vm:prefer-inline')
   void restoreState(EnvelopeState state) {
     start = state.start;
     disable = state.disable;
@@ -545,23 +553,27 @@ class LengthCounter {
     0x1E,
   ];
 
+  @pragma('vm:prefer-inline')
   void load(int index) {
     if (index < lengthTable.length) {
       counter = lengthTable[index];
     }
   }
 
+  @pragma('vm:prefer-inline')
   void clock() {
     if (!halt && counter > 0) {
       counter--;
     }
   }
 
+  @pragma('vm:prefer-inline')
   LengthCounterState saveState() => LengthCounterState(
     counter: counter,
     halt: halt,
   );
 
+  @pragma('vm:prefer-inline')
   void restoreState(LengthCounterState state) {
     counter = state.counter;
     halt = state.halt;
@@ -580,6 +592,7 @@ class PulseWave {
   final LengthCounter lengthCounter = LengthCounter();
   final Sweeper sweeper = Sweeper();
 
+  @pragma('vm:prefer-inline')
   void clock() {
     if (timer == 0) {
       timer = reload;
@@ -632,6 +645,7 @@ class PulseWave {
         (reload < 8) || (!sweeper.down && ((reload + offset) > 0x7FF));
   }
 
+  @pragma('vm:prefer-inline')
   PulseWaveState saveState() => PulseWaveState(
     enable: enable,
     dutycycle: dutyIndex.toDouble(),
@@ -643,6 +657,7 @@ class PulseWave {
     sweeperState: sweeper.saveState(),
   );
 
+  @pragma('vm:prefer-inline')
   void restoreState(PulseWaveState state) {
     enable = state.enable;
     dutyIndex = state.dutycycle.round();
@@ -697,6 +712,7 @@ class Sweeper {
     _updateMute(target, isPulse1);
   }
 
+  @pragma('vm:prefer-inline')
   void _updateMute(int target, bool isPulse1) {
     if (target < 8) {
       mute = true;
@@ -711,6 +727,7 @@ class Sweeper {
     }
   }
 
+  @pragma('vm:prefer-inline')
   SweeperState saveState() => SweeperState(
     enabled: enabled,
     down: down,
@@ -721,6 +738,7 @@ class Sweeper {
     mute: mute,
   );
 
+  @pragma('vm:prefer-inline')
   void restoreState(SweeperState state) {
     enabled = state.enabled;
     down = state.down;
@@ -738,10 +756,13 @@ class LinearCounter {
   bool controlFlag = false;
   bool reloadFlag = false;
 
+  @pragma('vm:prefer-inline')
   void load(int value) => reload = value;
 
+  @pragma('vm:prefer-inline')
   void setReloadFlag() => reloadFlag = true;
 
+  @pragma('vm:prefer-inline')
   void clock() {
     if (reloadFlag) {
       counter = reload;
@@ -752,6 +773,7 @@ class LinearCounter {
     if (!controlFlag) reloadFlag = false;
   }
 
+  @pragma('vm:prefer-inline')
   LinearCounterState saveState() => LinearCounterState(
     counter: counter,
     reload: reload,
@@ -759,6 +781,7 @@ class LinearCounter {
     reloadFlag: reloadFlag,
   );
 
+  @pragma('vm:prefer-inline')
   void restoreState(LinearCounterState state) {
     counter = state.counter;
     reload = state.reload;
@@ -812,6 +835,7 @@ class TriangleWave {
   final LengthCounter lengthCounter = LengthCounter();
   final LinearCounter linearCounter = LinearCounter();
 
+  @pragma('vm:prefer-inline')
   void clock() {
     if (timer == 0) {
       timer = reload;
@@ -847,6 +871,7 @@ class TriangleWave {
     return _sequence[phase];
   }
 
+  @pragma('vm:prefer-inline')
   TriangleWaveState saveState() => TriangleWaveState(
     enable: enable,
     timer: timer,
@@ -856,6 +881,7 @@ class TriangleWave {
     linearCounterState: linearCounter.saveState(),
   );
 
+  @pragma('vm:prefer-inline')
   void restoreState(TriangleWaveState state) {
     enable = state.enable;
     timer = state.timer;
@@ -878,6 +904,7 @@ class NoiseWave {
   final Envelope envelope = Envelope();
   final LengthCounter lengthCounter = LengthCounter();
 
+  @pragma('vm:prefer-inline')
   void clock() {
     if (timer == 0) {
       timer = reload;
@@ -916,6 +943,7 @@ class NoiseWave {
     return 0;
   }
 
+  @pragma('vm:prefer-inline')
   NoiseWaveState saveState() => NoiseWaveState(
     enable: enable,
     mode: mode,
@@ -926,6 +954,7 @@ class NoiseWave {
     lengthCounterState: lengthCounter.saveState(),
   );
 
+  @pragma('vm:prefer-inline')
   void restoreState(NoiseWaveState state) {
     enable = state.enable;
     mode = state.mode;
@@ -956,6 +985,7 @@ class DMC {
   bool silence = true;
   int duration = 0;
 
+  @pragma('vm:prefer-inline')
   void clock(int Function(int)? memoryRead) {
     if (sampleBufferEmpty && duration > 0) {
       if (memoryRead != null) {
@@ -1026,6 +1056,7 @@ class DMC {
   @pragma('vm:prefer-inline')
   int output() => (!debugEnable) ? 0 : dmcOutput;
 
+  @pragma('vm:prefer-inline')
   DMCState saveState() => DMCState(
     enable: duration > 0,
     irqEnabled: irqEnabled,
@@ -1043,6 +1074,7 @@ class DMC {
     silenceFlag: silence,
   );
 
+  @pragma('vm:prefer-inline')
   void restoreState(DMCState state) {
     irqEnabled = state.irqEnabled;
     loop = state.loop;

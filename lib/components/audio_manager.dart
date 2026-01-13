@@ -38,35 +38,33 @@ class AudioManager {
   Future<void> addSamples(List<double> samples) async {
     if (!_isInitialized || !_isPlaying) return;
 
-    await Future.microtask(() {
-      for (final sample in samples) {
-        final audioSample = (sample * _volume).clamp(-1.0, 1.0);
-        _audioQueue.add(audioSample);
-      }
+    for (final sample in samples) {
+      final audioSample = (sample * _volume).clamp(-1.0, 1.0);
+      _audioQueue.add(audioSample);
+    }
 
-      if (_audioQueue.length >= _minBufferThreshold) {
-        while (_audioQueue.length >= _chunkSize) {
-          final chunk = Float32List.fromList(
-            _audioQueue.getRange(0, _chunkSize).toList(),
-          );
+    if (_audioQueue.length >= _minBufferThreshold) {
+      while (_audioQueue.length >= _chunkSize) {
+        final chunk = Float32List.fromList(
+          _audioQueue.getRange(0, _chunkSize).toList(),
+        );
 
-          _audioQueue.removeRange(0, _chunkSize);
+        _audioQueue.removeRange(0, _chunkSize);
 
-          try {
-            _audioStream.push(chunk);
-          } on Exception catch (_) {
-            _audioQueue.insertAll(0, chunk);
-            break;
-          }
+        try {
+          _audioStream.push(chunk);
+        } on Exception catch (_) {
+          _audioQueue.insertAll(0, chunk);
+          break;
         }
       }
+    }
 
-      if (_audioQueue.length > _maxBufferSize) {
-        final overflow = _audioQueue.length - _maxBufferSize;
+    if (_audioQueue.length > _maxBufferSize) {
+      final overflow = _audioQueue.length - _maxBufferSize;
 
-        _audioQueue.removeRange(0, overflow);
-      }
-    });
+      _audioQueue.removeRange(0, overflow);
+    }
   }
 
   void pause() {

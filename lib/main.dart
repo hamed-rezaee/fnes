@@ -880,6 +880,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
   Future<void> dispose() async {
     _stopEmulationLoop();
     _focusNode.dispose();
+    await _nesController.dispose();
 
     super.dispose();
   }
