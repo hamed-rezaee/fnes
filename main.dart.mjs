@@ -669,6 +669,7 @@ class CompiledApp {
       _1574: f => finalizeWrapper(f, function(x0) { return dartInstance.exports._1574(f,arguments.length,x0) }),
       _1583: (x0,x1) => x0.append(x1),
       _1584: (x0,x1,x2,x3,x4) => x0.init(x1,x2,x3,x4),
+      _1585: x0 => x0.uninit(),
       _1586: x0 => x0.resume(),
       _1587: (x0,x1) => x0.push(x1),
       _1592: () => globalThis.AudioStream,
