@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide Image;
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:fnes/components/apu.dart';
 import 'package:fnes/components/bus.dart';
@@ -57,7 +58,8 @@ class NESEmulatorScreen extends StatefulWidget {
   State<NESEmulatorScreen> createState() => _NESEmulatorScreenState();
 }
 
-class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
+class _NESEmulatorScreenState extends State<NESEmulatorScreen>
+    with SingleTickerProviderStateMixin {
   final _nesController = NESEmulatorController(
     bus: Bus(
       cpu: CPU(),
@@ -71,8 +73,8 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
   int get _targetFrameTimeMicros =>
       _nesController.systemType.value == SystemType.pal ? 20000 : 16639;
 
-  Timer? _emulationTimer;
-  DateTime? _lastFrameTime;
+  Ticker? _ticker;
+  Duration _lastElapsed = Duration.zero;
   int _accumulatedTimeMicros = 0;
 
   late final FocusNode _focusNode = FocusNode();
@@ -113,12 +115,12 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     }
 
     if (isRunning) {
-      if (_emulationTimer == null || !_emulationTimer!.isActive) {
-        _startEmulationLoop();
+      if (_ticker == null || !_ticker!.isActive) {
+        unawaited(_startEmulationLoop());
       }
 
       _focusNode.requestFocus();
-    } else if (!isRunning && _emulationTimer != null) {
+    } else if (!isRunning && _ticker != null) {
       _stopEmulationLoop();
     }
 
@@ -838,48 +840,48 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen> {
     if (result) await onConfirm();
   }
 
-  void _startEmulationLoop() {
-    _emulationTimer?.cancel();
-    _lastFrameTime = DateTime.now();
+  Future<void> _startEmulationLoop() async {
+    _ticker?.dispose();
+    _lastElapsed = Duration.zero;
     _accumulatedTimeMicros = 0;
 
-    _emulationTimer = Timer.periodic(const Duration(milliseconds: 4), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
+    _ticker = createTicker((elapsed) {
+      if (!mounted) return;
 
-      final now = DateTime.now();
-      if (_lastFrameTime != null) {
-        final elapsed = now.difference(_lastFrameTime!).inMicroseconds;
-        _accumulatedTimeMicros += elapsed;
+      final deltaTime = elapsed - _lastElapsed;
 
-        while (_accumulatedTimeMicros >= _targetFrameTimeMicros) {
-          _nesController.updateEmulation();
-          _accumulatedTimeMicros -= _targetFrameTimeMicros;
+      _lastElapsed = elapsed;
+      _accumulatedTimeMicros += deltaTime.inMicroseconds;
 
-          if (_accumulatedTimeMicros > _targetFrameTimeMicros * 3) {
-            _accumulatedTimeMicros = 0;
-            break;
-          }
+      while (_accumulatedTimeMicros >= _targetFrameTimeMicros) {
+        _nesController.updateEmulation();
+        _accumulatedTimeMicros -= _targetFrameTimeMicros;
+
+        if (_accumulatedTimeMicros > _targetFrameTimeMicros * 5) {
+          _accumulatedTimeMicros = _targetFrameTimeMicros;
+
+          break;
         }
       }
-
-      _lastFrameTime = now;
     });
+
+    await _ticker?.start();
   }
 
   void _stopEmulationLoop() {
-    _emulationTimer?.cancel();
-    _emulationTimer = null;
-    _lastFrameTime = null;
+    _ticker?.stop();
+    _ticker?.dispose();
+    _ticker = null;
+    _lastElapsed = Duration.zero;
     _accumulatedTimeMicros = 0;
   }
 
   @override
   Future<void> dispose() async {
     _stopEmulationLoop();
+    _ticker?.dispose();
     _focusNode.dispose();
+
     await _nesController.dispose();
 
     super.dispose();
