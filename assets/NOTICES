@@ -1719,6 +1719,7 @@ flutter_plugin_android_lifecycle
 shared_preferences
 shared_preferences_android
 shared_preferences_foundation
+shared_preferences_platform_interface
 url_launcher_android
 url_launcher_ios
 url_launcher_linux
@@ -24565,7 +24566,6 @@ path_provider_platform_interface
 path_provider_windows
 plugin_platform_interface
 shared_preferences_linux
-shared_preferences_platform_interface
 shared_preferences_web
 shared_preferences_windows
 url_launcher
