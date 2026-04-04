@@ -23,7 +23,8 @@ import 'package:signals/signals_flutter.dart';
 enum RenderMode {
   both('All'),
   background('Background'),
-  sprites('Sprites');
+  sprites('Sprites')
+  ;
 
   const RenderMode(this.label);
 
@@ -193,7 +194,7 @@ class NESEmulatorController {
       isLoadingROM.value = true;
       errorMessage.value = null;
 
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['nes'],
         withData: true,
