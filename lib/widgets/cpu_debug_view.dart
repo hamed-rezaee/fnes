@@ -135,7 +135,7 @@ class _CpuDebugViewState extends State<CpuDebugView> {
 
   TextSpan _getDisassemblyRichText(String disassembly) {
     final lines = disassembly.split('\n');
-    final pcIndex = lines.indexWhere((String line) => line.startsWith('-> '));
+    final pcIndex = lines.indexWhere((line) => line.startsWith('-> '));
 
     if (pcIndex == -1) return const TextSpan();
 

@@ -207,7 +207,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
       body: KeyboardListener(
         focusNode: _focusNode,
         autofocus: true,
-        onKeyEvent: (KeyEvent event) {
+        onKeyEvent: (event) {
           if (event is KeyDownEvent) {
             _nesController.handleKeyDown(event.logicalKey);
           } else if (event is KeyUpEvent) {
@@ -347,7 +347,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
       return Listener(
         behavior: HitTestBehavior.translucent,
         onPointerDown: isZapperEnabled
-            ? (PointerDownEvent event) => _handleZapperPointerDown(
+            ? (event) => _handleZapperPointerDown(
                 event,
                 screenWidth,
                 screenHeight,
@@ -599,7 +599,7 @@ class _NESEmulatorScreenState extends State<NESEmulatorScreen>
     return PopupMenuButton<String>(
       icon: const Icon(Icons.settings),
       tooltip: 'Settings',
-      itemBuilder: (BuildContext context) => [
+      itemBuilder: (context) => [
         _buildMenuGroupHeader('VIDEO'),
         PopupMenuItem<String>(
           value: 'toggle_system',

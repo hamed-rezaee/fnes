@@ -18,7 +18,7 @@ class CartridgeDebugView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: info.entries
                 .map(
-                  (MapEntry<String, String> e) => Padding(
+                  (e) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(
                       children: [

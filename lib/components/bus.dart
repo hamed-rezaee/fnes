@@ -20,7 +20,7 @@ class Bus {
   }) {
     cpu.connect(this);
 
-    apu.dmcMemoryRead = (int address) => cpuRead(address, readOnly: true);
+    apu.dmcMemoryRead = (address) => cpuRead(address, readOnly: true);
   }
 
   final CPU cpu;
