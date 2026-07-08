@@ -22,6 +22,7 @@ class Mapper023 extends Mapper {
   bool _irqEnabled = false;
   bool _irqEnableAfterAck = false;
   bool _irqCycleMode = false;
+  bool _irqActive = false;
   int _irqCounter = 0;
   int _irqLatch = 0;
   int _irqPrescaler = 0;
@@ -40,6 +41,7 @@ class Mapper023 extends Mapper {
     _irqEnabled = false;
     _irqEnableAfterAck = false;
     _irqCycleMode = false;
+    _irqActive = false;
     _irqCounter = 0;
     _irqLatch = 0;
     _irqPrescaler = 0;
@@ -104,11 +106,9 @@ class Mapper023 extends Mapper {
           _prgBank8000 = data & 0x1F;
           _updateBanks();
         case 0x9000:
-        case 0x9001:
           _mirroring = data & 0x03;
-        case 0x9002:
-        case 0x9003:
-          break;
+        case 0x9001:
+          break; // PRG swap mode – not implemented
         case 0xA000:
         case 0xA001:
         case 0xA002:
@@ -119,69 +119,55 @@ class Mapper023 extends Mapper {
           _chrBanks[0] = (_chrBanks[0] & 0xF0) | (data & 0x0F);
           _updateBanks();
         case 0xB001:
-        case 0xB004:
           _chrBanks[0] = (_chrBanks[0] & 0x0F) | ((data & 0x0F) << 4);
           _updateBanks();
         case 0xB002:
-        case 0xB008:
           _chrBanks[1] = (_chrBanks[1] & 0xF0) | (data & 0x0F);
           _updateBanks();
         case 0xB003:
-        case 0xB00C:
           _chrBanks[1] = (_chrBanks[1] & 0x0F) | ((data & 0x0F) << 4);
           _updateBanks();
         case 0xC000:
           _chrBanks[2] = (_chrBanks[2] & 0xF0) | (data & 0x0F);
           _updateBanks();
         case 0xC001:
-        case 0xC004:
           _chrBanks[2] = (_chrBanks[2] & 0x0F) | ((data & 0x0F) << 4);
           _updateBanks();
         case 0xC002:
-        case 0xC008:
           _chrBanks[3] = (_chrBanks[3] & 0xF0) | (data & 0x0F);
           _updateBanks();
         case 0xC003:
-        case 0xC00C:
           _chrBanks[3] = (_chrBanks[3] & 0x0F) | ((data & 0x0F) << 4);
           _updateBanks();
         case 0xD000:
           _chrBanks[4] = (_chrBanks[4] & 0xF0) | (data & 0x0F);
           _updateBanks();
         case 0xD001:
-        case 0xD004:
           _chrBanks[4] = (_chrBanks[4] & 0x0F) | ((data & 0x0F) << 4);
           _updateBanks();
         case 0xD002:
-        case 0xD008:
           _chrBanks[5] = (_chrBanks[5] & 0xF0) | (data & 0x0F);
           _updateBanks();
         case 0xD003:
-        case 0xD00C:
           _chrBanks[5] = (_chrBanks[5] & 0x0F) | ((data & 0x0F) << 4);
           _updateBanks();
         case 0xE000:
           _chrBanks[6] = (_chrBanks[6] & 0xF0) | (data & 0x0F);
           _updateBanks();
         case 0xE001:
-        case 0xE004:
           _chrBanks[6] = (_chrBanks[6] & 0x0F) | ((data & 0x0F) << 4);
           _updateBanks();
         case 0xE002:
-        case 0xE008:
           _chrBanks[7] = (_chrBanks[7] & 0xF0) | (data & 0x0F);
           _updateBanks();
         case 0xE003:
-        case 0xE00C:
           _chrBanks[7] = (_chrBanks[7] & 0x0F) | ((data & 0x0F) << 4);
           _updateBanks();
         case 0xF000:
           _irqLatch = (_irqLatch & 0xF0) | (data & 0x0F);
         case 0xF001:
-        case 0xF004:
           _irqLatch = (_irqLatch & 0x0F) | ((data & 0x0F) << 4);
         case 0xF002:
-        case 0xF008:
           _irqEnableAfterAck = (data & 0x01) != 0;
           _irqEnabled = (data & 0x02) != 0;
           _irqCycleMode = (data & 0x04) != 0;
@@ -192,7 +178,6 @@ class Mapper023 extends Mapper {
             _irqPrescalerCounter = 0;
           }
         case 0xF003:
-        case 0xF00C:
           _irqEnabled = _irqEnableAfterAck;
       }
 
@@ -204,7 +189,10 @@ class Mapper023 extends Mapper {
 
   int _decodeRegister(int address) {
     final baseReg = address & 0xF000;
-    final subReg = address & 0x000F;
+    // VRC2b (submapper 2/3): M0=A0, M1=A1 → sub = address & 0x03
+    // VRC4e (default):       M0=A1, M1=A2 → sub = (address >> 1) & 0x03
+    final isVrc2b = submapper == 2 || submapper == 3;
+    final subReg = isVrc2b ? (address & 0x03) : ((address >> 1) & 0x03);
 
     return baseReg | subReg;
   }
@@ -244,7 +232,7 @@ class Mapper023 extends Mapper {
 
       if (_irqCounter >= 0x100) {
         _irqCounter = _irqLatch;
-        irqClear();
+        _irqActive = true;
       }
     } else {
       _irqPrescalerCounter += cycles;
@@ -258,7 +246,7 @@ class Mapper023 extends Mapper {
 
           if (_irqCounter == 0xFF) {
             _irqCounter = _irqLatch;
-            irqClear();
+            _irqActive = true;
           } else {
             _irqCounter++;
           }
@@ -268,10 +256,10 @@ class Mapper023 extends Mapper {
   }
 
   @override
-  bool irqState() => !_irqEnabled;
+  bool irqState() => _irqActive;
 
   @override
-  void irqClear() {}
+  void irqClear() => _irqActive = false;
 
   @override
   Map<String, dynamic> saveState() => {
@@ -282,6 +270,7 @@ class Mapper023 extends Mapper {
     'irqEnabled': _irqEnabled,
     'irqEnableAfterAck': _irqEnableAfterAck,
     'irqCycleMode': _irqCycleMode,
+    'irqActive': _irqActive,
     'irqCounter': _irqCounter,
     'irqLatch': _irqLatch,
     'irqPrescaler': _irqPrescaler,
@@ -297,6 +286,7 @@ class Mapper023 extends Mapper {
     _irqEnabled = (state['irqEnabled'] as bool?) ?? false;
     _irqEnableAfterAck = (state['irqEnableAfterAck'] as bool?) ?? false;
     _irqCycleMode = (state['irqCycleMode'] as bool?) ?? false;
+    _irqActive = (state['irqActive'] as bool?) ?? false;
     _irqCounter = (state['irqCounter'] as int?) ?? 0;
     _irqLatch = (state['irqLatch'] as int?) ?? 0;
     _irqPrescaler = (state['irqPrescaler'] as int?) ?? 0;

@@ -169,8 +169,12 @@ class Bus {
       ppu.nmi = false;
       cycles = cpu.nmi();
     } else if (cart?.getMapper().irqState() ?? false) {
-      cycles = cpu.irq();
-      cart?.getMapper().irqClear();
+      final irqCycles = cpu.irq();
+
+      if (irqCycles > 0) {
+        cycles = irqCycles;
+        cart?.getMapper().irqClear();
+      }
     } else if (apu.frameIrq) {
       cycles = cpu.irq();
     }
@@ -219,6 +223,8 @@ class Bus {
     for (var i = 0; i < cycles; i++) {
       apu.clock();
     }
+
+    cart?.getMapper().clock(cycles);
 
     _cpuClockCounter += cycles;
   }
