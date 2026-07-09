@@ -6,7 +6,7 @@ class CPU {
   CPU() {
     lookup[0x00] = Instruction(InstructionType.brk, AddressMode.imp, 7);
     lookup[0x01] = Instruction(InstructionType.ora, AddressMode.izx, 6);
-    lookup[0x02] = Instruction(InstructionType.nop, AddressMode.imp, 2);
+    lookup[0x02] = Instruction(InstructionType.nop, AddressMode.imm, 2);
     lookup[0x03] = Instruction(InstructionType.slo, AddressMode.izx, 8);
     lookup[0x04] = Instruction(InstructionType.nop, AddressMode.zp0, 3);
     lookup[0x05] = Instruction(InstructionType.ora, AddressMode.zp0, 3);
@@ -38,7 +38,7 @@ class CPU {
     lookup[0x1F] = Instruction(InstructionType.slo, AddressMode.abx, 7);
     lookup[0x20] = Instruction(InstructionType.jsr, AddressMode.abs, 6);
     lookup[0x21] = Instruction(InstructionType.and, AddressMode.izx, 6);
-    lookup[0x22] = Instruction(InstructionType.nop, AddressMode.imp, 2);
+    lookup[0x22] = Instruction(InstructionType.nop, AddressMode.imm, 2);
     lookup[0x23] = Instruction(InstructionType.rla, AddressMode.izx, 8);
     lookup[0x24] = Instruction(InstructionType.bit, AddressMode.zp0, 3);
     lookup[0x25] = Instruction(InstructionType.and, AddressMode.zp0, 3);
@@ -70,7 +70,7 @@ class CPU {
     lookup[0x3F] = Instruction(InstructionType.rla, AddressMode.abx, 7);
     lookup[0x40] = Instruction(InstructionType.rti, AddressMode.imp, 6);
     lookup[0x41] = Instruction(InstructionType.eor, AddressMode.izx, 6);
-    lookup[0x42] = Instruction(InstructionType.nop, AddressMode.imp, 2);
+    lookup[0x42] = Instruction(InstructionType.nop, AddressMode.imm, 2);
     lookup[0x43] = Instruction(InstructionType.sre, AddressMode.izx, 8);
     lookup[0x44] = Instruction(InstructionType.nop, AddressMode.zp0, 3);
     lookup[0x45] = Instruction(InstructionType.eor, AddressMode.zp0, 3);
@@ -102,7 +102,7 @@ class CPU {
     lookup[0x5F] = Instruction(InstructionType.sre, AddressMode.abx, 7);
     lookup[0x60] = Instruction(InstructionType.rts, AddressMode.imp, 6);
     lookup[0x61] = Instruction(InstructionType.adc, AddressMode.izx, 6);
-    lookup[0x62] = Instruction(InstructionType.nop, AddressMode.imp, 2);
+    lookup[0x62] = Instruction(InstructionType.nop, AddressMode.imm, 2);
     lookup[0x63] = Instruction(InstructionType.rra, AddressMode.izx, 8);
     lookup[0x64] = Instruction(InstructionType.nop, AddressMode.zp0, 3);
     lookup[0x65] = Instruction(InstructionType.adc, AddressMode.zp0, 3);
@@ -685,7 +685,6 @@ class CPU {
 
   int _brk() {
     pc++;
-    _setFlag(disableInterruptsFlag, isFlagSet: true);
     write(0x0100 + stkp, (pc >> 8) & 0x00FF);
     stkp = (stkp - 1) & 0xFF;
     write(0x0100 + stkp, pc & 0x00FF);
@@ -693,6 +692,7 @@ class CPU {
 
     write(0x0100 + stkp, status | breakFlag | unusedFlag);
     stkp = (stkp - 1) & 0xFF;
+    _setFlag(disableInterruptsFlag, isFlagSet: true);
 
     pc = read(0xFFFE) | (read(0xFFFF) << 8);
     return 0;
@@ -834,7 +834,7 @@ class CPU {
 
     bus?.eventBus?.dispatch(CPUInterruptEvent(type: 'NMI', vector: addrAbs));
 
-    return 8;
+    return 7;
   }
 
   int step() {
@@ -1295,7 +1295,13 @@ class CPU {
   }
 
   int _ahx() {
-    write(addrAbs, a & x & ((addrAbs >> 8) + 1));
+    final baseHigh = ((addrAbs - y) & 0xFFFF) >> 8;
+    final result = a & x & (baseHigh + 1);
+    final pageCross = (addrAbs >> 8) != baseHigh;
+    final writeAddr = pageCross ? (result << 8) | (addrAbs & 0xFF) : addrAbs;
+
+    write(writeAddr, result);
+
     return 0;
   }
 
@@ -1311,18 +1317,36 @@ class CPU {
   }
 
   int _shx() {
-    write(addrAbs, x & ((addrAbs >> 8) + 1));
+    final baseHigh = ((addrAbs - y) & 0xFFFF) >> 8;
+    final result = x & (baseHigh + 1);
+    final pageCross = (addrAbs >> 8) != baseHigh;
+    final writeAddr = pageCross ? (result << 8) | (addrAbs & 0xFF) : addrAbs;
+
+    write(writeAddr, result);
+
     return 0;
   }
 
   int _shy() {
-    write(addrAbs, y & ((addrAbs >> 8) + 1));
+    final baseHigh = ((addrAbs - x) & 0xFFFF) >> 8;
+    final result = y & (baseHigh + 1);
+    final pageCross = (addrAbs >> 8) != baseHigh;
+    final writeAddr = pageCross ? (result << 8) | (addrAbs & 0xFF) : addrAbs;
+
+    write(writeAddr, result);
+
     return 0;
   }
 
   int _tas() {
     stkp = a & x;
-    write(addrAbs, a & x & ((addrAbs >> 8) + 1));
+    final baseHigh = ((addrAbs - y) & 0xFFFF) >> 8;
+    final result = a & x & (baseHigh + 1);
+    final pageCross = (addrAbs >> 8) != baseHigh;
+    final writeAddr = pageCross ? (result << 8) | (addrAbs & 0xFF) : addrAbs;
+
+    write(writeAddr, result);
+
     return 0;
   }
 

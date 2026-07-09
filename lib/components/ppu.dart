@@ -506,6 +506,7 @@ class PPU {
         oamAddress = data;
       case 0x0004:
         pOAM[oamAddress] = data;
+        oamAddress = (oamAddress + 1) & 0xFF;
       case 0x0005:
         if (addressLatch == 0) {
           fineX = data & 0x07;
