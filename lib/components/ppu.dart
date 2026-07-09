@@ -40,6 +40,7 @@ class PPU {
   int fineX = 0x00;
   int addressLatch = 0x00;
   int ppuDataBuffer = 0x00;
+  int ppuOpenBus = 0x00;
 
   int frameScrollX = 0;
   int frameScrollY = 0;
@@ -420,6 +421,7 @@ class PPU {
     fineX = 0x00;
     addressLatch = 0;
     ppuDataBuffer = 0x00;
+    ppuOpenBus = 0x00;
     scanline = 0;
     cycle = 0;
     frameCounter = 0;
@@ -439,7 +441,7 @@ class PPU {
   }
 
   int cpuRead(int address, {bool readOnly = false}) {
-    var data = 0x00;
+    var data = ppuOpenBus;
 
     if (readOnly) {
       switch (address) {
@@ -467,13 +469,15 @@ class PPU {
         case 0x0001:
           break;
         case 0x0002:
-          data = (status.reg & 0xE0) | (ppuDataBuffer & 0x1F);
+          data = (status.reg & 0xE0) | (ppuOpenBus & 0x1F);
+          ppuOpenBus = data;
           status.verticalBlank = false;
           addressLatch = 0;
         case 0x0003:
           break;
         case 0x0004:
           data = pOAM[oamAddress];
+          ppuOpenBus = data;
         case 0x0005:
           break;
         case 0x0006:
@@ -482,7 +486,10 @@ class PPU {
           data = ppuDataBuffer;
           ppuDataBuffer = ppuRead(vramAddress.reg, ignorePalette: true);
 
-          if (vramAddress.reg >= 0x3F00) data = ppuRead(vramAddress.reg);
+          if (vramAddress.reg >= 0x3F00) {
+            data = (ppuRead(vramAddress.reg) & 0x3F) | (ppuOpenBus & 0xC0);
+          }
+          ppuOpenBus = data;
 
           vramAddress.reg += (control.incrementMode ? 32 : 1);
           vramAddress.reg &= 0x3FFF;
@@ -493,6 +500,7 @@ class PPU {
   }
 
   void cpuWrite(int address, int data) {
+    ppuOpenBus = data;
     switch (address) {
       case 0x0000:
         control.reg = data;

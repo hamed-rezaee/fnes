@@ -64,6 +64,11 @@ class Bus {
   bool _dmaDummy = true;
   bool _dmaTransfer = false;
 
+  int _cpuDataBus = 0x00;
+
+  bool _irqDelayed = false;
+  bool _committedIrq = false;
+
   void setSystemType({required bool isPal}) {
     _isPal = isPal;
     ppu.setSystemType(isPal: isPal);
@@ -82,6 +87,8 @@ class Bus {
 
   @pragma('vm:prefer-inline')
   void cpuWrite(int address, int data) {
+    _cpuDataBus = data;
+
     if (cart?.cpuWrite(address, data, _systemClockCounter) ?? false) return;
 
     if (address >= 0x0000 && address <= 0x1FFF) {
@@ -107,9 +114,11 @@ class Bus {
 
   @pragma('vm:prefer-inline')
   int cpuRead(int address, {bool readOnly = false}) {
-    var data = 0x00;
+    var data = (address >> 8) & 0xFF;
 
     if (cart?.cpuRead(address, (v) => data = v) ?? false) {
+      if (!readOnly) _cpuDataBus = data;
+
       return cheatEngine.applyCheatToRead(address, data);
     }
 
@@ -118,11 +127,13 @@ class Bus {
     } else if (address >= 0x2000 && address <= 0x3FFF) {
       data = ppu.cpuRead(address & 0x0007, readOnly: readOnly);
     } else if (address == 0x4015) {
-      data = apu.cpuRead(address);
+      return cheatEngine.applyCheatToRead(address, apu.cpuRead(address));
     } else if (address >= 0x4016 && address <= 0x4017) {
       final controllerIndex = address & 0x0001;
 
-      data = (_controllerState[controllerIndex] & 0x80) > 0 ? 1 : 0;
+      data =
+          ((_controllerState[controllerIndex] & 0x80) > 0 ? 1 : 0) |
+          (_cpuDataBus & 0xE0);
 
       if (!readOnly) {
         _controllerState[controllerIndex] =
@@ -136,6 +147,8 @@ class Bus {
         zapper.triggerPressed ? data &= ~0x10 : data |= 0x10;
       }
     }
+
+    if (!readOnly) _cpuDataBus = data;
 
     return cheatEngine.applyCheatToRead(address, data);
   }
@@ -165,17 +178,25 @@ class Bus {
   void step() {
     var cycles = 0;
 
+    final iClearBefore = (cpu.status & cpu.disableInterruptsFlag) == 0;
+
     if (ppu.nmi) {
       ppu.nmi = false;
+      _irqDelayed = false;
+      _committedIrq = false;
       cycles = cpu.nmi();
+    } else if (_committedIrq) {
+      _committedIrq = false;
+      cycles = cpu.forceIrq();
     } else if (cart?.getMapper().irqState() ?? false) {
       final irqCycles = cpu.irq();
 
       if (irqCycles > 0) {
         cycles = irqCycles;
+        _irqDelayed = false;
         cart?.getMapper().irqClear();
       }
-    } else if (apu.frameIrq) {
+    } else if (apu.frameIrq && iClearBefore && !_irqDelayed) {
       cycles = cpu.irq();
     }
 
@@ -191,7 +212,15 @@ class Bus {
 
         if (_cpuClockCounter.isOdd) cycles++;
       } else {
+        _irqDelayed = false;
         cycles = cpu.step();
+
+        final iClearAfter = (cpu.status & cpu.disableInterruptsFlag) == 0;
+        if (!iClearBefore && iClearAfter) {
+          if (cpu.opcode != 0x40) _irqDelayed = true;
+        } else if (iClearBefore && !iClearAfter && apu.frameIrq) {
+          _committedIrq = true;
+        }
       }
     }
 

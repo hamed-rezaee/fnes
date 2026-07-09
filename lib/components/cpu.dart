@@ -819,6 +819,24 @@ class CPU {
     return 0;
   }
 
+  int forceIrq() {
+    write(0x0100 + stkp, (pc >> 8) & 0x00FF);
+    stkp = (stkp - 1) & 0xFF;
+    write(0x0100 + stkp, pc & 0x00FF);
+    stkp = (stkp - 1) & 0xFF;
+    write(0x0100 + stkp, (status & ~breakFlag) | unusedFlag);
+    stkp = (stkp - 1) & 0xFF;
+    _setFlag(disableInterruptsFlag, isFlagSet: true);
+    addrAbs = 0xFFFE;
+    final lowByte = read(addrAbs + 0);
+    final highByte = read(addrAbs + 1);
+    pc = (highByte << 8) | lowByte;
+
+    bus?.eventBus?.dispatch(CPUInterruptEvent(type: 'IRQ', vector: addrAbs));
+
+    return 7;
+  }
+
   int nmi() {
     write(0x0100 + stkp, (pc >> 8) & 0x00FF);
     stkp = (stkp - 1) & 0xFF;
@@ -958,6 +976,9 @@ class CPU {
   @pragma('vm:prefer-inline')
   int _imp() {
     fetched = a;
+
+    read(pc);
+
     return 0;
   }
 
