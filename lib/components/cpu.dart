@@ -794,7 +794,7 @@ class CPU {
     addrRel = 0x0000;
     addrAbs = 0x0000;
     fetched = 0x00;
-    cycles = 8;
+    cycles = 7;
   }
 
   int irq() {
@@ -846,7 +846,7 @@ class CPU {
       cycles = _currentInstruction.cycles;
       final addl1 = _executeAddressMode(_currentInstruction.addressMode);
       final addl2 = _executeInstruction(_currentInstruction.instructionType);
-      cycles += addl1 | addl2;
+      cycles += addl1 & addl2;
       status |= unusedFlag;
     }
 
