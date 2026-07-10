@@ -208,31 +208,35 @@ class PPU {
     }
     spriteCount = 0;
 
-    var nOAMEntry = 0;
+    var n = 0;
     spriteZeroHitPossible = false;
-    while (nOAMEntry < 64 && spriteCount < 8) {
-      final diff = scanline - pOAM[nOAMEntry * 4];
-      if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
-        if (nOAMEntry == 0) {
-          spriteZeroHitPossible = true;
-        }
 
-        spriteScanline[spriteCount].y = pOAM[nOAMEntry * 4];
-        spriteScanline[spriteCount].id = pOAM[nOAMEntry * 4 + 1];
-        spriteScanline[spriteCount].attribute = pOAM[nOAMEntry * 4 + 2];
-        spriteScanline[spriteCount].x = pOAM[nOAMEntry * 4 + 3];
+    while (n < 64 && spriteCount < 8) {
+      final diff = scanline - pOAM[n * 4];
+      if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
+        if (n == 0) spriteZeroHitPossible = true;
+        spriteScanline[spriteCount].y = pOAM[n * 4];
+        spriteScanline[spriteCount].id = pOAM[n * 4 + 1];
+        spriteScanline[spriteCount].attribute = pOAM[n * 4 + 2];
+        spriteScanline[spriteCount].x = pOAM[n * 4 + 3];
         spriteCount++;
       }
-      nOAMEntry++;
+      n++;
     }
 
-    while (nOAMEntry < 64) {
-      final diff = scanline - pOAM[nOAMEntry * 4];
+    var m = 0;
+    while (n < 64) {
+      final byteIndex = (n * 4 + m) & 0xFF;
+      final diff = scanline - pOAM[byteIndex];
       if (diff >= 0 && diff < (control.spriteSize ? 16 : 8)) {
         status.spriteOverflow = true;
         break;
+      } else {
+        m = (m + 1) & 3;
+        n++;
+
+        if (m == 0) n++;
       }
-      nOAMEntry++;
     }
   }
 

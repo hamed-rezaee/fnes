@@ -217,18 +217,8 @@ class APU {
           dmc.irqFlag = false;
         }
       case 0x4017:
-        frameCounterMode = (data & 0x80) != 0;
-        irqDisable = (data & 0x40) != 0;
-        if (irqDisable) frameIrq = false;
-
-        globalTime = 0;
-        _frameStep = 0;
-
-        if (frameCounterMode) {
-          _clockEnvelopes();
-          _clockLengthCounters();
-          _clockSweepers();
-        }
+        _frameCounterPending = data;
+        _frameCounterWriteDelay = 3;
     }
   }
 
@@ -319,6 +309,26 @@ class APU {
 
   @pragma('vm:prefer-inline')
   void clock() {
+    if (_frameCounterWriteDelay > 0) {
+      _frameCounterWriteDelay--;
+
+      if (_frameCounterWriteDelay == 0) {
+        final data = _frameCounterPending;
+        frameCounterMode = (data & 0x80) != 0;
+        irqDisable = (data & 0x40) != 0;
+
+        if (irqDisable) frameIrq = false;
+
+        globalTime = 0;
+
+        if (frameCounterMode) {
+          _clockEnvelopes();
+          _clockLengthCounters();
+          _clockSweepers();
+        }
+      }
+    }
+
     final s1 = _isPal ? _fcStep1PAL : _fcStep1NTSC;
     final s2 = _isPal ? _fcStep2PAL : _fcStep2NTSC;
     final s3 = _isPal ? _fcStep3PAL : _fcStep3NTSC;
@@ -374,7 +384,8 @@ class APU {
     dmc.clock(dmcMemoryRead);
   }
 
-  int _frameStep = 0;
+  int _frameCounterWriteDelay = 0;
+  int _frameCounterPending = 0;
 
   @pragma('vm:prefer-inline')
   void _clockEnvelopes() {
@@ -409,7 +420,7 @@ class APU {
     frameCounterMode: frameCounterMode,
     irqDisable: irqDisable,
     frameIrq: frameIrq,
-    frameStep: _frameStep,
+    frameStep: 0,
     pulse1State: pulse1.saveState(),
     pulse2State: pulse2.saveState(),
     triangleState: triangle.saveState(),
@@ -422,7 +433,6 @@ class APU {
     frameCounterMode = state.frameCounterMode;
     irqDisable = state.irqDisable;
     frameIrq = state.frameIrq;
-    _frameStep = state.frameStep;
 
     pulse1.restoreState(state.pulse1State);
     pulse2.restoreState(state.pulse2State);
@@ -984,6 +994,7 @@ class DMC {
   int sampleBuffer = 0;
   bool silence = true;
   int duration = 0;
+  int dmcStallCycles = 0;
 
   @pragma('vm:prefer-inline')
   void clock(int Function(int)? memoryRead) {
@@ -992,6 +1003,7 @@ class DMC {
         sampleBuffer = memoryRead(currentAddress);
       }
       sampleBufferEmpty = false;
+      dmcStallCycles += 4;
 
       currentAddress = (currentAddress == 0xFFFF) ? 0x8000 : currentAddress + 1;
       duration--;

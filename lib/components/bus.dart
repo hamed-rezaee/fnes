@@ -57,6 +57,7 @@ class Bus {
   bool _isPal = false;
 
   final Uint8List _controllerState = Uint8List(2);
+  bool _controllerStrobe = false;
 
   int _dmaPage = 0x00;
   int _dmaAddress = 0x00;
@@ -106,8 +107,12 @@ class Bus {
 
       eventBus?.dispatch(DMATransferEvent(page: data, bytesTransferred: 256));
     } else if (address >= 0x4016 && address <= 0x4017) {
-      if ((data & 0x01) == 0) {
-        _controllerState[address & 0x0001] = controller[address & 0x0001];
+      final wasStrobe = _controllerStrobe;
+      _controllerStrobe = (data & 0x01) != 0;
+
+      if (wasStrobe && !_controllerStrobe) {
+        _controllerState[0] = controller[0];
+        _controllerState[1] = controller[1];
       }
     }
   }
@@ -131,13 +136,19 @@ class Bus {
     } else if (address >= 0x4016 && address <= 0x4017) {
       final controllerIndex = address & 0x0001;
 
-      data =
-          ((_controllerState[controllerIndex] & 0x80) > 0 ? 1 : 0) |
-          (_cpuDataBus & 0xE0);
+      if (_controllerStrobe) {
+        data =
+            ((controller[controllerIndex] & 0x80) > 0 ? 1 : 0) |
+            (_cpuDataBus & 0xE0);
+      } else {
+        data =
+            ((_controllerState[controllerIndex] & 0x80) > 0 ? 1 : 0) |
+            (_cpuDataBus & 0xE0);
 
-      if (!readOnly) {
-        _controllerState[controllerIndex] =
-            (_controllerState[controllerIndex] << 1) & 0xFF;
+        if (!readOnly) {
+          _controllerState[controllerIndex] =
+              (_controllerState[controllerIndex] << 1) & 0xFF;
+        }
       }
 
       if (controllerIndex == 1 && zapper.enabled) {
@@ -251,6 +262,29 @@ class Bus {
 
     for (var i = 0; i < cycles; i++) {
       apu.clock();
+    }
+
+    final stallCycles = apu.dmc.dmcStallCycles;
+
+    if (stallCycles > 0) {
+      apu.dmc.dmcStallCycles = 0;
+      final stallPpuCycles = (stallCycles * (_isPal ? 3.2 : 3.0)).round();
+
+      for (var i = 0; i < stallPpuCycles; i++) {
+        ppu.clock();
+        _systemClockCounter++;
+        _audioTime += _audioTimePerNESClock;
+
+        if (_audioTime >= _audioTimePerSystemSample) {
+          _audioTime -= _audioTimePerSystemSample;
+          _audioSample = apu.getOutputSample();
+          _audioBuffer[_audioBufferIndex] = _audioSample;
+          _audioBufferIndex = (_audioBufferIndex + 1) % _audioBufferSize;
+          if (_audioBufferCount < _audioBufferSize) _audioBufferCount++;
+        }
+      }
+
+      _cpuClockCounter += stallCycles;
     }
 
     cart?.getMapper().clock(cycles);

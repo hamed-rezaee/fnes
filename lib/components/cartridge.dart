@@ -13,6 +13,7 @@ class NESHeader {
     mapper1 = bytes[6];
     mapper2 = bytes[7];
     programRamSize = bytes[8];
+    romSizeMSB = bytes.length > 9 ? bytes[9] : 0;
 
     fileType = 1;
 
@@ -24,6 +25,7 @@ class NESHeader {
   late int mapper1;
   late int mapper2;
   late int programRamSize;
+  late int romSizeMSB;
   late int fileType;
 }
 
@@ -78,8 +80,16 @@ class Cartridge {
 
     if ((header.mapper1 & 0x04) != 0) offset += 512;
 
-    _mapperId = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
-    _submapper = (header.mapper2 >> 4) & 0x0F;
+    if (header.fileType == 2) {
+      _mapperId =
+          ((header.programRamSize & 0x0F) << 8) |
+          (header.mapper2 & 0xF0) |
+          (header.mapper1 >> 4);
+      _submapper = (header.programRamSize >> 4) & 0x0F;
+    } else {
+      _mapperId = (header.mapper2 & 0xF0) | (header.mapper1 >> 4);
+      _submapper = 0;
+    }
 
     _hwMirror = (header.mapper1 & 0x01) != 0
         ? MapperMirror.vertical
@@ -114,7 +124,7 @@ class Cartridge {
       }
     } else if (fileType == 2) {
       programBanks =
-          ((header.programRamSize & 0x07) << 8) | header.programRomChunks;
+          ((header.romSizeMSB & 0x0F) << 8) | header.programRomChunks;
       _programMemory = Uint8List(programBanks * 16384);
       if (offset + _programMemory.length <= bytes.length) {
         _programMemory.setAll(
@@ -124,15 +134,21 @@ class Cartridge {
       }
       offset += _programMemory.length;
 
-      charBanks = ((header.programRamSize & 0x38) << 8) | header.charRomChunks;
-      _charMemory = Uint8List(charBanks * 8192);
-      if (offset + _charMemory.length <= bytes.length) {
-        _charMemory.setAll(
-          0,
-          bytes.sublist(offset, offset + _charMemory.length),
-        );
+      charBanks = ((header.romSizeMSB >> 4) << 8) | header.charRomChunks;
+      if (charBanks == 0) {
+        _charMemory = Uint8List(8192);
+      } else {
+        _charMemory = Uint8List(charBanks * 8192);
+
+        if (offset + _charMemory.length <= bytes.length) {
+          _charMemory.setAll(
+            0,
+            bytes.sublist(offset, offset + _charMemory.length),
+          );
+        }
+
+        offset += _charMemory.length;
       }
-      offset += _charMemory.length;
     }
 
     _mapper = MapperFactory.createMapper(_mapperId, programBanks, charBanks)
